@@ -55,11 +55,50 @@ void updateSets()
       #endif
 }
 
+enum COMMAND
+{
+	P_ON,// - включить матрицу
+	P_OFF,// - выключить матрицу
+	SO_ON,// - включить звук
+    SO_OFF,// - выключить звук
+    EFF,// - сделать активным эффект №0 (нумерация с нуля)
+    BRI,// - установить яркость 44; диапазон [1..255]
+    SPD,// - установить скорость 3; диапазон [1..255]
+    SCA,// - установить масштаб 1; диапазон [1..100]
+    ALM_SET1,// ON - завести будильник 1 (понедельник); ON - вкл, OFF - выкл
+    //ALM_SET1 390 - установить время будильника 1 (понедельник) на 06:30 (количество минут от начала суток)
+    DAWN,// - установить "рассвет" за 5 минут до будильника (1 = 5 минут - номер опции в выпадающем списке в приложении, нумерация с единицы)
+    TMR_SET,// 1 3 300 - установить таймер; описание параметров - см. команду TMR ниже
+    FAV_SET,// 1 60 120 0 0 1 0 0 0 0 0 1 1 0 0 1 0 0 0 0 0 0 1 0 0 0 1 0 0 0 - установить режим "избранное", параметры - см. команду FAV ниже
+    BTN,// ON - разблокировать кнопку на лампе
+    //BTN OFF, - заблокировать кнопку на лампе
+    VOL,// - установить громкость 9 (максимум 30)
+    EQ,// - установить эквалайзер в НОРМАЛЬНО (значения от 0 до 5)
+};
+
+const char *commands[] = {
+	"p_on",
+	"p_off",
+	"so_on",
+	"son_off",
+	"eff",
+	"bri",
+	"spd",
+	"sca",
+	"alm",
+	"dawn",
+	"tmr",
+	"fav",
+	"btn",
+	"vol",
+	"eq"
+};
+
 void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutput)
 {
     char buff[MAX_UDP_BUFFER_SIZE], *endToken = NULL;
     String BUFF = String(inputBuffer);
-
+#if 0
     if (!strncmp_P(inputBuffer, PSTR("GET"), 3))
     {
       #ifdef GET_TIME_FROM_PHONE
@@ -1122,6 +1161,256 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       strcpy(outputBuffer, inputBuffer);
     }
     inputBuffer[0] = '\0';                                  // очистка буфера, читобы не он не интерпретировался, как следующий входной пакет
+#else
+	DynamicJsonDocument doc(1024);
+	deserializeJson(doc, inputBuffer);
+	
+	int key=-1;
+	for(int index=0;index<sizeof(commands)/sizeof(commands[0]);index++)
+	{
+		if(doc.containsKey(commands[index]))
+		{
+			key=index;
+			break;
+		}
+	}
+	
+	switch(key)
+	{
+	case P_ON:
+		{
+			if (dawnFlag) {
+				manualOff = true;
+				dawnFlag = false;
+				#ifdef TM1637_USE
+				clockTicker_blink();
+				#endif
+				SetBrightness(modes[currentMode].Brightness);
+				changePower();
+				sendCurrent(inputBuffer);
+			}
+			else {
+				ONflag = true;
+				jsonWrite(configSetup, "Power", ONflag);
+				EepromManager::EepromGet(modes);
+				timeout_save_file_changes = millis();
+				bitSet (save_file_changes, 0);
+				updateSets();
+				changePower();
+				loadingFlag = true;
+				#ifdef USE_MULTIPLE_LAMPS_CONTROL
+				repeat_multiple_lamp_control=true;
+				#endif  //USE_MULTIPLE_LAMPS_CONTROL
+				sendCurrent(inputBuffer);
+				#ifdef USE_BLYNK_PLUS
+				updateRemoteBlynkParams();
+				#endif
+			}  
+		}
+		break;
+	case P_OFF:
+		{
+			if (dawnFlag) {
+				manualOff = true;
+				dawnFlag = false;
+				#ifdef TM1637_USE
+				clockTicker_blink();
+				#endif
+				SetBrightness(modes[currentMode].Brightness);
+				changePower();
+				sendCurrent(inputBuffer);
+			}
+			else {
+				ONflag = false;
+				jsonWrite(configSetup, "Power", ONflag);
+				if (!FavoritesManager::FavoritesRunning) EepromManager::EepromPut(modes);
+				save_file_changes = 7;
+				//eepromTimeout = millis() - EEPROM_WRITE_DELAY;
+				timeout_save_file_changes = millis() - SAVE_FILE_DELAY_TIMEOUT;
+				timeTick();
+				changePower();
+				loadingFlag = true;
+				#ifdef USE_MULTIPLE_LAMPS_CONTROL
+				multiple_lamp_control ();
+				#endif  //USE_MULTIPLE_LAMPS_CONTROL
+				sendCurrent(inputBuffer);
+
+				#if (USE_MQTT)
+				if (espMode == 1U)
+				{
+				  MqttManager::needToPublish = true;
+				}
+				#endif
+				#ifdef USE_BLYNK_PLUS
+				updateRemoteBlynkParams();
+				#endif
+			}
+		}
+		break;
+	case EFF:
+		{
+			//memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
+			//uint8_t temp = (uint8_t)atoi(buff);
+			uint8_t temp = doc[commands[key]];
+			currentMode = eff_num_correct[temp];
+			updateSets();
+			jsonWrite(configSetup, "eff_sel", temp);
+			jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+			jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+			jsonWrite(configSetup, "sc", modes[currentMode].Scale);
+			#ifdef USE_MULTIPLE_LAMPS_CONTROL
+			repeat_multiple_lamp_control = true;
+			#endif  //USE_MULTIPLE_LAMPS_CONTROL
+			//FastLED.clear();
+			//delay(1);
+			sendCurrent(inputBuffer);
+			#ifdef USE_BLYNK_PLUS
+			updateRemoteBlynkParams();
+			#endif
+			if (random_on && FavoritesManager::FavoritesRunning)
+				selectedSettings = 1U;
+			SetBrightness(modes[currentMode].Brightness);
+		}
+		break;
+	case BRI:
+		{
+			//memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
+			//modes[currentMode].Brightness = constrain(atoi(buff), 1, 255);
+			modes[currentMode].Brightness = constrain(doc[commands[key]], 1, 255);
+			jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+			#ifdef USE_MULTIPLE_LAMPS_CONTROL
+			repeat_multiple_lamp_control = true;
+			#endif  //USE_MULTIPLE_LAMPS_CONTROL
+			SetBrightness(modes[currentMode].Brightness);
+			//loadingFlag = true; //не хорошо делать перезапуск эффекта после изменения яркости, но в некоторых эффектах от чётности яркости мог бы зависеть внешний вид
+			//settChanged = true;
+			//eepromTimeout = millis();
+			sendCurrent(inputBuffer);
+
+			#if (USE_MQTT)
+			if (espMode == 1U)
+			{
+				MqttManager::needToPublish = true;
+			}
+			#endif
+			#ifdef USE_BLYNK_PLUS
+			updateRemoteBlynkParams();
+			#endif
+		}
+		break;
+	case SPD:
+		{
+			//memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
+			modes[currentMode].Speed = doc[commands[key]];//atoi(buff);
+			jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+			#ifdef USE_BLYNK_PLUS
+			updateRemoteBlynkParams();
+			#endif
+			#ifdef USE_MULTIPLE_LAMPS_CONTROL
+			repeat_multiple_lamp_control = true;
+			#endif  //USE_MULTIPLE_LAMPS_CONTROL
+			updateSets();
+			sendCurrent(inputBuffer);
+		}
+		break;
+	case SCA:
+		{
+			//memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
+			//modes[currentMode].Scale = atoi(buff);
+			modes[currentMode].Scale = doc[commands[key]];
+			jsonWrite(configSetup, "sc", modes[currentMode].Scale);
+			#ifdef USE_MULTIPLE_LAMPS_CONTROL
+			repeat_multiple_lamp_control = true;
+			#endif  //USE_MULTIPLE_LAMPS_CONTROL
+			updateSets();
+			sendCurrent(inputBuffer);
+			#ifdef USE_BLYNK_PLUS
+			updateRemoteBlynkParams();
+			#endif
+		}
+		break;
+	case DAWN:
+		{
+			//memcpy(buff, &inputBuffer[4], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 5
+			//dawnMode = atoi(buff) - 1;
+			dawnMode = doc[commands[key]].as<int>() - 1;
+			sendAlarms(inputBuffer);
+			#if (USE_MQTT)
+			if (espMode == 1U)
+			{
+				MqttManager::needToPublish = true;
+			}
+			#endif
+		}
+		break;
+	case BTN:
+		{
+			//if (strstr_P(inputBuffer, PSTR("ON")) - inputBuffer == 4)
+			if(doc[commands[key]])
+			{
+				buttonEnabled = true;
+				jsonWrite(configSetup, "button_on", (int) buttonEnabled);
+				saveConfig();
+				sendCurrent(inputBuffer);
+			}
+			else// if (strstr_P(inputBuffer, PSTR("OFF")) - inputBuffer == 4)
+			{
+				buttonEnabled = false;
+				jsonWrite(configSetup, "button_on", (int) buttonEnabled);
+				saveConfig();
+				sendCurrent(inputBuffer);
+			}
+
+			#if (USE_MQTT)
+			if (espMode == 1U)
+			{
+				strcpy(MqttManager::mqttBuffer, inputBuffer);
+				MqttManager::needToPublish = true;
+			}
+			#endif
+		}
+		break;
+	case VOL:
+		{
+			//memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
+			//uint8_t eff_sound_on_tmp = (uint8_t)atoi(buff);
+			uint8_t eff_sound_on_tmp = doc[commands[key]].as<int>();
+			if (eff_sound_on_tmp)  {
+				eff_sound_on = eff_volume = constrain( eff_sound_on_tmp, 1,30 );
+				//modes[EFF_VOICE].Scale = 51;
+			}
+			else
+			{
+				if (!eff_sound_on) {
+					eff_sound_on = eff_volume;
+				}
+				else {
+					eff_sound_on = 0;
+				}
+			}
+			send_command(6,0,0,eff_volume);
+			jsonWrite(configSetup, "vol", eff_volume);
+			jsonWrite(configSetup, "on_sound", constrain (eff_sound_on,0,1));
+      
+			sendVolume(inputBuffer);
+
+			#if (USE_MQTT)
+			if (espMode == 1U)
+			{
+				MqttManager::needToPublish = true;
+			}
+			#endif
+
+			#ifdef USE_BLYNK_PLUS
+			updateRemoteBlynkParams();
+			#endif
+			#ifdef USE_MULTIPLE_LAMPS_CONTROL
+			repeat_multiple_lamp_control = true;
+			#endif  //USE_MULTIPLE_LAMPS_CONTROL
+		}
+		break;
+	}
+#endif
 }
 
 void sendCurrent(char *outputBuffer)

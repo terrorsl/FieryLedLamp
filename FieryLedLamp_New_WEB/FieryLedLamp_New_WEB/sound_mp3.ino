@@ -398,6 +398,7 @@ int16_t send_command(int8_t cmd, uint8_t feedback, uint8_t dat1, uint8_t dat2)
         return (((int16_t)mp3_receive_buf[5]) << 8) + mp3_receive_buf[6];
       }
     //Serial.println ("Ничего");
+    return 0;
 }
 
 

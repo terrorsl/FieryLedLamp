@@ -2951,7 +2951,7 @@ void LotusFlower() {
 
   if (modes[currentMode].Speed > 128U) {
     if (modes[currentMode].Scale > 50) {
-      deltaSpeed = 80U + (128U - abs(128U - deltaValue)) / 1.25;
+      //deltaSpeed = 80U + (128U - abs(128U - deltaValue)) / 1.25;
       FPSdelay = SpeedFactor(deltaSpeed);
       if (step % 256 == 0U ) hue += 32;           /* color morph */
     } else {
@@ -3731,7 +3731,7 @@ void Serpentine() {
     // CRGB col3 = CHSV(ms / 29 + y * 256 / (HEIGHT - 1) + step, 255, 255 - (HEIGHT - y) * BR_INTERWAL - fade);
 
     wu_pixel( x1 + hue * DELTA, yy - PADDING * (255 - hue), &col1);
-    wu_pixel( abs((WIDTH - 1) * 256 - (x1 + hue * DELTA)), yy - PADDING * hue, &col2);
+   // wu_pixel( abs((WIDTH - 1) * 256 - (x1 + hue * DELTA)), yy - PADDING * hue, &col2);
     //    wu_pixel( x1 + hue * DELTA, yy - PADDING * 3 * (255 - hue), &col3);
   }
 
