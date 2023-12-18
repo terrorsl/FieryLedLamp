@@ -1244,76 +1244,6 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 			}
 		}
 		break;
-	/*case P_ON:
-		{
-			if (dawnFlag) {
-				manualOff = true;
-				dawnFlag = false;
-				#ifdef TM1637_USE
-				clockTicker_blink();
-				#endif
-				SetBrightness(modes[currentMode].Brightness);
-				changePower();
-				sendCurrent(inputBuffer);
-			}
-			else {
-				ONflag = true;
-				jsonWrite(configSetup, "Power", ONflag);
-				EepromManager::EepromGet(modes);
-				timeout_save_file_changes = millis();
-				bitSet (save_file_changes, 0);
-				updateSets();
-				changePower();
-				loadingFlag = true;
-				#ifdef USE_MULTIPLE_LAMPS_CONTROL
-				repeat_multiple_lamp_control=true;
-				#endif  //USE_MULTIPLE_LAMPS_CONTROL
-				sendCurrent(inputBuffer);
-				#ifdef USE_BLYNK_PLUS
-				updateRemoteBlynkParams();
-				#endif
-			}  
-		}
-		break;
-	case P_OFF:
-		{
-			if (dawnFlag) {
-				manualOff = true;
-				dawnFlag = false;
-				#ifdef TM1637_USE
-				clockTicker_blink();
-				#endif
-				SetBrightness(modes[currentMode].Brightness);
-				changePower();
-				sendCurrent(inputBuffer);
-			}
-			else {
-				ONflag = false;
-				jsonWrite(configSetup, "Power", ONflag);
-				if (!FavoritesManager::FavoritesRunning) EepromManager::EepromPut(modes);
-				save_file_changes = 7;
-				//eepromTimeout = millis() - EEPROM_WRITE_DELAY;
-				timeout_save_file_changes = millis() - SAVE_FILE_DELAY_TIMEOUT;
-				timeTick();
-				changePower();
-				loadingFlag = true;
-				#ifdef USE_MULTIPLE_LAMPS_CONTROL
-				multiple_lamp_control ();
-				#endif  //USE_MULTIPLE_LAMPS_CONTROL
-				sendCurrent(inputBuffer);
-
-				#if (USE_MQTT)
-				if (espMode == 1U)
-				{
-				  MqttManager::needToPublish = true;
-				}
-				#endif
-				#ifdef USE_BLYNK_PLUS
-				updateRemoteBlynkParams();
-				#endif
-			}
-		}
-		break;*/
 	case EFF:
 		{
 			//memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
@@ -1394,6 +1324,43 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 			#ifdef USE_BLYNK_PLUS
 			updateRemoteBlynkParams();
 			#endif
+		}
+		break;
+	case ALM_SET1:
+		{
+			if(doc["mode"] == "set")
+			{
+				uint8_t alarmNum = doc["num"];
+				alarmNum -= 1;
+				if(doc["state"] == "on")
+				{
+					alarms[alarmNum].State = true;
+					sendAlarms(inputBuffer);
+				}
+				else if(doc["state"] == "off")
+				{
+					alarms[alarmNum].State = false;
+					sendAlarms(inputBuffer);
+				}
+				else
+				{
+				  memcpy(buff, &inputBuffer[8], strlen(inputBuffer)); // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 9
+				  alarms[alarmNum].Time = atoi(buff);
+				  sendAlarms(inputBuffer);
+				}
+
+				#if (USE_MQTT)
+				if (espMode == 1U)
+				{
+				  strcpy(MqttManager::mqttBuffer, inputBuffer);
+				  MqttManager::needToPublish = true;
+				}
+				#endif
+			}
+			else
+			{
+				sendAlarms(inputBuffer);
+			}
 		}
 		break;
 	case DAWN:
@@ -1478,7 +1445,49 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 		}
 		break;
 #endif
+	case TMR_SET:
+		{
+			/*if (!strncmp_P(inputBuffer, PSTR("TMR_"), 4)) { // сокращаем GET и SET для ускорения регулярного цикла
+			  if (!strncmp_P(inputBuffer, PSTR("TMR_SET"), 7))
+			  {
+				memcpy(buff, &inputBuffer[8], 2);                     // взять подстроку, состоящую из 9 и 10 символов, из строки inputBuffer
+				TimerManager::TimerRunning = (bool)atoi(buff);
+
+				memcpy(buff, &inputBuffer[10], 2);                    // взять подстроку, состоящую из 11 и 12 символов, из строки inputBuffer
+				TimerManager::TimerOption = (uint8_t)atoi(buff);
+
+				memcpy(buff, &inputBuffer[12], strlen(inputBuffer));  // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 13
+				TimerManager::TimeToFire = millis() + strtoull(buff, &endToken, 10) * 1000;
+
+				TimerManager::TimerHasFired = false;
+				sendTimer(inputBuffer);
+
+				#if (USE_MQTT)
+				if (espMode == 1U)
+				{
+				  MqttManager::needToPublish = true;
+				}
+				#endif
+			  }
+			  else
+				sendTimer(inputBuffer);
+			}*/
+		}
+		break;
+	default:
+		inputBuffer[0] = '\0';
 	}
+
+    if (strlen(inputBuffer) <= 0)
+    {
+      return;
+    }
+
+    if (generateOutput)                                     // если запрошен вывод ответа выполнения команд, копируем его в исходящий буфер
+    {
+      strcpy(outputBuffer, inputBuffer);
+    }
+    inputBuffer[0] = '\0';                                  // очистка буфера, читобы не он не интерпретировался, как следующий входной пакет
 #endif
 }
 
