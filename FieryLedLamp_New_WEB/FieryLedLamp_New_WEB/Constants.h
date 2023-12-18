@@ -70,7 +70,7 @@ uint32_t AUTOMATIC_OFF_TIME = (0UL);                        // Не удаляй
 #define CLK                   (14U)                         // D5 TM1637 display CLK pin
 #endif  //TM1637_USE
 
-#define MP3_TX_PIN            (12U)                         // В СЛУЧАЕ ОТСУТСТВИЯ ПЛЕЕРА ЗАКОМЕНТМРОВАТЬ СТРОКУ!!! Определяет вывод TX (D6)(RX на плеере)  
+//#define MP3_TX_PIN            (12U)                         // В СЛУЧАЕ ОТСУТСТВИЯ ПЛЕЕРА ЗАКОМЕНТМРОВАТЬ СТРОКУ!!! Определяет вывод TX (D6)(RX на плеере)  
 #define MP3_RX_PIN            (13U)                         // Определяет вывод RX (D7)(TX на плеере) программного последовательного порта
 #ifdef MP3_TX_PIN
   //#define CHECK_MP3_CONNECTION                              // Закоментируйте эту строку если нужно, чтобы лампа не проверяла наличие связи с МР3 плеером
@@ -474,7 +474,8 @@ static const uint8_t defaultSettings[][3] PROGMEM = {
 #define WINTER_TIMEZONE_NAME  ("EET")                       // обозначение зимнего времени; до 5 символов; может быть использовано, если понадобится его вывести после вывода времени; может быть "ЗИМ"
 
 // --- ВНЕШНЕЕ УПРАВЛЕНИЕ --------------
-#define USE_MQTT              (false)                       // true - используется mqtt клиент, false - нет
+#define USE_MQTT              (true)                       // true - используется mqtt клиент, false - нет
+#define USE_MQTT_JSON
 #if USE_MQTT
 #define MQTT_RECONNECT_TIME   (10U)                         // время в секундах перед подключением к MQTT брокеру в случае потери подключения
 #endif

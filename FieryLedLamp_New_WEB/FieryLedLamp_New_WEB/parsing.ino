@@ -57,6 +57,7 @@ void updateSets()
 
 enum COMMAND
 {
+	POWER,
 	P_ON,// - включить матрицу
 	P_OFF,// - выключить матрицу
 	SO_ON,// - включить звук
@@ -77,8 +78,7 @@ enum COMMAND
 };
 
 const char *commands[] = {
-	"p_on",
-	"p_off",
+	"power",
 	"so_on",
 	"son_off",
 	"eff",
@@ -98,7 +98,7 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 {
     char buff[MAX_UDP_BUFFER_SIZE], *endToken = NULL;
     String BUFF = String(inputBuffer);
-#if 0
+#ifndef USE_MQTT_JSON
     if (!strncmp_P(inputBuffer, PSTR("GET"), 3))
     {
       #ifdef GET_TIME_FROM_PHONE
@@ -1177,7 +1177,67 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 	
 	switch(key)
 	{
-	case P_ON:
+	case POWER:
+		{
+			bool val = doc[commands[key]];
+			if (dawnFlag) {
+				manualOff = true;
+				dawnFlag = false;
+				#ifdef TM1637_USE
+				clockTicker_blink();
+				#endif
+				SetBrightness(modes[currentMode].Brightness);
+				changePower();
+				sendCurrent(inputBuffer);
+			}
+			else {
+				if(val)
+				{
+					ONflag = true;
+					jsonWrite(configSetup, "Power", ONflag);
+					EepromManager::EepromGet(modes);
+					timeout_save_file_changes = millis();
+					bitSet (save_file_changes, 0);
+					updateSets();
+					changePower();
+					loadingFlag = true;
+					#ifdef USE_MULTIPLE_LAMPS_CONTROL
+					repeat_multiple_lamp_control=true;
+					#endif  //USE_MULTIPLE_LAMPS_CONTROL
+					sendCurrent(inputBuffer);
+					#ifdef USE_BLYNK_PLUS
+					updateRemoteBlynkParams();
+					#endif
+				}
+				else {
+					ONflag = false;
+					jsonWrite(configSetup, "Power", ONflag);
+					if (!FavoritesManager::FavoritesRunning) EepromManager::EepromPut(modes);
+					save_file_changes = 7;
+					//eepromTimeout = millis() - EEPROM_WRITE_DELAY;
+					timeout_save_file_changes = millis() - SAVE_FILE_DELAY_TIMEOUT;
+					timeTick();
+					changePower();
+					loadingFlag = true;
+					#ifdef USE_MULTIPLE_LAMPS_CONTROL
+					multiple_lamp_control ();
+					#endif  //USE_MULTIPLE_LAMPS_CONTROL
+					sendCurrent(inputBuffer);
+
+					#if (USE_MQTT)
+					if (espMode == 1U)
+					{
+					  MqttManager::needToPublish = true;
+					}
+					#endif
+					#ifdef USE_BLYNK_PLUS
+					updateRemoteBlynkParams();
+					#endif
+				}
+			}
+		}
+		break;
+	/*case P_ON:
 		{
 			if (dawnFlag) {
 				manualOff = true;
@@ -1246,7 +1306,7 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 				#endif
 			}
 		}
-		break;
+		break;*/
 	case EFF:
 		{
 			//memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
@@ -1370,6 +1430,7 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 			#endif
 		}
 		break;
+#ifdef MP3_TX_PIN
 	case VOL:
 		{
 			//memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
@@ -1409,12 +1470,14 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 			#endif  //USE_MULTIPLE_LAMPS_CONTROL
 		}
 		break;
+#endif
 	}
 #endif
 }
 
 void sendCurrent(char *outputBuffer)
 {
+#ifndef USE_MQTT_JSON
     uint8_t n;
     for (n=0; n< MODE_AMOUNT; n++)
     {
@@ -1454,6 +1517,41 @@ void sendCurrent(char *outputBuffer)
   sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)eff_sound_on);
   //sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)eff_volume);
   #endif  //MP3_TX_PIN
+#else
+	DynamicJsonDocument doc(255);
+
+	doc["bri"] = modes[currentMode].Brightness;
+	doc["spd"] = modes[currentMode].Speed;
+    doc["sca"] = modes[currentMode].Scale;
+    doc["power"] = ONflag;
+    doc["esp_mode"] = espMode;
+#ifdef USE_NTP
+	doc["ntp"] = true;
+#else
+	doc["ntp"] = false;
+#endif
+
+	doc["timer"] = (uint8_t)TimerManager::TimerRunning;
+#ifdef ESP_USE_BUTTON
+	doc["btn"] = (uint8_t)buttonEnabled;
+#else
+	doc["btn"] = False;
+#endif //ESP_USE_BUTTON
+
+	char timeBuf[9];
+#if defined(USE_NTP) || defined(USE_MANUAL_TIME_SETTING) || defined(GET_TIME_FROM_PHONE)
+	getFormattedTime(timeBuf);
+#else
+	time_t currentTicks = millis() / 1000UL;
+	sprintf_P(timeBuf, PSTR("%02u:%02u:%02u"), hour(currentTicks), minute(currentTicks), second(currentTicks));
+#endif
+	doc["time"] = timeBuf;
+#ifdef MP3_TX_PIN
+	doc["mp3"] = (uint8_t)eff_sound_on;
+#endif  //MP3_TX_PIN
+	
+	serializeJson(doc, outputBuffer, 255);
+#endif
 }
 
 void NEWsendCurrent(char *outputBuffer)
