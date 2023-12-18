@@ -1177,7 +1177,16 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 	{
 	case POWER:
 		{
-			bool val = doc[commands[key]];
+			bool val;
+			if(doc[commands[key]].is<bool>())
+				val = doc[commands[key]];
+			else
+			{
+				if(doc[commands[key]].as<String>()=="on" || doc[commands[key]].as<String>()=="1")
+					val = true;
+				else
+					val = false;
+			}
 			if (dawnFlag) {
 				manualOff = true;
 				dawnFlag = false;
