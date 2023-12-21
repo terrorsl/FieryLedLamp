@@ -64,7 +64,7 @@ uint32_t AUTOMATIC_OFF_TIME = (0UL);                        // Не удаляй
    #define DISPLAY_IP_AT_START                              // Закоментируйте эту строчку, если не хотите, чтобы при включении пмтания и подключению к WiFi, лампа один раз выводила свой IP адрес (для ламп без кнопки)
 #endif  //ESP_USE_BUTTON
 
-#define TM1637_USE                                          // закоментировать, если не используется дисплей TM1637
+//#define TM1637_USE                                          // закоментировать, если не используется дисплей TM1637
 #ifdef TM1637_USE
 #define DIO                   (16U)                         // D0 TM1637 display DIO pin
 #define CLK                   (14U)                         // D5 TM1637 display CLK pin
@@ -80,7 +80,7 @@ uint32_t AUTOMATIC_OFF_TIME = (0UL);                        // Не удаляй
   #endif  //DF_PLAYER_IS_ORIGINAL
 #endif  //MP3_TX_PIN
 
-#define IR_RECEIVER_USE                                     // Если не используется ИК ДУ - Закомментировать эту строку
+//#define IR_RECEIVER_USE                                     // Если не используется ИК ДУ - Закомментировать эту строку
 #ifdef IR_RECEIVER_USE
   #define IR_RECEIVER_PIN  2                                // Пин ИК сенсора D4
 #endif  //IR_RECEIVER_USE
@@ -286,7 +286,7 @@ uint8_t MATRIX_TYPE = 0;                                    // тип матри
 // формат записи:
 //{ Яркость, Скорость, Масштаб}
 
-static const uint8_t defaultSettings[][3] PROGMEM = {
+static const uint8_t defaultSettings[MODE_AMOUNT][3] PROGMEM = {
   {  10,   1,  50}, // Бeлый cвeт
   {  25, 200,  65}, // Акварель
   {  20, 215,  60}, // Аленький цветочек

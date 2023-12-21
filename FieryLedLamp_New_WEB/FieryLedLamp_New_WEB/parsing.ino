@@ -20,7 +20,7 @@ void parseUDP()
 
     char reply[MAX_UDP_BUFFER_SIZE];
     reply [0] = '\0';
-    processInputBuffer(inputBuffer, reply, true);
+    processInputBuffer(inputBuffer, reply, true, false);
 
     #if (USE_MQTT)                                          // отправка ответа выполнения команд по MQTT, если разрешено
     if (espMode == 1U)
@@ -92,7 +92,7 @@ const char *commands[] = {
 	"eq"
 };
 
-void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutput)
+void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutput, bool fromMqtt)
 {
     char buff[MAX_UDP_BUFFER_SIZE], *endToken = NULL;
     String BUFF = String(inputBuffer);
@@ -1161,7 +1161,18 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
     inputBuffer[0] = '\0';                                  // очистка буфера, читобы не он не интерпретировался, как следующий входной пакет
 #else
 	DynamicJsonDocument doc(1024);
-	deserializeJson(doc, inputBuffer);
+	DeserializationError err = deserializeJson(doc, inputBuffer);
+	if(err!=DeserializationError::Ok)
+	{
+#if (USE_MQTT)
+		if (espMode == 1U)
+		{
+			MqttManager::needToPublish = true;
+		}
+#endif
+		sprintf(outputBuffer,"{\"error\":\"DeserializationError:%d\"}", err);
+		return;
+	}
 	
 	int key=-1;
 	for(int index=0;index<sizeof(commands)/sizeof(commands[0]);index++)

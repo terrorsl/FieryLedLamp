@@ -178,9 +178,14 @@ BLYNK_WRITE(V9)
 void processParams(char *prefix, const char *paramValue)
 {
   char charBuf[50];
+#ifndef USE_MQTT_JSON
   String value = prefix + String(paramValue);
   value.toCharArray(charBuf, 50);
-  processInputBuffer(charBuf, NULL, false);
+#else
+  sprintf(charBuf,"{\"%s\":%s}", prefix, paramValue);
+#endif
+  
+  processInputBuffer(charBuf, NULL, false, false);
   
   // добавляем сброс настроек на значения по умолчанию при выборе всех единичек на всех бегунках
   if (modes[currentMode].Brightness == 1U && modes[currentMode].Speed == 1U && modes[currentMode].Scale == 1U) {

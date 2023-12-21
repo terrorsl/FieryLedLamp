@@ -310,12 +310,11 @@ uint8_t last_day_night = 0;
 
 void setup()  //==================================================================  void setup()  =========================================================================
 {
-	
-  Serial.begin(115200);
-  delay(300);
-  ESP.wdtEnable(WDTO_8S);
+	Serial.begin(115200);
+	delay(300);
+	ESP.wdtEnable(WDTO_8S);
 
-  LOG.print(F("\n\n\nSYSTEM START\n"));
+	LOG.print(F("\n\n\nSYSTEM START\n"));
 
   #if defined(ESP_USE_BUTTON) && defined(BUTTON_LOCK_ON_START)
     #if (BUTTON_IS_SENSORY == 1)
@@ -331,35 +330,35 @@ void setup()  //================================================================
 #endif
 
   // ПИНЫ
-  #ifdef MOSFET_PIN                                         // инициализация пина, управляющего MOSFET транзистором в состояние "выключен"
-  pinMode(MOSFET_PIN, OUTPUT);
+#ifdef MOSFET_PIN                                         // инициализация пина, управляющего MOSFET транзистором в состояние "выключен"
+	pinMode(MOSFET_PIN, OUTPUT);
   #ifdef MOSFET_LEVEL
-  digitalWrite(MOSFET_PIN, !MOSFET_LEVEL);
+	digitalWrite(MOSFET_PIN, !MOSFET_LEVEL);
   #endif
-  #endif
+#endif
 
   #ifdef ALARM_PIN                                          // инициализация пина, управляющего будильником в состояние "выключен"
-  pinMode(ALARM_PIN, OUTPUT);
+	pinMode(ALARM_PIN, OUTPUT);
   #ifdef ALARM_LEVEL
-  digitalWrite(ALARM_PIN, !ALARM_LEVEL);
+	digitalWrite(ALARM_PIN, !ALARM_LEVEL);
   #endif
   #endif
   
   // часы
 #ifdef TM1637_USE
-  LOG.print(F("\nСтарт дисплея TM1637\n"));
-  tmr_clock = millis();                                     // +++ устанавливаем начальное значение счетчика
-  display.setBrightness(DispBrightness);                    // +++ яркость дисплея максимальная = 255
-  display.displayByte(_empty, _empty, _empty, _empty);      // +++ очистка дисплея
-  display.displayByte(_dash, _dash, _dash, _dash);          // +++ отображаем прочерки
+	LOG.print(F("\nСтарт дисплея TM1637\n"));
+	tmr_clock = millis();                                     // +++ устанавливаем начальное значение счетчика
+	display.setBrightness(DispBrightness);                    // +++ яркость дисплея максимальная = 255
+	display.displayByte(_empty, _empty, _empty, _empty);      // +++ очистка дисплея
+	display.displayByte(_dash, _dash, _dash, _dash);          // +++ отображаем прочерки
 #endif
 
-   //HTTP
-  User_setings ();
+	//HTTP
+	User_setings ();
   #ifdef GENERAL_DEBUG  
-  LOG.print(F("\nСтарт файловой системы\n"));
+	LOG.print(F("\nСтарт файловой системы\n"));
   #endif
-  FS_init();  //Запускаем файловую систему
+	FS_init();  //Запускаем файловую систему
   #ifdef GENERAL_DEBUG
   LOG.print(F("Чтение файла конфигурации\n"));
   #endif
@@ -371,12 +370,12 @@ void setup()  //================================================================
   #ifdef GENERAL_DEBUG
   LOG.print(F("Старт SSDP\n"));
   #endif
-  SSDP_init();
-  //Настраиваем и запускаем HTTP интерфейс
+	SSDP_init();
+	//Настраиваем и запускаем HTTP интерфейс
   #ifdef GENERAL_DEBUG
-  LOG.print (F("Старт WebServer\n"));
+	LOG.print (F("Старт WebServer\n"));
   #endif
-  HTTP_init();
+	HTTP_init();
 
   
 //-----------Инициализируем переменные, хранящиеся в файле config.json--------------
@@ -493,28 +492,24 @@ void setup()  //================================================================
   #endif
 
 
-  // ЛЕНТА/МАТРИЦА
-  FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS)/*.setCorrection(TypicalLEDStrip)*/;
-  //FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(0xB0FFE0); // Калибровка баланса белого цвета. Последовательность байт RGB (B0-R FF-G E0-B)
-  FastLED.setBrightness(BRIGHTNESS);
-  if (current_limit > 0)
-  {
-    FastLED.setMaxPowerInVoltsAndMilliamps(5, current_limit);
-  }
-  FastLED.clear();
-  FastLED.show();
+	// ЛЕНТА/МАТРИЦА
+	FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+	FastLED.setBrightness(BRIGHTNESS);
+	if (current_limit > 0)
+	{
+		FastLED.setMaxPowerInVoltsAndMilliamps(5, current_limit);
+	}
+	FastLED.clear();
+	FastLED.show();
 
-
-  // КНОПКА
-  #if defined(ESP_USE_BUTTON)
-  touch.setStepTimeout(BUTTON_STEP_TIMEOUT);
-  touch.setClickTimeout(BUTTON_CLICK_TIMEOUT);
-  touch.setDebounce(BUTTON_SET_DEBOUNCE);
+	// КНОПКА
+#if defined(ESP_USE_BUTTON)
+	touch.setStepTimeout(BUTTON_STEP_TIMEOUT);
+	touch.setClickTimeout(BUTTON_CLICK_TIMEOUT);
+	touch.setDebounce(BUTTON_SET_DEBOUNCE);
     #ifdef BUTTON_LOCK_ON_START
     if (buttonBlocing) {
-       buttonEnabled = false;
-       //jsonWrite(configSetup, "button_on", buttonEnabled);
-       //saveConfig();
+       buttonEnabled = false;    
     }
     ESP.wdtFeed();
     #endif
@@ -522,182 +517,155 @@ void setup()  //================================================================
 
 #ifdef USE_SHUFFLE_FAVORITES // первоначальная очередь избранного до перемешивания
     for (uint8_t i = 0; i < MODE_AMOUNT; i++)
-      shuffleFavoriteModes[i] = i;
+		shuffleFavoriteModes[i] = i;
 #endif
 
-
-  // EEPROM
-  EepromManager::InitEepromSettings(modes, &(restoreSettings)); // инициализация EEPROM; запись начального состояния настроек, если их там ещё нет; инициализация настроек лампы значениями из EEPROM
- // не придумал ничего лучше, чем делать восстановление настроек по умолчанию в обработчике инициализации EepromManager
+	// EEPROM
+	EepromManager::InitEepromSettings(modes, &(restoreSettings)); // инициализация EEPROM; запись начального состояния настроек, если их там ещё нет; инициализация настроек лампы значениями из EEPROM
+	// не придумал ничего лучше, чем делать восстановление настроек по умолчанию в обработчике инициализации EepromManager
     
+	if(DONT_TURN_ON_AFTER_SHUTDOWN){
+		ONflag = false;
+		jsonWrite(configSetup, "Power", ONflag);
+	}
+	else
+		ONflag = jsonReadtoInt (configSetup, "Power");  // Чтение состояния лампы вкл/выкл,текущий эффект,яркость,скорость,масштаб
 
-  if(DONT_TURN_ON_AFTER_SHUTDOWN){
-      ONflag = false;
-  jsonWrite(configSetup, "Power", ONflag);
-  }
-  else
-      ONflag = jsonReadtoInt (configSetup, "Power");  // Чтение состояния лампы вкл/выкл,текущий эффект,яркость,скорость,масштаб
+	currentMode = eff_num_correct[jsonReadtoInt (configSetup, "eff_sel")];
+	modes[currentMode].Brightness = jsonReadtoInt (configSetup, "br");
+	modes[currentMode].Speed = jsonReadtoInt (configSetup, "sp");
+	modes[currentMode].Scale = jsonReadtoInt (configSetup, "sc");
 
-  currentMode = eff_num_correct[jsonReadtoInt (configSetup, "eff_sel")];
-  modes[currentMode].Brightness = jsonReadtoInt (configSetup, "br");
-  modes[currentMode].Speed = jsonReadtoInt (configSetup, "sp");
-  modes[currentMode].Scale = jsonReadtoInt (configSetup, "sc");
-/*
-  {
-    File file = SPIFFS.open(F("/index.json.gz"),"r");
-    if ((EEPROM.read(EEPROM_FIRST_RUN_ADDRESS+1)!= MODE_AMOUNT) && (file.size() > 700UL))
-    {
-        for (uint8_t i = 0; i < 85; i++) TextTicker[i] = pgm_read_byte(&Default_Settings[i]);
-    SPIFFS.format();
-    buttonEnabled = 0;
-    currentMode = EFF_TEXT;
-    ONflag = 1;
-    changePower();
-    }
-    file.close();
-  }
-*/
-  first_entry = 1;
-  handle_alarm ();
-  first_entry = 0;
-  FavoritesManager::FavoritesRunning = jsonReadtoInt(configSetup, "cycle_on");  // чтение состояния настроек режима Цикл 
-  FavoritesManager::Interval = jsonReadtoInt(configSetup, "time_eff");          // вкл/выкл,время переключения,дисперсия,вкл цикла после перезагрузки
-  FavoritesManager::Dispersion = jsonReadtoInt(configSetup, "disp");
-  FavoritesManager::UseSavedFavoritesRunning = jsonReadtoInt(configSetup, "cycle_allwase");
-  jsonWrite(configSetup, "tmr", 0);
-  jsonWrite(configSetup, "button_on", buttonEnabled);
-  first_entry = 1;
-  handle_cycle_set();  // чтение выбранных эффектов
-  first_entry = 0;
+	first_entry = 1;
+	handle_alarm ();
+	first_entry = 0;
+	FavoritesManager::FavoritesRunning = jsonReadtoInt(configSetup, "cycle_on");  // чтение состояния настроек режима Цикл 
+	FavoritesManager::Interval = jsonReadtoInt(configSetup, "time_eff");          // вкл/выкл,время переключения,дисперсия,вкл цикла после перезагрузки
+	FavoritesManager::Dispersion = jsonReadtoInt(configSetup, "disp");
+	FavoritesManager::UseSavedFavoritesRunning = jsonReadtoInt(configSetup, "cycle_allwase");
+	jsonWrite(configSetup, "tmr", 0);
+	jsonWrite(configSetup, "button_on", buttonEnabled);
+	first_entry = 1;
+	handle_cycle_set();  // чтение выбранных эффектов
+	first_entry = 0;
 #ifdef MP3_TX_PIN
-  first_entry = 1;
-  handle_sound_set();  //чтение выбранных папок
-  first_entry = 0;
+	first_entry = 1;
+	handle_sound_set();  //чтение выбранных папок
+	first_entry = 0;
 #endif  //MP3_TX_PIN
 #ifdef USE_MULTIPLE_LAMPS_CONTROL  
-  multilamp_get ();   // Чтение из файла адресов синхронно управляемых ламп 
+	multilamp_get ();   // Чтение из файла адресов синхронно управляемых ламп 
 #endif //USE_MULTIPLE_LAMPS_CONTROL
-  
-  // MP3 Player
-   
+	// MP3 Player
   #ifdef MP3_TX_PIN
-   mp3.begin(9600);
-   LOG.println (F("\nСтарт MP3 Player"));
-   mp3_timer = millis();
-   mp3_player_connect = 1;
+	mp3.begin(9600);
+	LOG.println (F("\nСтарт MP3 Player"));
+	mp3_timer = millis();
+	mp3_player_connect = 1;
   #endif 
   
-  // UDP
+	// UDP
+	LOG.printf_P(PSTR("\nСтарт UDP сервера. Порт: %u\n"), localPort);
+	Udp.begin(localPort);
+	// WI-FI
+	LOG.printf_P(PSTR("\nРабочий режим лампы: ESP_MODE = %d\n"), espMode);
+	//Запускаем WIFI
+	LOG.println(F("Старуем WIFI"));
   
-  LOG.printf_P(PSTR("\nСтарт UDP сервера. Порт: %u\n"), localPort);
-  Udp.begin(localPort);
-  
-  // WI-FI
-  
-  LOG.printf_P(PSTR("\nРабочий режим лампы: ESP_MODE = %d\n"), espMode);
-  //Запускаем WIFI
-  LOG.println(F("Старуем WIFI"));
-  
-  WiFi.persistent(false);   // Побережём EEPROM
+	WiFi.persistent(false);   // Побережём EEPROM
  
-  if (espMode == 0U)                                        // режим WiFi точки доступа
-  {
-  // Отключаем WIFI
-  WiFi.disconnect();
-  // Меняем режим на режим точки доступа
-  WiFi.mode(WIFI_AP);
-  // Задаем настройки сети
-    if (sizeof(AP_STATIC_IP))
-    {
-      WiFi.softAPConfig(                      
-        IPAddress(AP_STATIC_IP[0], AP_STATIC_IP[1], AP_STATIC_IP[2], AP_STATIC_IP[3]),      // IP адрес WiFi точки доступа
-        IPAddress(AP_STATIC_IP[0], AP_STATIC_IP[1], AP_STATIC_IP[2], 1),                    // первый доступный IP адрес сети
-        IPAddress(255, 255, 255, 0));                                                       // маска подсети
-    }
-  // Включаем WIFI в режиме точки доступа с именем и паролем
-  // хронящихся в переменных _ssidAP _passwordAP в фвйле config.json
-  WiFi.softAP(AP_NAME, AP_PASS);
-    LOG.print(F("Старт WiFi в режиме точки доступа\n"));
-    LOG.print(F("IP адрес: "));
-    LOG.println(WiFi.softAPIP());
+	if (espMode == 0U)                                        // режим WiFi точки доступа
+	{
+		// Отключаем WIFI
+		WiFi.disconnect();
+		// Меняем режим на режим точки доступа
+		WiFi.mode(WIFI_AP);
+		// Задаем настройки сети
+		if (sizeof(AP_STATIC_IP))
+		{
+			WiFi.softAPConfig(
+				IPAddress(AP_STATIC_IP[0], AP_STATIC_IP[1], AP_STATIC_IP[2], AP_STATIC_IP[3]),      // IP адрес WiFi точки доступа
+				IPAddress(AP_STATIC_IP[0], AP_STATIC_IP[1], AP_STATIC_IP[2], 1),                    // первый доступный IP адрес сети
+				IPAddress(255, 255, 255, 0));                                                       // маска подсети
+		}
+		// Включаем WIFI в режиме точки доступа с именем и паролем
+		// хронящихся в переменных _ssidAP _passwordAP в фвйле config.json
+		WiFi.softAP(AP_NAME, AP_PASS);
+		LOG.print(F("Старт WiFi в режиме точки доступа\n"));
+		LOG.print(F("IP адрес: "));
+		LOG.println(WiFi.softAPIP());
    #ifdef GENERAL_DEBUG
-    LOG.println (F("*******************************************"));
-    LOG.print (F("Heap Size after connection AP mode = "));
-    LOG.println(system_get_free_heap_size());
-    LOG.println (F("*******************************************"));
+		LOG.println (F("*******************************************"));
+		LOG.print (F("Heap Size after connection AP mode = "));
+		LOG.println(system_get_free_heap_size());
+		LOG.println (F("*******************************************"));
     #endif    
-  connect = true;
-    delay (100);    
-  }
-  else                                                      // режим WiFi клиента. Подключаемся к роутеру
-  {
-    LOG.println(F("Старт WiFi в режиме клиента (подключение к роутеру)"));
-//  WIFI_start_station_mode (); 
-  
+		connect = true;
+		delay (100);    
+	}
+	else                                                      // режим WiFi клиента. Подключаемся к роутеру
+	{
+		LOG.println(F("Старт WiFi в режиме клиента (подключение к роутеру)"));  
    
-   WiFi.persistent(false);
+		WiFi.persistent(false);
 
-  // Попытка подключения к Роутеру
-  WiFi.mode(WIFI_STA);
-  String _ssid = jsonRead(configSetup, "ssid");
-  String _password = jsonRead(configSetup, "password");
-  if (_ssid == "" && _password == "") {
-   espMode = 0;
-   jsonWrite(configSetup, "ESP_mode", (int)espMode);
-   saveConfig(); 
-   ESP.restart();
-  }
-  else {
-
-    if(use_static_ip)
-    {  
-        WiFi.config(Static_IP, Gateway, Subnet, DNS1, DNS2); // Конфигурация под статический IP Address
-    }
-  delay(10);  
-    WiFi.begin(_ssid.c_str(), _password.c_str());
-  }
+		// Попытка подключения к Роутеру
+		WiFi.mode(WIFI_STA);
+		String _ssid = jsonRead(configSetup, "ssid");
+		String _password = jsonRead(configSetup, "password");
+		if (_ssid == "" && _password == "") {
+			espMode = 0;
+			jsonWrite(configSetup, "ESP_mode", (int)espMode);
+			saveConfig(); 
+			ESP.restart();
+		}
+		else {
+			if(use_static_ip)
+			{  
+				WiFi.config(Static_IP, Gateway, Subnet, DNS1, DNS2); // Конфигурация под статический IP Address
+			}
+			delay(10);  
+			WiFi.begin(_ssid.c_str(), _password.c_str());
+		}
     
-  delay (10);	  
+		delay (10);	  
     #ifdef USE_BLYNK
-    Blynk.config(USE_BLYNK, "blynk.tk", 8080);
+		Blynk.config(USE_BLYNK, "blynk.tk", 8080);
     #endif
-  }     //if (espMode == 0U) {...} else {...
+	}     //if (espMode == 0U) {...} else {...
   
-  ESP.wdtFeed();
+	ESP.wdtFeed();
 
-  // NTP
+	// NTP
   #ifdef USE_NTP
-  timeClient.begin();
-  ESP.wdtFeed();
+	timeClient.begin();
+	ESP.wdtFeed();
   #endif
 
 
   // MQTT
   #if (USE_MQTT)
-  if (espMode == 1U)
-  {
-    mqttClient = new AsyncMqttClient();
-    MqttManager::setupMqtt(mqttClient, inputBuffer, &sendCurrent);    // создание экземпляров объектов для работы с MQTT, их инициализация и подключение к MQTT брокеру
-  }
-  ESP.wdtFeed();
+	if (espMode == 1U)
+	{
+		mqttClient = new AsyncMqttClient();
+		MqttManager::setupMqtt(mqttClient, inputBuffer, &sendCurrent);    // создание экземпляров объектов для работы с MQTT, их инициализация и подключение к MQTT брокеру
+	}
+	ESP.wdtFeed();
   #endif
 
-
-  // ОСТАЛЬНОЕ
-  memset(matrixValue, 0, sizeof(matrixValue)); //это массив для эффекта Огонь. странно, что его нужно залить нулями
-  randomSeed(micros());
-  changePower();
-  loadingFlag = true;
+	// ОСТАЛЬНОЕ
+	memset(matrixValue, 0, sizeof(matrixValue)); //это массив для эффекта Огонь. странно, что его нужно залить нулями
+	randomSeed(micros());
+	changePower();
+	loadingFlag = true;
   #ifdef IR_RECEIVER_USE
     irrecv.enableIRIn();  // Start the IR receiver
     IR_Tick_Timer = millis();
     IR_Repeat_Timer = millis();
   #endif  //IR_RECEIVER_USE
 
-  //delay (100);
-  
 #ifdef TM1637_USE
-  DisplayTimer = millis();
+	DisplayTimer = millis();
  #ifdef MP3_TX_PIN
     CurrentFolder = effects_folders[currentMode];
     mp3_folder = CurrentFolder;
@@ -705,210 +673,226 @@ void setup()  //================================================================
  #endif  //MP3_TX_PIN
 #endif  //TM1637_USE
 
-  my_timer=millis();
+	my_timer=millis();
   
   #ifdef HEAP_SIZE_PRINT
-   mem_timer = millis();
+	mem_timer = millis();
   #endif //HEAP_SIZE_PRINT 
-  WiFiClient client;  //Declare an object of class HTTPClient
+	WiFiClient client;  //Declare an object of class HTTPClient
 }
-
 
 void loop()  //====================================================================  void loop()  ===========================================================================
 {
-  
- if (espMode) {
-  if (WiFi.status() != WL_CONNECTED) {
-	if ((millis()-my_timer) >= 1000UL) {	
-	  my_timer=millis();
-	  if (ESP_CONN_TIMEOUT--) {
-		LOG.print(F("."));
-		ESP.wdtFeed();
-	  }
-	  else {
-		// Если не удалось подключиться запускаем в режиме AP
-		espMode = 0;
-		jsonWrite(configSetup, "ESP_mode", (int)espMode);
-		saveConfig(); 
-		ESP.restart();
-	  }
-	}
-  }
-	else {
-		// Иначе удалось подключиться отправляем сообщение
-		// о подключении и выводим адрес IP
-		LOG.print(F("\nПодключение к роутеру установлено\n"));
-		LOG.print(F("IP адрес: "));
-		LOG.println(WiFi.localIP());
-		long rssi = WiFi.RSSI();
-		LOG.print(F("Уровень сигнала сети RSSI = "));
-		LOG.print(rssi);
-		LOG.println(F(" dbm"));
-		connect = true;
-		lastResolveTryMoment = 0;
-      #ifdef GENERAL_DEBUG
-        LOG.println (F("***********************************************"));
-        LOG.print (F("Heap Size after connection Station mode = "));
-        LOG.println(system_get_free_heap_size());
-        LOG.println (F("***********************************************"));
-      #endif
+	if (espMode) {
+		if (WiFi.status() != WL_CONNECTED) {
+			if ((millis()-my_timer) >= 1000UL) {
+				my_timer=millis();
+				if (ESP_CONN_TIMEOUT--) {
+					LOG.print(F("."));
+					ESP.wdtFeed();
+				}
+				else {
+					// Если не удалось подключиться запускаем в режиме AP
+					espMode = 0;
+					jsonWrite(configSetup, "ESP_mode", (int)espMode);
+					saveConfig(); 
+					ESP.restart();
+				}
+			}
+		}
+		else {
+			// Иначе удалось подключиться отправляем сообщение
+			// о подключении и выводим адрес IP
+			LOG.print(F("\nПодключение к роутеру установлено\n"));
+			LOG.print(F("IP адрес: "));
+			LOG.println(WiFi.localIP());
+			long rssi = WiFi.RSSI();
+			LOG.print(F("Уровень сигнала сети RSSI = "));
+			LOG.print(rssi);
+			LOG.println(F(" dbm"));
+			connect = true;
+			lastResolveTryMoment = 0;
+#ifdef GENERAL_DEBUG
+			LOG.println (F("***********************************************"));
+			LOG.print (F("Heap Size after connection Station mode = "));
+			LOG.println(system_get_free_heap_size());
+			LOG.println (F("***********************************************"));
+#endif
       #ifdef DISPLAY_IP_AT_START
-        loadingFlag = true;
+			loadingFlag = true;
       #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)      // установка сигнала в пин, управляющий MOSFET транзистором, матрица должна быть включена на время вывода текста
-        digitalWrite(MOSFET_PIN, MOSFET_LEVEL);
+			digitalWrite(MOSFET_PIN, MOSFET_LEVEL);
       #endif
-        while(!fillString(WiFi.localIP().toString().c_str(), CRGB::White, false)) { delay(1); ESP.wdtFeed(); }
-        if (ColorTextFon  & (!ONflag || (currentMode == EFF_COLOR && modes[currentMode].Scale < 3))){
-          FastLED.clear();
-          delay(1);
-          FastLED.show();
-        }
+			while(!fillString(WiFi.localIP().toString().c_str(), CRGB::White, false)) { delay(1); ESP.wdtFeed(); }
+			if (ColorTextFon  & (!ONflag || (currentMode == EFF_COLOR && modes[currentMode].Scale < 3))){
+				FastLED.clear();
+				delay(1);
+				FastLED.show();
+			}
       #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)      // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы или будильника
-        digitalWrite(MOSFET_PIN, ONflag || (dawnFlag && !manualOff) ? MOSFET_LEVEL : !MOSFET_LEVEL);
+			digitalWrite(MOSFET_PIN, ONflag || (dawnFlag && !manualOff) ? MOSFET_LEVEL : !MOSFET_LEVEL);
       #endif
-        loadingFlag = true;
+			loadingFlag = true;
       #endif  // DISPLAY_IP_AT_START
-		delay (0);
+			delay (0);
+		}
 	}
- }
  
- if (connect || !espMode)  { my_timer = millis(); }
+	if (connect || !espMode)  { my_timer = millis(); }
   
-do {	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++========= Главный цикл ==========+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	do {	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++========= Главный цикл ==========+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   // Если не устойчивое подключение к WiFi, или не создаётся точка доступа, или лампа не хочет подключаться к вашей сети или вы не можете подключиться к точке доступа, то может быть у вас не качественная плата.
-  delay (0);   //Для некоторых плат ( особенно без металлического экрана над ESP и Flash памятью ) эта задержка должна быть увеличена. Подбирается индивидуально в пределах 1-12 мс до устойчивой работы WiFi. Чем меньше, тем лучше. Качественные платы работают с задержкой 0.
-  yield();
-  
+		delay (0);   //Для некоторых плат ( особенно без металлического экрана над ESP и Flash памятью ) эта задержка должна быть увеличена. Подбирается индивидуально в пределах 1-12 мс до устойчивой работы WiFi. Чем меньше, тем лучше. Качественные платы работают с задержкой 0.
+		yield();
 	//if ((connect || !espMode)&&((millis() - my_timer) >= 10UL)) 
-	{
-	HTTP.handleClient(); // Обработка запросов web страницы. 
+		{
+		HTTP.handleClient(); // Обработка запросов web страницы. 
 	//my_timer = millis();
-	}
+		}
  
-  parseUDP();
-  yield();
+		parseUDP();
+		yield();
   #ifdef TM1637_USE
-    if (millis() - tmr_clock > 500UL) {         // каждую секунду изменяем
-      tmr_clock = millis();                     // обновляем значение счетчика
-      dotFlag = !dotFlag;                       // инверсия флага
-      boolean points[4] = {0,0,0,0};
-      points[1] = dotFlag;
-      if (!DisplayFlag) display.setSegmentPoints(points); // выкл/выкл двоеточия 
-      Display_Timer ();
-    }
-    if (dawnFlag) {
-    clockTicker_blink();
-    }
+		if (millis() - tmr_clock > 500UL) {         // каждую секунду изменяем
+			tmr_clock = millis();                     // обновляем значение счетчика
+			dotFlag = !dotFlag;                       // инверсия флага
+			boolean points[4] = {0,0,0,0};
+			points[1] = dotFlag;
+			if (!DisplayFlag) display.setSegmentPoints(points); // выкл/выкл двоеточия 
+			Display_Timer ();
+		}
+		if (dawnFlag) {
+			clockTicker_blink();
+		}
   #endif  //TM1637_USE
   #ifdef MP3_TX_PIN
-  switch (mp3_player_connect){
-      case 0: break;
-      case 1: read_command(1);
+		switch (mp3_player_connect){
+		case 0: break;
+		case 1: read_command(1);
               if (millis() > 3000UL || mp3_receive_buf[3] == 0x3F){
                  first_entry = 5;
                  //mp3_timer = millis();
                  mp3_setup ();
                 }
               break;
-      case 2: read_command(1);
+		case 2: read_command(1);
               if ( millis() - mp3_timer > 3000UL || mp3_receive_buf[3] == 0x3F) mp3_player_connect = 3;
               break;
-      case 3: mp3_setup(); break;
-      case 4: mp3_loop(); break;
-      }
-                    
+		case 3: mp3_setup(); break;
+		case 4: mp3_loop(); break;
+		}            
   #endif
 
- if (Painting == 0) {
-     
-  effectsTick();
-  
-  #ifdef HEAP_SIZE_PRINT
-   if (millis() - mem_timer > 10000UL) {
-       mem_timer = millis();
-       LOG.print (F("Heap Size = "));
-       LOG.println(system_get_free_heap_size());
-   }
-  #endif //HEAP_SIZE_PRINT
-  
-  #ifdef IR_RECEIVER_USE
-       IR_Receive_Handle();
-    if (millis() - IR_Tick_Timer > 100)
-    {
-        IR_Tick_Timer = millis();
-        if (IR_Data_Ready) 
-        {
-            IR_Receive_Button_Handle();
-            IR_Data_Ready =0;
-        }       
-    }
-  #endif  //IR_RECEIVER_USE
+		if (Painting == 0) { 
+			effectsTick();
+	  #ifdef HEAP_SIZE_PRINT
+			if (millis() - mem_timer > 10000UL) {
+			   mem_timer = millis();
+			   LOG.print (F("Heap Size = "));
+			   LOG.println(system_get_free_heap_size());
+			}
+	  #endif //HEAP_SIZE_PRINT
+	  
+	  #ifdef IR_RECEIVER_USE
+			IR_Receive_Handle();
+			if (millis() - IR_Tick_Timer > 100)
+			{
+				IR_Tick_Timer = millis();
+				if (IR_Data_Ready) 
+				{
+					IR_Receive_Button_Handle();
+					IR_Data_Ready =0;
+				}       
+			}
+	  #endif  //IR_RECEIVER_USE
 
-  //EepromManager::HandleEepromTick(&settChanged, &eepromTimeout, modes);
-    yield();
+			//EepromManager::HandleEepromTick(&settChanged, &eepromTimeout, modes);
+			yield();
 
-  //#ifdef USE_NTP
-  #if defined(USE_NTP) || defined(USE_MANUAL_TIME_SETTING) || defined(GET_TIME_FROM_PHONE)
-    timeTick();
-  #endif
+	  //#ifdef USE_NTP
+	  #if defined(USE_NTP) || defined(USE_MANUAL_TIME_SETTING) || defined(GET_TIME_FROM_PHONE)
+			timeTick();
+	  #endif
 
-  #ifdef ESP_USE_BUTTON
-    buttonTick();
-  #endif
+	  #ifdef ESP_USE_BUTTON
+			buttonTick();
+	  #endif
 
-  #ifdef OTA
-  otaManager.HandleOtaUpdate();                             // ожидание и обработка команды на обновление прошивки по воздуху
-  #endif
-                                                            
-  TimerManager::HandleTimer(&ONflag, //&settChanged, //&eepromTimeout, // обработка событий таймера отключения лампы
-                            &timeout_save_file_changes,
-                            &save_file_changes, &changePower);    
-  
-  if (FavoritesManager::HandleFavorites(                    // обработка режима избранных эффектов
-      &ONflag,
-      &currentMode,
-      &loadingFlag
-      #if defined(USE_NTP) || defined(USE_MANUAL_TIME_SETTING) || defined(GET_TIME_FROM_PHONE)
-      , &dawnFlag
-      #endif
-      , &random_on
-      , &selectedSettings
-      ))
-  {
-    #ifdef USE_BLYNK
-    updateRemoteBlynkParams();
-    #endif
-    SetBrightness(modes[currentMode].Brightness);
-  }
+	  #ifdef OTA
+			otaManager.HandleOtaUpdate();                             // ожидание и обработка команды на обновление прошивки по воздуху
+	  #endif
+																
+			TimerManager::HandleTimer(&ONflag, //&settChanged, //&eepromTimeout, // обработка событий таймера отключения лампы
+								&timeout_save_file_changes,
+								&save_file_changes, &changePower);    
+	  
+			if (FavoritesManager::HandleFavorites(                    // обработка режима избранных эффектов
+				  &ONflag,
+				  &currentMode,
+				  &loadingFlag
+				  #if defined(USE_NTP) || defined(USE_MANUAL_TIME_SETTING) || defined(GET_TIME_FROM_PHONE)
+				  , &dawnFlag
+				  #endif
+				  , &random_on
+				  , &selectedSettings
+				  ))
+			{
+				#ifdef USE_BLYNK
+				updateRemoteBlynkParams();
+				#endif
+				SetBrightness(modes[currentMode].Brightness);
+			}
+#if 0
+	  #if USE_MQTT
+			if (espMode == 1U && mqttClient && WiFi.isConnected() && !mqttClient->connected())
+			{
+				MqttManager::mqttConnect();                             // библиотека не умеет восстанавливать соединение в случае потери подключения к MQTT брокеру, нужно управлять этим явно
+				MqttManager::needToPublish = true;
+			}
 
-  #if USE_MQTT
-  if (espMode == 1U && mqttClient && WiFi.isConnected() && !mqttClient->connected())
-  {
-    MqttManager::mqttConnect();                             // библиотека не умеет восстанавливать соединение в случае потери подключения к MQTT брокеру, нужно управлять этим явно
-    MqttManager::needToPublish = true;
-  }
+			if (MqttManager::needToPublish)
+			{
+				if (strlen(inputBuffer) > 0)                            // проверка входящего MQTT сообщения; если оно не пустое - выполнение команды из него и формирование MQTT ответа
+				{
+					processInputBuffer(inputBuffer, MqttManager::mqttBuffer, true, true);
+				}
+				MqttManager::publishState();
+			}
+	  #endif
 
-  if (MqttManager::needToPublish)
-  {
-    if (strlen(inputBuffer) > 0)                            // проверка входящего MQTT сообщения; если оно не пустое - выполнение команды из него и формирование MQTT ответа
-    {
-      processInputBuffer(inputBuffer, MqttManager::mqttBuffer, true);
-    }
-    
-    MqttManager::publishState();
-  }
-  #endif
+	  #ifdef USE_BLYNK
+			if (espMode == 1U && WiFi.isConnected())
+				Blynk.run();
+	  #endif
+#else
+			if(espMode == 1U && WiFi.isConnected())
+			{
+				#if USE_MQTT
+				if(mqttClient && !mqttClient->connected())
+				{
+					MqttManager::mqttConnect();                             // библиотека не умеет восстанавливать соединение в случае потери подключения к MQTT брокеру, нужно управлять этим явно
+					MqttManager::needToPublish = true;
+				}
+				if (MqttManager::needToPublish)
+				{
+					if (strlen(inputBuffer) > 0)                            // проверка входящего MQTT сообщения; если оно не пустое - выполнение команды из него и формирование MQTT ответа
+					{
+						processInputBuffer(inputBuffer, MqttManager::mqttBuffer, true, true);
+					}
+					MqttManager::publishState();
+				}
+				#endif
+				#ifdef USE_BLYNK
+				Blynk.run();
+				#endif
+			}
+#endif	
 
-  #ifdef USE_BLYNK
-  if (espMode == 1U && WiFi.isConnected())
-    Blynk.run();
-  #endif
-
-  #if defined(GENERAL_DEBUG) && GENERAL_DEBUG_TELNET
-  handleTelnetClient();
-  #endif
- }//if (Painting == 0)
-  yield();
-  ESP.wdtFeed();
-} while (connect);
+	  #if defined(GENERAL_DEBUG) && GENERAL_DEBUG_TELNET
+			handleTelnetClient();
+	  #endif
+		}//if (Painting == 0)
+		yield();
+		ESP.wdtFeed();
+	} while (connect);
 }

@@ -76,7 +76,7 @@ static const char MqttClientIdPrefix[] PROGMEM = "LedLamp_";                    
 
 class MqttManager
 {
-public:
+  public:
     static uint32_t mqttLastConnectingAttempt;
     static void setupMqtt(AsyncMqttClient* mqttClient, char* lampInputBuffer, SendCurrentDelegate sendCurrentDelegate);
     static void mqttConnect();
@@ -87,7 +87,7 @@ public:
     static void publishState();
     static bool needToPublish;
     static char mqttBuffer[MAX_UDP_BUFFER_SIZE];
-private:
+  private:
     static char* mqttServer;
     static char* mqttUser;
     static char* mqttPassword;
@@ -168,20 +168,21 @@ void MqttManager::mqttConnect()
 
 bool MqttManager::publish(const char *topic, const char *value)
 {
-	if (mqttClient->connected())
-	{
-		#ifdef GENERAL_DEBUG
-		LOG.print(F("Отправлено MQTT: топик \""));
-		LOG.print(topic);
-		LOG.print(F("\", значение \""));
-		LOG.print(value);
-		LOG.println('"');
-		LOG.println();
-		#endif
+  if (mqttClient->connected())
+  {
+    #ifdef GENERAL_DEBUG
+    LOG.print(F("Отправлено MQTT: топик \""));
+    LOG.print(topic);
+    LOG.print(F("\", значение \""));
+    LOG.print(value);
+    LOG.println('"');
+    LOG.println();
+    #endif
 
-		return mqttClient->publish(topic, qos, true, value, 0) != 0;
-	}
-	return false;
+    return mqttClient->publish(topic, qos, true, value, 0) != 0;
+  }
+
+  return false;
 }
 
 void MqttManager::onMqttConnect(bool sessionPresent)
