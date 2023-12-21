@@ -15,10 +15,14 @@ BLYNK_CONNECTED()
 BLYNK_WRITE(V0)
 {
   int value = param.asInt();
-  if (value == 1)
+  /*if (value == 1)
     processParams("P_ON", "");
   else
-    processParams("P_OFF", "");
+    processParams("P_OFF", "");*/
+  if(value)
+    processParams("power", "on");
+  else
+    processParams("power", "off");
 
   updateRemoteBlynkParams();
 }
