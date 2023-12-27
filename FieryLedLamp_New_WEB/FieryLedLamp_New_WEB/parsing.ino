@@ -58,8 +58,11 @@ void updateSets()
 enum COMMAND
 {
 	POWER,// - включить\выключить матрицу
+#ifdef MP3_TX_PIN
 	SO_ON,// - включить звук
     SO_OFF,// - выключить звук
+	VOL,// - установить громкость 9 (максимум 30)
+#endif
     EFF,// - сделать активным эффект №0 (нумерация с нуля)
     BRI,// - установить яркость 44; диапазон [1..255]
     SPD,// - установить скорость 3; диапазон [1..255]
@@ -71,14 +74,17 @@ enum COMMAND
     FAV_SET,// 1 60 120 0 0 1 0 0 0 0 0 1 1 0 0 1 0 0 0 0 0 0 1 0 0 0 1 0 0 0 - установить режим "избранное", параметры - см. команду FAV ниже
     BTN,// ON - разблокировать кнопку на лампе
     //BTN OFF, - заблокировать кнопку на лампе
-    VOL,// - установить громкость 9 (максимум 30)
     EQ,// - установить эквалайзер в НОРМАЛЬНО (значения от 0 до 5)
+	HELP
 };
 
 const char *commands[] = {
 	"power",
+#ifdef MP3_TX_PIN
 	"so_on",
 	"son_off",
+	"vol",
+#endif
 	"eff",
 	"bri",
 	"spd",
@@ -88,9 +94,22 @@ const char *commands[] = {
 	"tmr",
 	"fav",
 	"btn",
-	"vol",
-	"eq"
+	"eq",
+	"help"
 };
+
+void help(char *outputBuffer)
+{
+	DynamicJsonDocument doc(255);
+
+	JsonArray jc = doc.createNestedArray("commands");
+	for(unsigned int index=0;index<sizeof(commands)/sizeof(commands[0]);index++)
+	{
+		jc.add(commands[index]);
+	}
+	MqttManager::needToPublish = true;
+	serializeJson(doc, outputBuffer, 255);
+}
 
 void power_on_off(bool val)
 {
@@ -1499,6 +1518,11 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 			  else
 				sendTimer(inputBuffer);
 			}*/
+		}
+		break;
+	case HELP:
+		{
+			help(outputBuffer);
 		}
 		break;
 	default:
