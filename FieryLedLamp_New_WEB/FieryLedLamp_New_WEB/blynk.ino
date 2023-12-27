@@ -27,26 +27,30 @@ BLYNK_WRITE(V0)
 // бегунок яркости от 1 до 255
 BLYNK_WRITE(V1)
 {
-  processParams("BRI", param.asString());
+  //processParams("BRI", param.asString());
+  bri(param.asInt());
 }
 
 // бегунок скорости от 1 до 255
 BLYNK_WRITE(V2)
 {
-  processParams("SPD", param.asString());
+  //processParams("SPD", param.asString());
+  change_speed(param.asInt());
 }
 
 // бегунок масштаба от 1 до 100
 BLYNK_WRITE(V3)
 {
-  processParams("SCA", param.asString());
+  //processParams("SCA", param.asString());
+  change_scale(param.asInt());
 }
 
 // выбор эффекта из списка или по номеру
 BLYNK_WRITE(V4)
 {
   int value = param.asInt() - 1;
-  processParams("EFF", String(value).c_str());
+  //processParams("EFF", String(value).c_str());
+  eff(value);
   updateRemoteBlynkParams();
 }
 
@@ -98,44 +102,45 @@ void updatePlayerBlynkParams(bool isRunning)
 
 BLYNK_WRITE(V6)
 {
-  String action = param.asStr();
-  uint8_t nextmode;
+	String action = param.asStr();
+	uint8_t nextmode;
   
-  if (action == "play") {
-    //"CYCLE ON"
-    //FavoritesManager::ConfigureFavorites(inputBuffer);
-      FavoritesManager::FavoritesRunning = 1U;
-      FavoritesManager::nextModeAt = 0;
-      FavoritesManager::Interval = CYCLE_TIMER;
-      FavoritesManager::Dispersion = CYCLE_TIMER_PLUS;
-      FavoritesManager::UseSavedFavoritesRunning = CYCLE_DONT_OFF;
-      for (uint8_t i = 0; i < MODE_AMOUNT; i++)
-      {
-        FavoritesManager::FavoriteModes[i] = (i < CYCLE_1ST_EFFECT || i > CYCLE_LAST_EFFECT) ? 0U : 1U;
-      }
-    updatePlayerBlynkParams(true);
-  }
-  else if (action == "stop") {
-    //"CYCLE OFF"
-    //FavoritesManager::ConfigureFavorites(inputBuffer);
-      FavoritesManager::FavoritesRunning = 0U;
-    updatePlayerBlynkParams(false);
-  }
-  else if (action == "next") {
-    nextmode = currentMode + 1U;
-    if (nextmode >= MODE_AMOUNT) nextmode = 0U;
-    processParams("EFF", String(nextmode).c_str());
-    updateRemoteBlynkParams();
-  }
-  else { // if (action == "prev") {
-    if (currentMode != 0U)
-      nextmode = currentMode - 1U;
-    else 
-      nextmode = MODE_AMOUNT - 1U;
-    processParams("EFF", String(nextmode).c_str());
-    updateRemoteBlynkParams();
-  }
-
+	if (action == "play") {
+		//"CYCLE ON"
+		//FavoritesManager::ConfigureFavorites(inputBuffer);
+		FavoritesManager::FavoritesRunning = 1U;
+		FavoritesManager::nextModeAt = 0;
+		FavoritesManager::Interval = CYCLE_TIMER;
+		FavoritesManager::Dispersion = CYCLE_TIMER_PLUS;
+		FavoritesManager::UseSavedFavoritesRunning = CYCLE_DONT_OFF;
+		for (uint8_t i = 0; i < MODE_AMOUNT; i++)
+		{
+			FavoritesManager::FavoriteModes[i] = (i < CYCLE_1ST_EFFECT || i > CYCLE_LAST_EFFECT) ? 0U : 1U;
+		}
+		updatePlayerBlynkParams(true);
+	}
+	else if (action == "stop") {
+		//"CYCLE OFF"
+		//FavoritesManager::ConfigureFavorites(inputBuffer);
+		FavoritesManager::FavoritesRunning = 0U;
+		updatePlayerBlynkParams(false);
+	}
+	else if (action == "next") {
+		nextmode = currentMode + 1U;
+		if (nextmode >= MODE_AMOUNT) nextmode = 0U;
+		//processParams("EFF", String(nextmode).c_str());
+		eff(nextmode);
+		updateRemoteBlynkParams();
+	}
+	else { // if (action == "prev") {
+		if (currentMode != 0U)
+			nextmode = currentMode - 1U;
+		else 
+			nextmode = MODE_AMOUNT - 1U;
+		//processParams("EFF", String(nextmode).c_str());
+		eff(nextmode);
+		updateRemoteBlynkParams();
+	}
 }
 
 BLYNK_WRITE(V7)

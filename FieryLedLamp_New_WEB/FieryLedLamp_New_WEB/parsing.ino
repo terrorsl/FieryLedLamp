@@ -150,6 +150,100 @@ void power_on_off(bool val)
 	}
 };
 
+void eff(uint8_t temp)
+{
+	currentMode = eff_num_correct[temp];
+	updateSets();
+	jsonWrite(configSetup, "eff_sel", temp);
+	jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+	jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+	jsonWrite(configSetup, "sc", modes[currentMode].Scale);
+	#ifdef USE_MULTIPLE_LAMPS_CONTROL
+	repeat_multiple_lamp_control = true;
+	#endif  //USE_MULTIPLE_LAMPS_CONTROL
+	sendCurrent(inputBuffer);
+	#ifdef USE_BLYNK_PLUS
+	updateRemoteBlynkParams();
+	#endif
+	if (random_on && FavoritesManager::FavoritesRunning)
+		selectedSettings = 1U;
+	SetBrightness(modes[currentMode].Brightness);
+}
+
+void bri(uint8_t val)
+{
+	modes[currentMode].Brightness = val;
+	jsonWrite(configSetup, "br", modes[currentMode].Brightness);
+	#ifdef USE_MULTIPLE_LAMPS_CONTROL
+	repeat_multiple_lamp_control = true;
+	#endif  //USE_MULTIPLE_LAMPS_CONTROL
+	SetBrightness(modes[currentMode].Brightness);
+	sendCurrent(inputBuffer);
+	
+	#if (USE_MQTT)
+	if (espMode == 1U)
+	{
+		MqttManager::needToPublish = true;
+	}
+	#endif
+	#ifdef USE_BLYNK_PLUS
+	updateRemoteBlynkParams();
+	#endif
+}
+
+void change_speed(unsigned int val)
+{
+	modes[currentMode].Speed = val;
+	jsonWrite(configSetup, "sp", modes[currentMode].Speed);
+	#ifdef USE_BLYNK_PLUS
+	updateRemoteBlynkParams();
+	#endif
+	#ifdef USE_MULTIPLE_LAMPS_CONTROL
+	repeat_multiple_lamp_control = true;
+	#endif  //USE_MULTIPLE_LAMPS_CONTROL
+	updateSets();
+	sendCurrent(inputBuffer);
+}
+
+void change_scale(uint8_t val)
+{
+	modes[currentMode].Scale = val;
+	jsonWrite(configSetup, "sc", modes[currentMode].Scale);
+	#ifdef USE_MULTIPLE_LAMPS_CONTROL
+	repeat_multiple_lamp_control = true;
+	#endif  //USE_MULTIPLE_LAMPS_CONTROL
+	updateSets();
+	sendCurrent(inputBuffer);
+	#ifdef USE_BLYNK_PLUS
+	updateRemoteBlynkParams();
+	#endif
+}
+
+void change_button(uint8_t val)
+{
+	if(val)
+	{
+		buttonEnabled = true;
+		jsonWrite(configSetup, "button_on", (int) buttonEnabled);
+		saveConfig();
+		sendCurrent(inputBuffer);
+	}
+	else
+	{
+		buttonEnabled = false;
+		jsonWrite(configSetup, "button_on", (int) buttonEnabled);
+		saveConfig();
+		sendCurrent(inputBuffer);
+	}
+	#if (USE_MQTT)
+	if (espMode == 1U)
+	{
+		strcpy(MqttManager::mqttBuffer, inputBuffer);
+		MqttManager::needToPublish = true;
+	}
+	#endif
+}
+
 void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutput, bool fromMqtt)
 {
     char buff[MAX_UDP_BUFFER_SIZE], *endToken = NULL;
@@ -1261,84 +1355,23 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 		break;
 	case EFF:
 		{
-			//memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
-			//uint8_t temp = (uint8_t)atoi(buff);
 			uint8_t temp = doc[commands[key]];
-			currentMode = eff_num_correct[temp];
-			updateSets();
-			jsonWrite(configSetup, "eff_sel", temp);
-			jsonWrite(configSetup, "br", modes[currentMode].Brightness);
-			jsonWrite(configSetup, "sp", modes[currentMode].Speed);
-			jsonWrite(configSetup, "sc", modes[currentMode].Scale);
-			#ifdef USE_MULTIPLE_LAMPS_CONTROL
-			repeat_multiple_lamp_control = true;
-			#endif  //USE_MULTIPLE_LAMPS_CONTROL
-			//FastLED.clear();
-			//delay(1);
-			sendCurrent(inputBuffer);
-			#ifdef USE_BLYNK_PLUS
-			updateRemoteBlynkParams();
-			#endif
-			if (random_on && FavoritesManager::FavoritesRunning)
-				selectedSettings = 1U;
-			SetBrightness(modes[currentMode].Brightness);
+			eff(temp);
 		}
 		break;
 	case BRI:
 		{
-			//memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
-			//modes[currentMode].Brightness = constrain(atoi(buff), 1, 255);
-			modes[currentMode].Brightness = constrain(doc[commands[key]], 1, 255);
-			jsonWrite(configSetup, "br", modes[currentMode].Brightness);
-			#ifdef USE_MULTIPLE_LAMPS_CONTROL
-			repeat_multiple_lamp_control = true;
-			#endif  //USE_MULTIPLE_LAMPS_CONTROL
-			SetBrightness(modes[currentMode].Brightness);
-			//loadingFlag = true; //не хорошо делать перезапуск эффекта после изменения яркости, но в некоторых эффектах от чётности яркости мог бы зависеть внешний вид
-			//settChanged = true;
-			//eepromTimeout = millis();
-			sendCurrent(inputBuffer);
-
-			#if (USE_MQTT)
-			if (espMode == 1U)
-			{
-				MqttManager::needToPublish = true;
-			}
-			#endif
-			#ifdef USE_BLYNK_PLUS
-			updateRemoteBlynkParams();
-			#endif
+			bri(constrain(doc[commands[key]], 1, 255));
 		}
 		break;
 	case SPD:
 		{
-			//memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
-			modes[currentMode].Speed = doc[commands[key]];//atoi(buff);
-			jsonWrite(configSetup, "sp", modes[currentMode].Speed);
-			#ifdef USE_BLYNK_PLUS
-			updateRemoteBlynkParams();
-			#endif
-			#ifdef USE_MULTIPLE_LAMPS_CONTROL
-			repeat_multiple_lamp_control = true;
-			#endif  //USE_MULTIPLE_LAMPS_CONTROL
-			updateSets();
-			sendCurrent(inputBuffer);
+			change_speed(doc[commands[key]]);
 		}
 		break;
 	case SCA:
 		{
-			//memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
-			//modes[currentMode].Scale = atoi(buff);
-			modes[currentMode].Scale = doc[commands[key]];
-			jsonWrite(configSetup, "sc", modes[currentMode].Scale);
-			#ifdef USE_MULTIPLE_LAMPS_CONTROL
-			repeat_multiple_lamp_control = true;
-			#endif  //USE_MULTIPLE_LAMPS_CONTROL
-			updateSets();
-			sendCurrent(inputBuffer);
-			#ifdef USE_BLYNK_PLUS
-			updateRemoteBlynkParams();
-			#endif
+			change_scale(doc[commands[key]]);
 		}
 		break;
 	case ALM_SET1:
@@ -1394,29 +1427,8 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 		break;
 	case BTN:
 		{
-			//if (strstr_P(inputBuffer, PSTR("ON")) - inputBuffer == 4)
-			if(doc[commands[key]])
-			{
-				buttonEnabled = true;
-				jsonWrite(configSetup, "button_on", (int) buttonEnabled);
-				saveConfig();
-				sendCurrent(inputBuffer);
-			}
-			else// if (strstr_P(inputBuffer, PSTR("OFF")) - inputBuffer == 4)
-			{
-				buttonEnabled = false;
-				jsonWrite(configSetup, "button_on", (int) buttonEnabled);
-				saveConfig();
-				sendCurrent(inputBuffer);
-			}
-
-			#if (USE_MQTT)
-			if (espMode == 1U)
-			{
-				strcpy(MqttManager::mqttBuffer, inputBuffer);
-				MqttManager::needToPublish = true;
-			}
-			#endif
+			uint8_t val = doc[commands[key]];
+			change_button(val);
 		}
 		break;
 #ifdef MP3_TX_PIN
