@@ -1,5 +1,6 @@
 #include"FieryLedLamp.h"
 
+FieryLedLamp lamp;
 void setup()
 {
   

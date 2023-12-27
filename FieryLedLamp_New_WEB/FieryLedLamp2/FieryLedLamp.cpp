@@ -1,6 +1,11 @@
 #include"FieryLedLamp.h"
 #include"Constants.h"
 
+#ifdef USE_NTP
+#include <WiFiUdp.h>
+WiFiUDP ntpUdp;
+#endif
+
 bool FieryLedLamp::setup_config()
 {
 	"config.json";
@@ -8,7 +13,7 @@ bool FieryLedLamp::setup_config()
 };
 void FieryLedLamp::setup_pin()
 {
-#if defined(ESP_USE_BUTTON) && defined(BUTTON_LOCK_ON_START)
+/*#if defined(ESP_USE_BUTTON) && defined(BUTTON_LOCK_ON_START)
 	pinMode(BTN_PIN, INPUT);
 #if (BUTTON_IS_SENSORY == 1)
 	if (digitalRead(BTN_PIN)) {
@@ -20,7 +25,7 @@ void FieryLedLamp::setup_pin()
 		buttonBlocing = true;
 	}
 #endif
-#endif
+#endif*/
 	// ПИНЫ
 #ifdef MOSFET_PIN                                         // инициализация пина, управляющего MOSFET транзистором в состояние "выключен"
 	pinMode(MOSFET_PIN, OUTPUT);
@@ -39,7 +44,7 @@ void FieryLedLamp::setup_pin()
 void FieryLedLamp::setup_time()
 {
 #ifdef USE_NTP
-	ntpClient = new NTPClient();
+	ntpClient = new NTPClient(ntpUdp);
 #endif
 };
 
