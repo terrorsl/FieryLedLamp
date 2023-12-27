@@ -19,11 +19,8 @@ BLYNK_WRITE(V0)
     processParams("P_ON", "");
   else
     processParams("P_OFF", "");*/
-  if(value)
-    processParams("power", "on");
-  else
-    processParams("power", "off");
-
+	power_on_off(value);
+	
   updateRemoteBlynkParams();
 }
 

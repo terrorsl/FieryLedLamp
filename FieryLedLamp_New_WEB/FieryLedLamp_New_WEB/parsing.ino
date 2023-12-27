@@ -92,6 +92,64 @@ const char *commands[] = {
 	"eq"
 };
 
+void power_on_off(bool val)
+{
+	if (dawnFlag) {
+		manualOff = true;
+		dawnFlag = false;
+		#ifdef TM1637_USE
+		clockTicker_blink();
+		#endif
+		SetBrightness(modes[currentMode].Brightness);
+		changePower();
+		sendCurrent(inputBuffer);
+	}
+	else {
+		if(val){
+			ONflag = true;
+			jsonWrite(configSetup, "Power", ONflag);
+			EepromManager::EepromGet(modes);
+			timeout_save_file_changes = millis();
+			bitSet (save_file_changes, 0);
+			updateSets();
+			changePower();
+			loadingFlag = true;
+			#ifdef USE_MULTIPLE_LAMPS_CONTROL
+			repeat_multiple_lamp_control=true;
+			#endif  //USE_MULTIPLE_LAMPS_CONTROL
+			sendCurrent(inputBuffer);
+			#ifdef USE_BLYNK_PLUS
+			updateRemoteBlynkParams();
+			#endif
+		}
+		else {
+			ONflag = false;
+			jsonWrite(configSetup, "Power", ONflag);
+			if (!FavoritesManager::FavoritesRunning) EepromManager::EepromPut(modes);
+			save_file_changes = 7;
+			//eepromTimeout = millis() - EEPROM_WRITE_DELAY;
+			timeout_save_file_changes = millis() - SAVE_FILE_DELAY_TIMEOUT;
+			timeTick();
+			changePower();
+			loadingFlag = true;
+			#ifdef USE_MULTIPLE_LAMPS_CONTROL
+			multiple_lamp_control ();
+			#endif  //USE_MULTIPLE_LAMPS_CONTROL
+			sendCurrent(inputBuffer);
+
+			#if (USE_MQTT)
+			if (espMode == 1U)
+			{
+				MqttManager::needToPublish = true;
+			}
+			#endif
+			#ifdef USE_BLYNK_PLUS
+			updateRemoteBlynkParams();
+			#endif
+		}
+	}
+};
+
 void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutput, bool fromMqtt)
 {
     char buff[MAX_UDP_BUFFER_SIZE], *endToken = NULL;
@@ -1198,61 +1256,7 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 				else
 					val = false;
 			}
-			if (dawnFlag) {
-				manualOff = true;
-				dawnFlag = false;
-				#ifdef TM1637_USE
-				clockTicker_blink();
-				#endif
-				SetBrightness(modes[currentMode].Brightness);
-				changePower();
-				sendCurrent(inputBuffer);
-			}
-			else {
-				if(val)
-				{
-					ONflag = true;
-					jsonWrite(configSetup, "Power", ONflag);
-					EepromManager::EepromGet(modes);
-					timeout_save_file_changes = millis();
-					bitSet (save_file_changes, 0);
-					updateSets();
-					changePower();
-					loadingFlag = true;
-					#ifdef USE_MULTIPLE_LAMPS_CONTROL
-					repeat_multiple_lamp_control=true;
-					#endif  //USE_MULTIPLE_LAMPS_CONTROL
-					sendCurrent(inputBuffer);
-					#ifdef USE_BLYNK_PLUS
-					updateRemoteBlynkParams();
-					#endif
-				}
-				else {
-					ONflag = false;
-					jsonWrite(configSetup, "Power", ONflag);
-					if (!FavoritesManager::FavoritesRunning) EepromManager::EepromPut(modes);
-					save_file_changes = 7;
-					//eepromTimeout = millis() - EEPROM_WRITE_DELAY;
-					timeout_save_file_changes = millis() - SAVE_FILE_DELAY_TIMEOUT;
-					timeTick();
-					changePower();
-					loadingFlag = true;
-					#ifdef USE_MULTIPLE_LAMPS_CONTROL
-					multiple_lamp_control ();
-					#endif  //USE_MULTIPLE_LAMPS_CONTROL
-					sendCurrent(inputBuffer);
-
-					#if (USE_MQTT)
-					if (espMode == 1U)
-					{
-					  MqttManager::needToPublish = true;
-					}
-					#endif
-					#ifdef USE_BLYNK_PLUS
-					updateRemoteBlynkParams();
-					#endif
-				}
-			}
+			power_on_off(val);
 		}
 		break;
 	case EFF:

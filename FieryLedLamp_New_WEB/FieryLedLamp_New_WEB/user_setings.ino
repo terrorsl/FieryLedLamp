@@ -430,7 +430,9 @@ void handle_PassOn ()   {
 }
 
 void handle_Power ()  {
-    uint8_t tmp;
+	bool tmp = HTTP.arg("Power").toInt();
+	power_on_off(tmp);
+    /*uint8_t tmp;
     if (dawnFlag) {
       manualOff = true;
       dawnFlag = false;
@@ -468,7 +470,7 @@ void handle_Power ()  {
     else {
         multiple_lamp_control ();
     }
-    #endif  //USE_MULTIPLE_LAMPS_CONTROL
+    #endif  //USE_MULTIPLE_LAMPS_CONTROL*/
 }	
 
 void handle_summer_time() {
