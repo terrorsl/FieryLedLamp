@@ -892,7 +892,7 @@ do {	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=========
   {
     if (strlen(inputBuffer) > 0)                            // проверка входящего MQTT сообщения; если оно не пустое - выполнение команды из него и формирование MQTT ответа
     {
-      processInputBuffer(inputBuffer, MqttManager::mqttBuffer, true);
+      processInputBuffer(inputBuffer, MqttManager::mqttBuffer, true, true);
     }
     
     MqttManager::publishState();
