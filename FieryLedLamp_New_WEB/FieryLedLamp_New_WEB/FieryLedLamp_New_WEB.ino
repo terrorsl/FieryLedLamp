@@ -21,10 +21,22 @@
 //
 #define FASTLED_USE_PROGMEM 1 // просим библиотеку FASTLED экономить память контроллера на свои палитры
 #include "pgmspace.h"
+
+#if defined(ESP8266)
 #include <ESP8266WebServer.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266SSDP.h>        
+#include <ESP8266HTTPUpdateServer.h>    // Обновление с web страницы
+
+#define WebServer ESP8266WebServer
+#define HTTPUpdateServer ESP8266HTTPUpdateServer
+#elif defined(ESP32)
+#include <WebServer.h>
+#include <WiFi.h>
+#endif
+
 #include "Constants.h"
 #include <FastLED.h>
-#include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 #include <EEPROM.h>
 #include "Types.h"
@@ -50,8 +62,6 @@
 #ifdef USE_BLYNK
 #include <BlynkSimpleEsp8266.h>
 #endif
-#include <ESP8266SSDP.h>        
-#include <ESP8266HTTPUpdateServer.h>    // Обновление с web страницы
 /*
 #include <ArduinoJson.h>        // Перенесен в файл constants.h в разделе "для Разработчиков"
 #ifdef USE_LittleFS
@@ -136,8 +146,8 @@ uint32_t MqttManager::mqttLastConnectingAttempt = 0;
 SendCurrentDelegate MqttManager::sendCurrentDelegate = NULL;
 #endif
 
-ESP8266HTTPUpdateServer httpUpdater;  // Объект для обнавления с web страницы
-ESP8266WebServer HTTP (ESP_HTTP_PORT);//ESP8266WebServer HTTP;  // Web интерфейс для устройства
+HTTPUpdateServer httpUpdater;  // Объект для обнавления с web страницы
+WebServer HTTP(ESP_HTTP_PORT);//ESP8266WebServer HTTP;  // Web интерфейс для устройства
 File fsUploadFile;  // Для файловой системы
 
 
@@ -309,13 +319,12 @@ uint8_t AutoBrightness;              // Автояркость on/off
 uint8_t last_day_night = 0;
 
 void setup()  //==================================================================  void setup()  =========================================================================
-{
-	
-  Serial.begin(115200);
-  delay(300);
-  ESP.wdtEnable(WDTO_8S);
+{	
+	Serial.begin(115200);
+	delay(300);
+	ESP.wdtEnable(WDTO_8S);
 
-  LOG.print(F("\n\n\nSYSTEM START\n"));
+	LOG.print(F("\n\n\nSYSTEM START\n"));
 
   #if defined(ESP_USE_BUTTON) && defined(BUTTON_LOCK_ON_START)
     #if (BUTTON_IS_SENSORY == 1)
@@ -329,21 +338,20 @@ void setup()  //================================================================
         }
     #endif
 #endif
+	// ПИНЫ
+#ifdef MOSFET_PIN                                         // инициализация пина, управляющего MOSFET транзистором в состояние "выключен"
+	pinMode(MOSFET_PIN, OUTPUT);
+#ifdef MOSFET_LEVEL
+	digitalWrite(MOSFET_PIN, !MOSFET_LEVEL);
+#endif
+#endif
 
-  // ПИНЫ
-  #ifdef MOSFET_PIN                                         // инициализация пина, управляющего MOSFET транзистором в состояние "выключен"
-  pinMode(MOSFET_PIN, OUTPUT);
-  #ifdef MOSFET_LEVEL
-  digitalWrite(MOSFET_PIN, !MOSFET_LEVEL);
-  #endif
-  #endif
-
-  #ifdef ALARM_PIN                                          // инициализация пина, управляющего будильником в состояние "выключен"
-  pinMode(ALARM_PIN, OUTPUT);
-  #ifdef ALARM_LEVEL
-  digitalWrite(ALARM_PIN, !ALARM_LEVEL);
-  #endif
-  #endif
+#ifdef ALARM_PIN                                          // инициализация пина, управляющего будильником в состояние "выключен"
+	pinMode(ALARM_PIN, OUTPUT);
+#ifdef ALARM_LEVEL
+	digitalWrite(ALARM_PIN, !ALARM_LEVEL);
+#endif
+#endif
   
   // часы
 #ifdef TM1637_USE
@@ -354,8 +362,8 @@ void setup()  //================================================================
   display.displayByte(_dash, _dash, _dash, _dash);          // +++ отображаем прочерки
 #endif
 
-   //HTTP
-  User_setings ();
+	//HTTP
+	User_setings ();
   #ifdef GENERAL_DEBUG  
   LOG.print(F("\nСтарт файловой системы\n"));
   #endif
@@ -494,8 +502,7 @@ void setup()  //================================================================
 
 
   // ЛЕНТА/МАТРИЦА
-  FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS)/*.setCorrection(TypicalLEDStrip)*/;
-  //FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(0xB0FFE0); // Калибровка баланса белого цвета. Последовательность байт RGB (B0-R FF-G E0-B)
+  FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
   FastLED.setBrightness(BRIGHTNESS);
   if (current_limit > 0)
   {
