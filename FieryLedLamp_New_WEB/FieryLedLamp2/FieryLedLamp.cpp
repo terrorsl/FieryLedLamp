@@ -6,6 +6,23 @@
 WiFiUDP ntpUdp;
 #endif
 
+#ifdef USE_MQTT
+void mqttOnConnect(bool sessionPresent)
+{
+	lamp.setup_mqtt_subscribe();
+};
+void mqttOnMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
+{
+}
+#endif
+
+void FieryLedLamp::setup()
+{
+	setup_config();
+	setup_pin();
+	setup_mqtt();
+};
+
 bool FieryLedLamp::setup_config()
 {
 	"config.json";
@@ -47,10 +64,49 @@ void FieryLedLamp::setup_time()
 	ntpClient = new NTPClient(ntpUdp);
 #endif
 };
+bool FieryLedLamp::setup_mqtt()
+{
+#ifdef USE_MQTT
+	std::string clientId = "lamp";
+	mqtt.setServer("mqtt.dealgate.ru", 1883);
+	mqtt.setCredentials("","");
+	mqtt.setWill(MQTT_STATUS_TOPIC,0,true,"disconnect");
+	mqtt.setClientId(clientId.c_str());
 
+	mqtt.onConnect(mqttOnConnect);
+	mqtt.onMessage(mqttOnMessage);
+#endif
+	return true;
+};
+void FieryLedLamp::setup_mqtt_subscribe()
+{
+#ifdef USE_MQTT
+	mqtt.subscribe(MQTT_COMMAND_TOPIC, 0);
+	mqtt.publish(MQTT_STATUS_TOPIC, 0, true, "connect");
+#endif
+};
 void FieryLedLamp::update_time()
 {
 #ifdef USE_NTP
 	ntpClient->update();
 #endif
+};
+void FieryLedLamp::update_effect()
+{
+
+};
+void FieryLedLamp::update()
+{
+	update_effect();
+
+	if (WiFi.isConnected() == false)
+	{
+		WiFi.begin();
+		return;
+	}
+	if (mqtt.connected() == false)
+	{
+		mqtt.connect();
+		return;
+	}
 };
