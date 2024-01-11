@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Fiery Led Lamp</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+		<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+		<script type="text/javascript" src="index.js"></script>
+		<link rel="stylesheet" href="slider/css/bulma-slider.min.css">
+		<script type="text/javascript" src="slider/js/bulma-slider.min.js"></script>
+	</head>
+	<body>
+		<section class="section">
+			<div class="container">
+				<h1 class="title">Fiery Led Lamp</h1>
+				<p class="subtitle">
+					My first website with <strong>Bulma</strong>!
+				</p>
+				<div class="columns">
+					<div class="column is-2">
+						<aside class="menu">
+							<p class="menu-label">General</p>
+							<ul class="menu-list">
+								<li><a href="/effects">Effects</a></li>
+								<li><a>Customers</a></li>
+							</ul>
+  <p class="menu-label">
+    Administration
+  </p>
+  <ul class="menu-list">
+    <li><a>Team Settings</a></li>
+    <li>
+      <a class="is-active">Manage Your Team</a>
+      <ul>
+        <li><a>Members</a></li>
+        <li><a>Plugins</a></li>
+        <li><a>Add a member</a></li>
+      </ul>
+    </li>
+    <li><a>Invitations</a></li>
+    <li><a>Cloud Storage Environment Settings</a></li>
+    <li><a>Authentication</a></li>
+  </ul>
+  <p class="menu-label">
+    Transactions
+  </p>
+  <ul class="menu-list">
+    <li><a>Payments</a></li>
+    <li><a>Transfers</a></li>
+    <li><a>Balance</a></li>
+  </ul>
+</aside>
+				</div>
+				<div class="column">
+					<div class="field">
+						<button class="button is-success is-large is-responsive" onclick="on_power()">Power</button>
+					</div>
+					<div class="field">
+						<label class="label">Effect</label>
+						<div class="control">
+							<div class="select">
+								<select onchange="change_effect(this)">
+									<option value="0">White</option>
+									<option value="1">With options</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="field">
+						<label class="label">Brightness</label>
+						<div class="control">
+							<input id="brightness" class="slider has-output is-fullwidth is-success" step="1" min="0" max="100" value="0" type="range">
+							<output for="brightness">0</output>
+						</div>
+					</div>
+					<div class="field">
+						<label class="label">Speed</label>
+						<div class="control">
+							<input id="speed" class="slider has-output is-fullwidth is-success" step="1" min="0" max="100" value="0" type="range">
+							<output for="speed">0</output>
+						</div>
+					</div>
+					<div class="field">
+						<label class="label">Scale</label>
+						<div class="control">
+							<input id="scale" class="slider has-output is-fullwidth is-success" step="1" min="0" max="100" value="0" type="range">
+							<output for="scale">0</output>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	
+	<!-- <script src="slider/js/bulma-slider.min.js"></script> -->
+    <!-- <script> -->
+        <!-- bulmaSlider.attach(); -->
+    <!-- </script> -->
+	
+  </body>
+</html>

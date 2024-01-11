@@ -1,6 +1,8 @@
 #ifndef EFFECT_FILE
 #define EFFECT_FILE
 
+#include"platform.h"
+
 class FieryLedLampEffect
 {
 public:

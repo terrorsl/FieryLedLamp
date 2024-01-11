@@ -3,7 +3,7 @@
 void FieryLedLampEffect::update()
 {
 	updateInner();
-
+#if 0
 #ifdef MP3_TX_PIN
 	mp3_folder = effects_folders[currentMode];
 #endif  //MP3_TX_PIN
@@ -45,12 +45,13 @@ void FieryLedLampEffect::update()
 			Fill_String = fillString(TextTicker, CHSV(ColorRunningText, 255U, 255U), true);
 		}
 	}
-
+#endif
 	//FastLED.show();
 };
 
 void FieryLedLampEffectWhiteColorStripeRoutine::updateInner()
 {
+	#if 0
 	if (loadingFlag)
 	{
 #if defined(USE_RANDOM_SETS_IN_APP) || defined(RANDOM_SETTINGS_IN_CYCLE_MODE)
@@ -80,24 +81,25 @@ void FieryLedLampEffectWhiteColorStripeRoutine::updateInner()
 		for (int16_t i = center; i >= 0; i--)
 		{
 			CRGB color = CHSV(
-				45U,                                                                              // определяем тон
-				map(modes[currentMode].Speed, 0U, 255U, 0U, 170U),                                // определяем насыщенность
-				i > (center - fullFill - 1)                                                       // определяем яркость
-				? 255U                                                                            // для центральных горизонтальных полос
-				: iPol * (i > center - fullFill - 2));  // для остальных горизонтальных полос яркость равна либо 255, либо 0 в зависимости от масштаба
+				45U,                                                                              // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
+				map(modes[currentMode].Speed, 0U, 255U, 0U, 170U),                                // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+				i > (center - fullFill - 1)                                                       // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+				? 255U                                                                            // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+				: iPol * (i > center - fullFill - 2));  // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ 255, пїЅпїЅпїЅпїЅ 0 пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 			if (modes[currentMode].Scale <= 50U)
 				for (uint8_t x = 0U; x < WIDTH; x++)
 				{
-					drawPixelXY(x, i, color);                         // при чётной высоте матрицы максимально яркими отрисуются 2 центральных горизонтальных полосы
-					drawPixelXY(x, HEIGHT + offset - i - 2U, color);  // при нечётной - одна, но дважды
+					drawPixelXY(x, i, color);                         // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 2 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+					drawPixelXY(x, HEIGHT + offset - i - 2U, color);  // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 				}
 			else
 				for (uint8_t y = 0U; y < HEIGHT; y++)
 				{
-					drawPixelXY((i + modes[currentMode].Speed - 1U) % WIDTH, y, color);                    // при чётной ширине матрицы максимально яркими отрисуются 2 центральных вертикальных полосы
-					drawPixelXY((WIDTH + offset - i + modes[currentMode].Speed - 3U) % WIDTH, y, color);   // при нечётной - одна, но дважды
+					drawPixelXY((i + modes[currentMode].Speed - 1U) % WIDTH, y, color);                    // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 2 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+					drawPixelXY((WIDTH + offset - i + modes[currentMode].Speed - 3U) % WIDTH, y, color);   // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 				}
 		}
 	}
+	#endif
 };
