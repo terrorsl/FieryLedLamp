@@ -1,10 +1,5 @@
 #include"FieryLedLamp.h"
 
-void web_root()
-{
-
-};
-
 String getContentType(String filename)
 {
     if (lamp.Web()->hasArg("download")) return F("application/octet-stream");
@@ -35,7 +30,7 @@ void handleFileRead()
         if (LittleFS.exists(pathWithGz))
             path += ".gz";
         File file = LittleFS.open(path, "r");
-        size_t sent = lamp.Web()->streamFile(file, contentType);
+        lamp.Web()->streamFile(file, contentType);
         file.close();
     }
     else

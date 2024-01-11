@@ -60,7 +60,7 @@
 						<label class="label">Effect</label>
 						<div class="control">
 							<div class="select">
-								<select onchange="change_effect(this)">
+								<select id="effectList" onchange="change_effect(this)">
 									<option value="0">White</option>
 									<option value="1">With options</option>
 								</select>
@@ -70,21 +70,21 @@
 					<div class="field">
 						<label class="label">Brightness</label>
 						<div class="control">
-							<input id="brightness" class="slider has-output is-fullwidth is-success" step="1" min="0" max="100" value="0" type="range">
+							<input id="brightness" class="slider has-output is-fullwidth is-success is-large" step="1" min="0" max="100" value="0" type="range">
 							<output for="brightness">0</output>
 						</div>
 					</div>
 					<div class="field">
 						<label class="label">Speed</label>
 						<div class="control">
-							<input id="speed" class="slider has-output is-fullwidth is-success" step="1" min="0" max="100" value="0" type="range">
+							<input id="speed" class="slider has-output is-fullwidth is-warning is-large" step="1" min="0" max="100" value="0" type="range">
 							<output for="speed">0</output>
 						</div>
 					</div>
 					<div class="field">
 						<label class="label">Scale</label>
 						<div class="control">
-							<input id="scale" class="slider has-output is-fullwidth is-success" step="1" min="0" max="100" value="0" type="range">
+							<input id="scale" class="slider has-output is-fullwidth is-success is-large" step="1" min="0" max="100" value="0" type="range">
 							<output for="scale">0</output>
 						</div>
 					</div>

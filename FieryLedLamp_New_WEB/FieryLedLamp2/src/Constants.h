@@ -49,7 +49,7 @@
 //#define GENERAL_DEBUG                                     // если строка не закомментирована, будут выводиться общие отладочные сообщения
 
 
-#define LED_PIN               (0U)                          // пин ленты                (D3) на (D4) - встроенный светодиод платы , поэтому лучше паять на D3 = #define LED_PIN (0U)
+//#define LED_PIN               (0U)                          // пин ленты                (D3) на (D4) - встроенный светодиод платы , поэтому лучше паять на D3 = #define LED_PIN (0U)
 #define BTN_PIN               (4U)                          // пин кнопки               (D2)
 //#define MOSFET_PIN            (5U)                          // пин MOSFET транзистора   (D1) - может быть использован для управления питанием матрицы/ленты (если раскомментировать строку)
 #define MOSFET_LEVEL          (HIGH)                        // логический уровень, в который будет установлен пин MOSFET_PIN, когда матрица включена - HIGH или LOW (если раскомментировать)
@@ -132,8 +132,8 @@
 
 #define COLOR_ORDER           (GRB)                         // порядок цветов на ленте. Если цвет отображается некорректно - меняйте. Начать можно с RGB
 
-//uint8_t ORIENTATION;
-//uint8_t MATRIX_TYPE = 0;                                    // тип матрицы: 0 - зигзаг, 1 - параллельная
+static uint8_t ORIENTATION;
+static uint8_t MATRIX_TYPE = 0;                                    // тип матрицы: 0 - зигзаг, 1 - параллельная
 #define CONNECTION_ANGLE      (0U)                          // угол подключения: 0 - левый нижний, 1 - левый верхний, 2 - правый верхний, 3 - правый нижний
 #define STRIP_DIRECTION       (0U)                          // направление ленты из угла: 0 - вправо, 1 - вверх, 2 - влево, 3 - вниз
                                                             // при неправильной настройке матрицы вы получите предупреждение "Wrong matrix parameters! Set to default"
@@ -421,10 +421,10 @@ static const uint8_t defaultSettings[MODE_AMOUNT][3] PROGMEM = {
 #define NUM_LEDS              (uint16_t)(WIDTH * HEIGHT)
 #define SEGMENTS              (1U)                          // диодов в одном "пикселе" (для создания матрицы из кусков ленты). вряд ли эффекты будут корректно работать, если изменить этот параметр
 
-#define DYNAMIC                (0U)   // динамическая задержка для кадров ( будет использоваться бегунок Скорость )
-#define SOFT_DELAY             (1U)   // задержка для смены кадров FPSdelay задается програмно прямо в теле эффекта
-#define LOW_DELAY             (15U)   // низкая фиксированная задержка для смены кадров
-#define HIGH_DELAY            (50U)   // высокая фиксированная задержка для смены кадров
+//#define DYNAMIC                (0U)   // динамическая задержка для кадров ( будет использоваться бегунок Скорость )
+//#define SOFT_DELAY             (1U)   // задержка для смены кадров FPSdelay задается програмно прямо в теле эффекта
+//#define LOW_DELAY             (15U)   // низкая фиксированная задержка для смены кадров
+//#define HIGH_DELAY            (50U)   // высокая фиксированная задержка для смены кадров
 #define DYNAMIC_DELAY_TICK    if (millis() - effTimer >= (256U - modes[currentMode].Speed))
 #define HIGH_DELAY_TICK       if (millis() - effTimer >= 50)
 #define LOW_DELAY_TICK        if (millis() - effTimer >= 15)

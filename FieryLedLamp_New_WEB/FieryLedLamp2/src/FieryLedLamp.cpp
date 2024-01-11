@@ -28,13 +28,13 @@ void mqttDisconnect(AsyncMqttClientDisconnectReason reason)
 };
 void mqttOnMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
 {
+	lamp.update_mqtt(payload);
 };
 #endif
 
 void FieryLedLamp::setup()
 {
 	config.power_state=false;
-	config.wifi_ap_mode=false;
 	
 	web=new WebServer(80);
 	
@@ -151,8 +151,17 @@ void FieryLedLamp::setup_mqtt()
 };
 void FieryLedLamp::setup_mqtt_subscribe()
 {
-	mqtt.subscribe(MQTT_COMMAND_TOPIC, 0);
-	mqtt.publish(MQTT_STATUS_TOPIC, 0, true, "connect");
+	std::string topic = config.mqtt.clientid + MQTT_COMMAND_TOPIC;
+	mqtt.subscribe(topic.c_str(), 0);
+
+	JsonDocument doc;
+	doc["power"]=config.power_state;
+	doc["effect"]=config.currentEffect;
+	
+	topic=config.mqtt.clientid + MQTT_RESULT_TOPIC;
+	String payload;
+	serializeJson(doc,payload);
+	mqtt.publish(topic.c_str(), 0, true, payload.c_str());
 };
 #endif
 void FieryLedLamp::update_time()
@@ -167,7 +176,8 @@ void FieryLedLamp::connect_mqtt()
 };
 void FieryLedLamp::update_effect()
 {
-
+	if(config.power_state && config.effect)
+		config.effect->update();
 };
 void FieryLedLamp::power_button(bool state)
 {
@@ -188,6 +198,8 @@ void FieryLedLamp::update_button()
 			if(delta>=SETUP_BUTTON_TIME)
 			{
 				digitalWrite(BUILDIN_LED_PIN, LOW);
+
+				web->stop();
 
 				WiFiManager manager;
 				WiFiManagerParameter server("mqtt_server","MQTT Server",config.mqtt.server.c_str(),40);
@@ -213,6 +225,7 @@ void FieryLedLamp::update_button()
 					doc["mqtt_keepalive"]=atol(keepalive.getValue());
 					save_config(&doc);
 				}
+				web->begin();
 
 				digitalWrite(BUILDIN_LED_PIN, HIGH);
 				button_down=false;
@@ -240,4 +253,24 @@ void FieryLedLamp::update()
 	update_button();
 
 	web->handleClient();
+};
+void FieryLedLamp::change_effect(unsigned short index)
+{
+	if(config.currentEffect==index)
+		return;
+	FieryLedLampEffect *current=config.effect;
+	switch(index)
+	{
+	case FieryLedLampEffectTypes::WhiteColor:
+		config.effect=new FieryLedLampEffectWhiteColorStripeRoutine();
+		break;
+	case FieryLedLampEffectTypes::WaterColor:
+		config.effect=new FieryLedLampEffectWaterColor();
+		break;
+	default:
+		return;
+	}
+	config.currentEffect=index;
+	config.effect->setup();
+	delete current;
 };
