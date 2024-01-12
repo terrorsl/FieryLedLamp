@@ -49,9 +49,9 @@ public:
 	void connect_web();
 	void connect_mqtt();
 
-	void setup_time();
-	void setup_wifi();
-	bool setup_led();
+	void change_effect(unsigned short index);
+	void next_effect();
+	void prev_effect();
 
 #ifdef USE_MQTT
 	void setup_mqtt_subscribe();
@@ -64,6 +64,7 @@ public:
 	WebServer *Web(){return web;}
 private:
 	void setup_pin();
+	void setup_time();
 	void setup_config();
 #ifdef USE_MQTT
 	void setup_mqtt();
@@ -74,7 +75,6 @@ private:
 	void update_button();
 
 	void power_button(bool state);
-	void change_effect(unsigned short index);
 
 	JsonDocument load_config();
 	void save_config(JsonDocument *doc);
@@ -87,7 +87,8 @@ private:
 	WebServer *web;
 
 	bool button_down;
-	unsigned long button_down_time;
+	unsigned long button_down_time, button_up_time;
+	unsigned char button_down_count;
 
 	unsigned long current_time;
 	FieryLedLampConfig config;

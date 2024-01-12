@@ -8,6 +8,8 @@
 WiFiUDP ntpUdp;
 #endif
 
+extern CRGB leds[NUM_LEDS];
+
 void onWiFiConnected(const WiFiEventStationModeConnected &)
 {
 	lamp.connect_web();
@@ -34,11 +36,25 @@ void mqttOnMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
 
 void FieryLedLamp::setup()
 {
+	DBG_START(9600);
+	DBG_PRINT("start");
+	
 	config.power_state=false;
 	
 	web=new WebServer(80);
 	
 	setup_pin();
+	
+	FastLED.addLeds<WS2812B,LED_PIN,GRB>(leds,NUM_LEDS);
+	FastLED.setBrightness(BRIGHTNESS);
+  	/*if (current_limit > 0)
+  	{
+    	FastLED.setMaxPowerInVoltsAndMilliamps(5, current_limit);
+  	}*/
+	FastLED.setMaxPowerInVoltsAndMilliamps(5, 3000);
+  	FastLED.clear();
+  	FastLED.show();
+	
 	setup_config();
 	setup_mqtt();
 	setup_web_server();
@@ -51,6 +67,7 @@ void FieryLedLamp::setup()
 
 void FieryLedLamp::setup_config()
 {
+	Serial.println("setup_config");
 #if defined(ESP8266)
 	LittleFS.begin();
 #else
@@ -58,6 +75,8 @@ void FieryLedLamp::setup_config()
 #endif
 	JsonDocument doc=load_config();
 	
+	config.currentEffect = 0xff;
+
 	if(doc.isNull())
 	{
 		config.mqtt.server="mqtt.dealgate.ru";
@@ -72,6 +91,8 @@ void FieryLedLamp::setup_config()
 		char name[256];
 		sprintf(name,"ledLamp%lx",id);
 		config.mqtt.clientid=name;
+
+		change_effect(0);
 	}
 	else
 	{
@@ -81,6 +102,8 @@ void FieryLedLamp::setup_config()
 		config.mqtt.password=doc["mqtt_password"].as<std::string>();
 		config.mqtt.keep_alive=doc["mqtt_keepalive"].as<uint16_t>();
 		config.mqtt.clientid=doc["mqtt_clientid"].as<std::string>();
+
+		change_effect(doc["effect"].as<uint16_t>());
 	}
 };
 
@@ -107,6 +130,11 @@ void FieryLedLamp::save_config(JsonDocument *doc)
 
 void FieryLedLamp::setup_pin()
 {
+	DBG_PRINT("setup_pin");
+
+	pinMode(BUILDIN_LED_PIN, OUTPUT);
+	digitalWrite(BUILDIN_LED_PIN, HIGH);
+
 #if BUTTON_IS_SENSORY
 	pinMode(BUTTON_PIN, INPUT);
 #else
@@ -181,6 +209,7 @@ void FieryLedLamp::update_effect()
 };
 void FieryLedLamp::power_button(bool state)
 {
+	DBG_PRINT("power state:%d\n",state);
 	config.power_state=state;
 	digitalWrite(MOSFET_PIN, state);
 };
@@ -197,6 +226,7 @@ void FieryLedLamp::update_button()
 			unsigned long delta=millis()-button_down_time;
 			if(delta>=SETUP_BUTTON_TIME)
 			{
+				DBG_PRINT("setup mode\n");
 				digitalWrite(BUILDIN_LED_PIN, LOW);
 
 				web->stop();
@@ -230,6 +260,15 @@ void FieryLedLamp::update_button()
 				digitalWrite(BUILDIN_LED_PIN, HIGH);
 				button_down=false;
 			}
+			/*else
+			{
+				if(delta>=POWER_BUTTON_TIME)
+				{
+					DBG_PRINT("power mode\n");
+					power_button(!config.power_state);
+					button_down=false;
+				}
+			}*/
 		}
 		else
 		{
@@ -241,21 +280,64 @@ void FieryLedLamp::update_button()
 	{
 		if(button_down)
 		{
-			power_button(!config.power_state);
 			button_down=false;
+			unsigned long delta=millis()-button_up_time;
+			if(delta<=DELTA_BUTTON_DOWN)
+			{
+				button_down_count++;
+			}
+			else
+				button_down_count=1;
+			button_up_time=millis();
+			DBG_PRINT("delta:%d\n",delta);
+		}
+		else
+		{
+			if(button_down_count && millis()-button_up_time>DELTA_BUTTON_DOWN)
+			{
+				switch(button_down_count)
+				{
+				case POWER_BUTTON_COUNT:
+					power_button(!config.power_state);
+					break;
+				case NEXT_BUTTON_COUNT:
+					DBG_PRINT("next mode\n");
+					next_effect();
+					break;
+				case BEFOR_BUTTON_COUNT:
+					DBG_PRINT("before mode\n");
+					prev_effect();
+					break;
+				}
+				button_down_count=0;
+			}
 		}
 	}
 };
 void FieryLedLamp::update()
 {
 	update_effect();
-
 	update_button();
-
 	web->handleClient();
+};
+void FieryLedLamp::next_effect()
+{
+	unsigned short effect=config.currentEffect+1;
+	if(effect>=FieryLedLampEffectTypes::MaxEffect)
+		config.currentEffect=0;
+	change_effect(effect);
+};
+void FieryLedLamp::prev_effect()
+{
+	unsigned short effect=config.currentEffect;
+	if(effect==0)
+		effect=FieryLedLampEffectTypes::MaxEffect;
+	effect--;
+	change_effect(effect);
 };
 void FieryLedLamp::change_effect(unsigned short index)
 {
+	DBG_PRINT("change_effect:%d", index);
 	if(config.currentEffect==index)
 		return;
 	FieryLedLampEffect *current=config.effect;
@@ -267,10 +349,38 @@ void FieryLedLamp::change_effect(unsigned short index)
 	case FieryLedLampEffectTypes::WaterColor:
 		config.effect=new FieryLedLampEffectWaterColor();
 		break;
+	case FieryLedLampEffectTypes::FlowerRuta:
+		config.effect=new FieryLedLampEffectFlowerRuta();
+		break;
+	case FieryLedLampEffectTypes::Bamboo:
+		config.effect=new FieryLedLampEffectBamboo();
+		break;
+	case FieryLedLampEffectTypes::Madness:
+		config.effect=new FieryLedLampEffectMadnessNoise();
+		break;
+	case FieryLedLampEffectTypes::Ball:
+		config.effect=new FieryLedLampEffectBall();
+		break;
+	case FieryLedLampEffectTypes::Waterfall:
+		config.effect=new FieryLedLampEffectWaterfall();
+		break;
+	case FieryLedLampEffectTypes::Waves:
+		config.effect=new FieryLedLampEffectWave();
+		break;
+	case FieryLedLampEffectTypes::MagicLantern:
+		config.effect=new FieryLedLampEffectMagicLantern();
+		break;
+	case FieryLedLampEffectTypes::Wine:
+		config.effect=new FieryLedLampEffectWine();
+		break;
+	case FieryLedLampEffectTypes::Whirl:
+		config.effect=new FieryLedLampEffectWhirl(true);
+		break;
 	default:
 		return;
 	}
 	config.currentEffect=index;
 	config.effect->setup();
-	delete current;
+	if(current)
+		delete current;
 };

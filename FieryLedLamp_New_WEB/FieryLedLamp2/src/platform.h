@@ -1,6 +1,14 @@
 #ifndef PLATFORM_FILE
 #define PLATFORM_FILE
 
+#define DEBUG_PRINT_ENABLE
+
+#if defined(DEBUG_PRINT_ENABLE)
+#define DBG_START(baud) Serial.begin(baud);delay(500)
+#define DBG_PRINT(format,...) Serial.printf(format,##__VA_ARGS__)
+#else
+#endif
+
 #if defined(ESP8266)
 #include<ESP8266WiFi.h>
 #include<ESP8266WebServer.h>
@@ -26,5 +34,11 @@
 
 // time in ms
 #define SETUP_BUTTON_TIME 5000
+#define POWER_BUTTON_TIME 2000
+
+#define DELTA_BUTTON_DOWN 500
+#define POWER_BUTTON_COUNT 1
+#define NEXT_BUTTON_COUNT 2
+#define BEFOR_BUTTON_COUNT 3
 
 #endif
