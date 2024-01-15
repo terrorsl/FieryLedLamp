@@ -76,6 +76,9 @@ void FieryLedLamp::setup_config()
 	JsonDocument doc=load_config();
 	
 	config.currentEffect = 0xff;
+	config.scale=50;
+	config.speed=50;
+	config.brightness=BRIGHTNESS;
 
 	if(doc.isNull())
 	{
@@ -335,11 +338,11 @@ void FieryLedLamp::prev_effect()
 	effect--;
 	change_effect(effect);
 };
-void FieryLedLamp::change_effect(unsigned short index)
+bool FieryLedLamp::change_effect(unsigned short index)
 {
 	DBG_PRINT("change_effect:%d", index);
 	if(config.currentEffect==index)
-		return;
+		return true;
 	FieryLedLampEffect *current=config.effect;
 	switch(index)
 	{
@@ -351,6 +354,9 @@ void FieryLedLamp::change_effect(unsigned short index)
 		break;
 	case FieryLedLampEffectTypes::FlowerRuta:
 		config.effect=new FieryLedLampEffectFlowerRuta();
+		break;
+	case FieryLedLampEffectTypes::Pool:
+		config.effect=new FieryLedLampEffectPool();
 		break;
 	case FieryLedLampEffectTypes::Bamboo:
 		config.effect=new FieryLedLampEffectBamboo();
@@ -377,10 +383,16 @@ void FieryLedLamp::change_effect(unsigned short index)
 		config.effect=new FieryLedLampEffectWhirl(true);
 		break;
 	default:
-		return;
+		DBG_PRINT("unknown effect:%d\n", index);
+		return false;
 	}
 	config.currentEffect=index;
+
+	config.effect->set_speed(config.speed);
+	config.effect->set_scale(config.scale);
+	
 	config.effect->setup();
 	if(current)
 		delete current;
+	return true;
 };

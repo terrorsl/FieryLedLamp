@@ -34,6 +34,7 @@ struct FieryLedLampConfig
 #if defined(USE_MQTT)
 	FieryLedLampConfigMQTT mqtt;
 #endif
+	unsigned char speed, scale, brightness;
 };
 
 typedef enum
@@ -49,7 +50,7 @@ public:
 	void connect_web();
 	void connect_mqtt();
 
-	void change_effect(unsigned short index);
+	bool change_effect(unsigned short index);
 	void next_effect();
 	void prev_effect();
 

@@ -147,69 +147,16 @@ public:
 	FieryLedLampEffect(uint8_t delayType):delat_type(delayType){};
 	virtual ~FieryLedLampEffect(){}
 
+  void set_bright(unsigned char val){}
+  void set_speed(unsigned char val){speed=val;}
+  void set_scale(unsigned char val){scale=val;}
+
 	virtual void setup() = 0;
 	virtual void updateInner() = 0;
 
 	void update();
 protected:
-	// получить номер пикселя в ленте по координатам
-	// библиотека FastLED тоже использует эту функцию
-	uint16_t XY(uint8_t x, uint8_t y)
-	{
-		uint8_t THIS_X;
-		uint8_t THIS_Y;
-		uint8_t _WIDTH = WIDTH;
-		
-		switch (ORIENTATION)
-		{
-		case 0:
-			THIS_X = x;                   //CONNECTION_ANGLE == 0 && STRIP_DIRECTION == 0
-			THIS_Y =y;
-			break;
-		case 1:
-			_WIDTH = HEIGHT;              //CONNECTION_ANGLE == 0 && STRIP_DIRECTION == 1
-			THIS_X = y;
-			THIS_Y = x;
-			break;
-		case 2:
-			THIS_X = x;                   //CONNECTION_ANGLE == 1 && STRIP_DIRECTION == 0
-			THIS_Y = (HEIGHT - y - 1);
-			break;
-		case 3:
-			_WIDTH = HEIGHT;              //CONNECTION_ANGLE == 1 && STRIP_DIRECTION == 3
-			THIS_X = (HEIGHT - y - 1);
-			THIS_Y = x;
-			break;
-		case 4:
-			THIS_X = (WIDTH - x - 1);     //CONNECTION_ANGLE == 2 && STRIP_DIRECTION == 2
-			THIS_Y = (HEIGHT - y - 1);
-			break;
-		case 5:
-			_WIDTH = HEIGHT;              //CONNECTION_ANGLE == 2 && STRIP_DIRECTION == 3
-			THIS_X = (HEIGHT - y - 1);
-			THIS_Y = (WIDTH - x - 1);
-			break;
-		case 6:
-			THIS_X = (WIDTH - x - 1);     //CONNECTION_ANGLE == 3 && STRIP_DIRECTION == 2
-			THIS_Y =y;
-			break;
-		case 7:
-			_WIDTH = HEIGHT;              //CONNECTION_ANGLE == 3 && STRIP_DIRECTION == 1
-			THIS_X = y;
-			THIS_Y = (WIDTH - x - 1);
-			break;
-		default:
-			THIS_X = x;                 // !! смотрите инструкцию: https://alexgyver.ru/wp-content/uploads/2018/11/scheme3.jpg
-			THIS_Y =y;                  // !! такого сочетания CONNECTION_ANGLE и STRIP_DIRECTION не бывает
-			break;
-		}
-		
-		if(!(THIS_Y & 0x01) || MATRIX_TYPE)               // Even rows run forwards
-			return (THIS_Y * _WIDTH + THIS_X);
-		else                                                  
-			return (THIS_Y * _WIDTH + _WIDTH - THIS_X - 1);  // Odd rows run backwards
-	}
-	// функция отрисовки точки по координатам X Y
+  // функция отрисовки точки по координатам X Y
 	void drawPixelXY(int8_t x, int8_t y, CRGB color);
 	//по мотивам
 	//https://gist.github.com/sutaburosu/32a203c2efa2bb584f4b846a91066583
@@ -217,10 +164,7 @@ protected:
 	// функция получения цвета пикселя по его номеру
 	uint32_t getPixColor(uint32_t thisSegm);
 	// функция получения цвета пикселя в матрице по его координатам
-	uint32_t getPixColorXY(uint8_t x, uint8_t y)
-	{
-		return getPixColor(XY(x, y));
-	}
+	uint32_t getPixColorXY(uint8_t x, uint8_t y);
 	// залить все
 	void fillAll(CRGB color);
 	//массивы состояния объектов, которые могут использоваться в любом эффекте
@@ -329,6 +273,7 @@ public:
 	void setup();
 	void updateInner();
 private:
+	void gradientVertical(uint8_t startX, uint8_t startY, uint8_t endX, uint8_t endY, uint8_t start_color, uint8_t end_color, uint8_t start_br, uint8_t end_br, uint8_t saturate);
 	uint8_t saturation;
   	uint8_t brightness;
   	uint8_t low_br;

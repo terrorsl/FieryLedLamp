@@ -2,14 +2,73 @@
 
 CRGB leds[NUM_LEDS];
 
+// получить номер пикселя в ленте по координатам
+// библиотека FastLED тоже использует эту функцию
+uint16_t XY(uint8_t x, uint8_t y)
+{
+	uint8_t THIS_X;
+	uint8_t THIS_Y;
+	uint8_t _WIDTH = WIDTH;
+	
+	switch (ORIENTATION)
+	{
+	case 0:
+		THIS_X = x;                   //CONNECTION_ANGLE == 0 && STRIP_DIRECTION == 0
+		THIS_Y =y;
+		break;
+	case 1:
+		_WIDTH = HEIGHT;              //CONNECTION_ANGLE == 0 && STRIP_DIRECTION == 1
+		THIS_X = y;
+		THIS_Y = x;
+		break;
+	case 2:
+		THIS_X = x;                   //CONNECTION_ANGLE == 1 && STRIP_DIRECTION == 0
+		THIS_Y = (HEIGHT - y - 1);
+		break;
+	case 3:
+		_WIDTH = HEIGHT;              //CONNECTION_ANGLE == 1 && STRIP_DIRECTION == 3
+		THIS_X = (HEIGHT - y - 1);
+		THIS_Y = x;
+		break;
+	case 4:
+		THIS_X = (WIDTH - x - 1);     //CONNECTION_ANGLE == 2 && STRIP_DIRECTION == 2
+		THIS_Y = (HEIGHT - y - 1);
+		break;
+	case 5:
+		_WIDTH = HEIGHT;              //CONNECTION_ANGLE == 2 && STRIP_DIRECTION == 3
+		THIS_X = (HEIGHT - y - 1);
+		THIS_Y = (WIDTH - x - 1);
+		break;
+	case 6:
+		THIS_X = (WIDTH - x - 1);     //CONNECTION_ANGLE == 3 && STRIP_DIRECTION == 2
+		THIS_Y =y;
+		break;
+	case 7:
+		_WIDTH = HEIGHT;              //CONNECTION_ANGLE == 3 && STRIP_DIRECTION == 1
+		THIS_X = y;
+		THIS_Y = (WIDTH - x - 1);
+		break;
+	default:
+		THIS_X = x;                 // !! смотрите инструкцию: https://alexgyver.ru/wp-content/uploads/2018/11/scheme3.jpg
+		THIS_Y =y;                  // !! такого сочетания CONNECTION_ANGLE и STRIP_DIRECTION не бывает
+		break;
+	}
+	
+	if(!(THIS_Y & 0x01) || MATRIX_TYPE)               // Even rows run forwards
+		return (THIS_Y * _WIDTH + THIS_X);
+	else                                                  
+		return (THIS_Y * _WIDTH + _WIDTH - THIS_X - 1);  // Odd rows run backwards
+}
+	
 // стандартные функции библиотеки LEDraw от @Palpalych (для адаптаций его эффектов)
 void blurScreen(fract8 blur_amount, CRGB *LEDarray = leds)
 {
-	//blur2d(LEDarray, WIDTH, HEIGHT, blur_amount);
+	blur2d(LEDarray, WIDTH, HEIGHT, blur_amount);
 }
-void dimAll(uint8_t value, CRGB *LEDarray = leds) {
-  // теперь короткий вариант
-  nscale8(LEDarray, NUM_LEDS, value);
+void dimAll(uint8_t value, CRGB *LEDarray = leds)
+{
+	// теперь короткий вариант
+  	nscale8(LEDarray, NUM_LEDS, value);
 }
 
 void FieryLedLampEffect::fillAll(CRGB color)
@@ -23,6 +82,10 @@ uint32_t FieryLedLampEffect::getPixColor(uint32_t thisSegm)
   	if (thisPixel > NUM_LEDS - 1)
 		return 0;
   	return (((uint32_t)leds[thisPixel].r << 16) | ((uint32_t)leds[thisPixel].g << 8 ) | (uint32_t)leds[thisPixel].b); // а почему не просто return (leds[thisPixel])?
+}
+uint32_t FieryLedLampEffect::getPixColorXY(uint8_t x, uint8_t y)
+{
+	return getPixColor(XY(x, y));
 }
 void FieryLedLampEffect::drawPixelXY(int8_t x, int8_t y, CRGB color)
 {
@@ -101,9 +164,6 @@ void FieryLedLampEffect::update()
 void FieryLedLampEffectWhiteColorStripeRoutine::setup()
 {
 	FastLED.clear();
-
-	scale = 0;
-	speed = 100;
 
 	uint8_t thisSize = HEIGHT;
 	uint8_t halfScale = scale;
@@ -444,7 +504,7 @@ void FieryLedLampEffectBamboo::setup()
 {
  	const uint8_t gamma[7] = {0, 32, 144, 160, 196, 208, 230};
   	deltaX = 0;
-  	bool direct = false;
+  	direct = false;
 	
     index = STP;
     uint8_t idx = map(scale, 5, 95, 0U, 6U);;
@@ -520,11 +580,11 @@ void FieryLedLampEffectWave::setup()
 
 void FieryLedLampEffectWave::updateInner()
 {
-	/*dimAll(254);
+	dimAll(254);
   	
 	int n = 0;
 
-  	switch (waveRotation)
+  	/*switch (waveRotation)
 	{
     case 0:
     	for (uint8_t x = 0; x < WIDTH; x++) {
@@ -704,7 +764,7 @@ void FieryLedLampEffectWaterfall::updateInner()
 #define STEP 4U
 void FieryLedLampEffectMagicLantern::setup()
 {
-  uint8_t delta;
+  	uint8_t delta;
 	deltaValue = 0;
     step = deltaValue;
     if (speed > 52) {
@@ -720,9 +780,54 @@ void FieryLedLampEffectMagicLantern::setup()
     FastLED.clear();
 }
 
+uint8_t validMinMax(float val, uint8_t minV, uint32_t maxV)
+{
+	uint8_t result;
+  	if (val <= minV) {
+    	result = minV;
+  	} else if (val >= maxV) {
+    	result = maxV;
+  	} else {
+    	result = ceil(val);
+  	}
+  	return result;
+}
+//--------------------------------------
+void FieryLedLampEffectMagicLantern::gradientVertical(uint8_t startX, uint8_t startY, uint8_t endX, uint8_t endY, uint8_t start_color, uint8_t end_color, uint8_t start_br, uint8_t end_br, uint8_t saturate) {
+  float step_color = 0;
+  float step_br = 0;
+  if (startX == endX) {
+    endX++;
+  }
+  if (startY == endY) {
+    endY++;
+  }
+  step_color = (end_color - start_color) / abs(startY - endY);
+
+  if (start_color >  end_color) {
+    step_color -= 1.2;
+  } else {
+    step_color += 1.2;
+  }
+
+  step_br = (end_br - start_br) / abs(startY - endY);
+  if (start_br >  end_color) {
+    step_br -= 1.2;
+  } else {
+    step_br += 1.2;
+  }
+  for (uint8_t y = startY; y < endY; y++) {
+    CHSV thisColor = CHSV( (uint8_t) validMinMax((start_color + (y - startY) * step_color), 0, 255), saturate,
+                           (uint8_t) validMinMax((start_br + (y - startY) * step_br), 0, 255) );
+    for (uint8_t x = startX; x < endX; x++) {
+      drawPixelXY(x, y, thisColor);
+    }
+  }
+}
+
 void FieryLedLampEffectMagicLantern::updateInner()
 {
-	/*dimAll(170);
+	dimAll(170);
   	hue = (scale > 95) ? floor(step / 32) * 32U : scale * 2.55;
 
 	for (uint8_t x = 0U; x < WIDTH + 1 ; x++) {
@@ -756,7 +861,7 @@ void FieryLedLampEffectMagicLantern::updateInner()
   	if (deltaValue >= STEP) {
     	deltaValue = 0;
   	}
-	step++;*/
+	step++;
 }
 
 // =============== Wine ================
