@@ -327,7 +327,7 @@ void FieryLedLamp::next_effect()
 {
 	unsigned short effect=config.currentEffect+1;
 	if(effect>=FieryLedLampEffectTypes::MaxEffect)
-		config.currentEffect=0;
+		effect=0;
 	change_effect(effect);
 };
 void FieryLedLamp::prev_effect()
@@ -381,6 +381,108 @@ bool FieryLedLamp::change_effect(unsigned short index)
 		break;
 	case FieryLedLampEffectTypes::Whirl:
 		config.effect=new FieryLedLampEffectWhirl(true);
+		break;
+	case FieryLedLampEffectTypes::WhirlMulti:
+		config.effect=new FieryLedLampEffectWhirl(false);
+		break;
+	case FieryLedLampEffectTypes::StarFall:
+		config.effect=new FieryLedLampEffectStarFall();
+		break;
+	case FieryLedLampEffectTypes::StormyRain:
+		//config.effect=new FieryLedLampEffectStarFall();
+		//break;
+	case FieryLedLampEffectTypes::DNA:
+		config.effect=new FieryLedLampEffectDNA();
+		break;
+	case FieryLedLampEffectTypes::Smoke:
+		config.effect=new FieryLedLampEffectSmoke(false);
+		break;
+	case FieryLedLampEffectTypes::SmokeColor:
+		config.effect=new FieryLedLampEffectSmoke(true);
+		break;
+	case FieryLedLampEffectTypes::SmokeBalls:
+		config.effect=new FieryLedLampEffectSmokeBalls();
+		break;
+	case FieryLedLampEffectTypes::LiqudLamp:
+		config.effect=new FieryLedLampEffectLiquidLamp(true);
+		break;
+	case FieryLedLampEffectTypes::LiqudLampAuto:
+		config.effect=new FieryLedLampEffectLiquidLamp(false);
+		break;
+	case FieryLedLampEffectTypes::Swirl:
+		config.effect=new FieryLedLampEffectSwirl();
+		break;
+	case FieryLedLampEffectTypes::Stars:
+		config.effect=new FieryLedLampEffectStars();
+		break;
+	case FieryLedLampEffectTypes::Zebra:
+		config.effect=new FieryLedLampEffectZebra();
+		break;
+	case FieryLedLampEffectTypes::TixyLand:
+		config.effect=new FieryLedLampEffectTixyLand();
+		break;
+	case FieryLedLampEffectTypes::Snakes:
+		config.effect=new FieryLedLampEffectSnakes();
+		break;
+	case FieryLedLampEffectTypes::Fountain:
+		config.effect=new FieryLedLampEffectFontain();
+		break;
+	case FieryLedLampEffectTypes::DropInWater:
+		config.effect=new FieryLedLampEffectDropInWater();
+		break;
+	case FieryLedLampEffectTypes::Drops:
+		config.effect=new FieryLedLampEffectDrops();
+		break;
+	case FieryLedLampEffectTypes::Rings:
+		config.effect=new FieryLedLampEffectRings();
+		break;
+	case FieryLedLampEffectTypes::Comet:
+		config.effect=new FieryLedLampEffectComet();
+		break;
+	case FieryLedLampEffectTypes::CometColor:
+		config.effect=new FieryLedLampEffectCometColor();
+		break;
+	case FieryLedLampEffectTypes::Comet2:
+		config.effect=new FieryLedLampEffectCometCount(2);
+		break;
+	case FieryLedLampEffectTypes::Comet3:
+		config.effect=new FieryLedLampEffectCometCount(3);
+		break;
+	case FieryLedLampEffectTypes::Contacts:
+		config.effect=new FieryLedLampEffectContacts();
+		break;
+	case FieryLedLampEffectTypes::Sparkles:
+		config.effect=new FieryLedLampEffectSparkles();
+		break;
+	case FieryLedLampEffectTypes::Cube2D:
+		config.effect=new FieryLedLampEffectCube2D();
+		break;
+	case FieryLedLampEffectTypes::Lava:
+		config.effect=new FieryLedLampEffectLava();
+		break;
+	case FieryLedLampEffectTypes::LavaLamp:
+		config.effect=new FieryLedLampEffectLavaLamp();
+		break;
+	case FieryLedLampEffectTypes::ButterflyLamp:
+		config.effect=new FieryLedLampEffectButterflyLamp(false);
+		break;
+	case FieryLedLampEffectTypes::Forest:
+		config.effect=new FieryLedLampEffectForest();
+		break;
+	case FieryLedLampEffectTypes::Lumenjer:
+		config.effect=new FieryLedLampEffectLumenjer();
+		break;
+	case FieryLedLampEffectTypes::Magma:
+		config.effect=new FieryLedLampEffectMagma();
+		break;
+	case FieryLedLampEffectTypes::Paints:
+		config.effect=new FieryLedLampEffectOilPaints();
+		break;
+	case FieryLedLampEffectTypes::Matrix:
+		config.effect=new FieryLedLampEffectMatrix();
+		break;
+	case FieryLedLampEffectTypes::Twinkles:
+		config.effect=new FieryLedLampEffectTwinkles();
 		break;
 	default:
 		DBG_PRINT("unknown effect:%d\n", index);

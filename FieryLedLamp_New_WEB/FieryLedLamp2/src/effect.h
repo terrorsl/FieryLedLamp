@@ -26,41 +26,41 @@ typedef enum{
 	Wine, // Вино
 	Whirl, // Вихри пламени
 	WhirlMulti, // Вихри разноцветные
-/*#define EFF_STARFALL            ( 14U)    // Вьюга
-#define EFF_STORMY_RAIN         ( 15U)    // Гроза в банке
-#define EFF_DNA                 ( 16U)    // ДНК
+	StarFall, // Вьюга
+	StormyRain, // Гроза в банке
+	DNA, // ДНК
 	Smoke, // Дым
 	SmokeColor, // Дым разноцветный
-#define EFF_SMOKEBALLS          ( 19U)    // Дымовые шашки
-#define EFF_LIQUIDLAMP          ( 20U)    // Жидкая лампа
-#define EFF_LIQUIDLAMP_AUTO     ( 21U)    // Жидкая лампа авто
-#define EFF_SWIRL               ( 22U)    // Завиток
-#define EFF_STARS               ( 23U)    // Звезды
-#define EFF_ZEBRA               ( 24U)    // Зебра
-#define EFF_TIXYLAND            ( 25U)    // Земля Тикси
-#define EFF_SNAKES              ( 26U)    // Змейки
-#define EFF_FOUNTAIN            ( 27U)    // Источник
-#define EFF_DROP_IN_WATER       ( 28U)    // Капли на воде
-#define EFF_DROPS               ( 29U)    // Капли на стекле
-#define EFF_LLAND               ( 30U)    // Кипение
-#define EFF_RINGS               ( 31U)    // Кодовый замок
-#define EFF_COMET               ( 32U)    // Комета
-#define EFF_COMET_COLOR         ( 33U)    // Комета одноцветная
-#define EFF_COMET_TWO           ( 34U)    // Комета двойная
-#define EFF_COMET_THREE         ( 35U)    // Комета тройная
-#define EFF_CONTACTS            ( 36U)    // Контакты
-#define EFF_SPARKLES            ( 37U)    // Конфетти
-#define EFF_CUBE2D              ( 38U)    // Кубик Рубика
+	SmokeBalls, // Дымовые шашки
+	LiqudLamp, // Жидкая лампа
+	LiqudLampAuto, // Жидкая лампа авто
+	Swirl, // Завиток
+	Stars, // Звезды
+	Zebra, // Зебра
+	TixyLand, // Земля Тикси
+	Snakes, // Змейки
+	Fountain, // Источник
+	DropInWater, // Капли на воде
+	Drops, // Капли на стекле
+	LLand, // Кипение
+	Rings, // Кодовый замок
+	Comet, // Комета
+	CometColor, // Комета одноцветная
+	Comet2, // Комета двойная
+	Comet3, // Комета тройная
+	Contacts, // Контакты
+	Sparkles, // Конфетти
+	Cube2D, // Кубик Рубика
 	Lava, // Лава
-#define EFF_LAVALAMP            ( 40U)    // Лавовая лампа
-#define EFF_BUTTERFLYS_LAMP     ( 41U)    // Лампа с мотыльками
-#define EFF_FOREST              ( 42U)    // Лес
-#define EFF_LUMENJER            ( 43U)    // Люмeньep
-#define EFF_MAGMA               ( 44U)    // Магма
-#define EFF_PAINTS              ( 45U)    // Масляные краски
-#define EFF_MATRIX              ( 46U)    // Матрица
-#define EFF_TWINKLES            ( 47U)    // Мерцание
-#define EFF_METABALLS           ( 48U)    // Метоболз
+	LavaLamp, // Лавовая лампа
+	ButterflyLamp, // Лампа с мотыльками
+	Forest,  // Лес
+	Lumenjer, // Люмeньep
+	Magma, // Магма
+	Paints, // Масляные краски
+	Matrix, // Матрица
+	Twinkles, // Мерцание
+/*#define EFF_METABALLS           ( 48U)    // Метоболз
 #define EFF_WEB_TOOLS           ( 49U)    // Мечта дизайнера
 #define EFF_MOSAIC              ( 50U)    // Мозайка
 #define EFF_BUTTERFLYS          ( 51U)    // Moтыльки
@@ -141,22 +141,44 @@ typedef enum{
 #define LOW_DELAY 1
 #define DYNAMIC_DELAY 2
 
+// палитра для типа реалистичного водопада (если ползунок Масштаб выставить на 100)
+const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {0x000000, 0x060707, 0x101110, 0x151717, 0x1C1D22, 0x242A28, 0x363B3A, 0x313634, 0x505552, 0x6B6C70, 0x98A4A1, 0xC1C2C1, 0xCACECF, 0xCDDEDD, 0xDEDFE0, 0xB2BAB9};
+
+// добавлено изменение текущей палитры (используется во многих эффектах ниже для бегунка Масштаб)
+static const TProgmemRGBPalette16 *palette_arr[] = {
+  &PartyColors_p,
+  &OceanColors_p,
+  &LavaColors_p,
+  &HeatColors_p,
+  &WaterfallColors_p,
+  &CloudColors_p,
+  &ForestColors_p,
+  &RainbowColors_p,
+  &RainbowStripeColors_p
+};
+
 class FieryLedLampEffect
 {
 public:
 	FieryLedLampEffect(uint8_t delayType):delat_type(delayType){};
 	virtual ~FieryLedLampEffect(){}
 
-  void set_bright(unsigned char val){}
-  void set_speed(unsigned char val){speed=val;}
-  void set_scale(unsigned char val){scale=val;}
+	void set_bright(unsigned char val){}
+	void set_speed(unsigned char val){speed=val;}
+	void set_scale(unsigned char val){scale=val;}
 
 	virtual void setup() = 0;
 	virtual void updateInner() = 0;
 
 	void update();
 protected:
-  // функция отрисовки точки по координатам X Y
+	void setCurrentPalette() {
+		if (scale > 100U)
+			scale = 100U; // чтобы не было проблем при прошивке без очистки памяти
+  		curPalette = palette_arr[(uint8_t)(scale / 100.0F * ((sizeof(palette_arr) / sizeof(TProgmemRGBPalette16 *)) - 0.01F))];
+	}
+
+  	// функция отрисовки точки по координатам X Y
 	void drawPixelXY(int8_t x, int8_t y, CRGB color);
 	//по мотивам
 	//https://gist.github.com/sutaburosu/32a203c2efa2bb584f4b846a91066583
@@ -167,6 +189,62 @@ protected:
 	uint32_t getPixColorXY(uint8_t x, uint8_t y);
 	// залить все
 	void fillAll(CRGB color);
+	void fadePixel(uint8_t i, uint8_t j, uint8_t step);
+	void drawStar(float xlocl, float ylocl, float biggy, float little, int16_t points, float dangle, uint8_t koler);
+	void DrawLine(int x1, int y1, int x2, int y2, CRGB color)
+{
+  int deltaX = abs(x2 - x1);
+  int deltaY = abs(y2 - y1);
+  int signX = x1 < x2 ? 1 : -1;
+  int signY = y1 < y2 ? 1 : -1;
+  int error = deltaX - deltaY;
+
+  drawPixelXY(x2, y2, color);
+  while (x1 != x2 || y1 != y2) {
+    drawPixelXY(x1, y1, color);
+    int error2 = error * 2;
+    if (error2 > -deltaY) {
+      error -= deltaY;
+      x1 += signX;
+    }
+    if (error2 < deltaX) {
+      error += deltaX;
+      y1 += signY;
+    }
+  }
+}
+void drawCircleF(float x0, float y0, float radius, CRGB color);
+void drawCircle(int x0, int y0, int radius, const CRGB &color) {
+  int a = radius, b = 0;
+  int radiusError = 1 - a;
+
+  if (radius == 0) {
+    drawPixelXY(x0, y0, color);
+    return;
+  }
+
+  while (a >= b)  {
+    drawPixelXY(a + x0, b + y0, color);
+    drawPixelXY(b + x0, a + y0, color);
+    drawPixelXY(-a + x0, b + y0, color);
+    drawPixelXY(-b + x0, a + y0, color);
+    drawPixelXY(-a + x0, -b + y0, color);
+    drawPixelXY(-b + x0, -a + y0, color);
+    drawPixelXY(a + x0, -b + y0, color);
+    drawPixelXY(b + x0, -a + y0, color);
+    b++;
+    if (radiusError < 0)
+      radiusError += 2 * b + 1;
+    else
+    {
+      a--;
+      radiusError += 2 * (b - a + 1);
+    }
+  }
+}
+	void fillNoiseLED(const TProgmemRGBPalette16 *currentPalette);
+	void FillNoise(uint8_t **noise3d, uint32_t noise32_x, uint32_t noise32_y, uint32_t noise32_z, uint32_t scale32_x, uint32_t scale32_y, uint8_t noisesmooth);
+
 	//массивы состояния объектов, которые могут использоваться в любом эффекте
 	#define trackingOBJECT_MAX_COUNT                         (100U)  // максимальное количество отслеживаемых объектов (очень влияет на расход памяти)
 	float   trackingObjectPosX[trackingOBJECT_MAX_COUNT];
@@ -178,9 +256,21 @@ protected:
 	uint8_t trackingObjectState[trackingOBJECT_MAX_COUNT];
 	bool    trackingObjectIsShift[trackingOBJECT_MAX_COUNT];
 
+	#if (WIDTH > HEIGHT)
+	uint8_t noise[WIDTH][WIDTH];
+	#else
+	uint8_t noise[HEIGHT][HEIGHT];
+	#endif
+	uint8_t colorLoop = 1;
+	uint8_t ihue = 0;
+
 	uint8_t delat_type;
-	uint8_t speed, scale;
+	uint8_t speed, scale, brightness;
 	uint8_t hue,hue2;
+
+	uint16_t x,y,z;
+
+	const TProgmemRGBPalette16 *curPalette;
 
 	unsigned long effectTimer;
 };
@@ -777,6 +867,274 @@ private:
 	Boid boids[AVAILABLE_BOID_COUNT];
 };
 
+class FieryLedLampEffectStarFall: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectStarFall():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+};
+
+class FieryLedLampEffectDNA: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectDNA():FieryLedLampEffect(LOW_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t step, deltaHue;
+};
+
+class FieryLedLampEffectSmoke: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectSmoke(bool _colored):FieryLedLampEffect(DYNAMIC_DELAY),colored(_colored){};
+	~FieryLedLampEffectSmoke();
+
+	void setup();
+	void updateInner();
+private:
+	bool colored;
+	uint8_t deltaHue, deltaHue2;
+	uint32_t noise32_x,noise32_y,noise32_z;
+	uint8_t **noise3d;
+};
+
+class FieryLedLampEffectSmokeBalls: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectSmokeBalls():FieryLedLampEffect(LOW_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t enlargedObjectNUM;
+	float speedfactor;
+};
+
+#define enlargedOBJECT_MAX_COUNT                     (WIDTH * 2) // максимальное количество сложных отслеживаемых объектов (меньше, чем trackingOBJECT_MAX_COUNT)
+class FieryLedLampEffectLiquidLamp: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectLiquidLamp(bool colored):FieryLedLampEffect(LOW_DELAY),isColored(colored){};
+	void setup();
+	void updateInner();
+private:
+	void fillPalette(uint8_t hue, bool isInvert = false);
+	void position();
+	void physic();
+
+	bool isColored;
+	float speedfactor;
+	uint8_t deltaHue, enlargedObjectNUM;
+	float liquidLampHot[enlargedOBJECT_MAX_COUNT], liquidLampSpf[enlargedOBJECT_MAX_COUNT];
+	uint8_t liquidLampMX[enlargedOBJECT_MAX_COUNT], liquidLampSC[enlargedOBJECT_MAX_COUNT], liquidLampTR[enlargedOBJECT_MAX_COUNT];
+	CRGBPalette16 palette;
+};
+
+class FieryLedLampEffectSwirl: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectSwirl():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t step, deltaValue, deltaHue, deltaHue2;
+};
+
+class FieryLedLampEffectStars: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectStars():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+#define STARS_NUM (8U)
+#define STAR_BLENDER (128U)
+#define CENTER_DRIFT_SPEED (6U)
+	uint8_t points[STARS_NUM];
+  	float color[STARS_NUM] ;
+  	int delay_arr[STARS_NUM];
+  	float counter;
+  	float driftx;
+  	float  drifty;
+  	float cangle;
+  	float  sangle;
+  	uint8_t stars_count;
+};
+
+class FieryLedLampEffectZebra: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectZebra():FieryLedLampEffect(HIGH_DELAY){};
+	void setup();
+	void updateInner();
+private:
+};
+
+class FieryLedLampEffectTixyLand: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectTixyLand():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	void processFrame(double t, double x, double y);
+	float code(double t, double i, double x, double y);
+
+	uint8_t deltaHue2, pcnt;
+};
+
+class FieryLedLampEffectSnakes: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectSnakes():FieryLedLampEffect(LOW_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	float speedfactor;
+	uint8_t enlargedObjectNUM;
+	unsigned long enlargedObjectTime[enlargedOBJECT_MAX_COUNT];
+};
+
+class FieryLedLampEffectFontain: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectFontain():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	void starfield2Emit(uint8_t i);
+	void particlesUpdate2(uint8_t i);
+
+	uint8_t enlargedObjectNUM, deltaValue;
+};
+
+class FieryLedLampEffectDropInWater: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectDropInWater():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	int rad[(HEIGHT + WIDTH) / 8];
+	byte posx[(HEIGHT + WIDTH) / 8], posy[(HEIGHT + WIDTH) / 8];
+};
+
+class FieryLedLampEffectDrops: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectDrops():FieryLedLampEffect(LOW_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t enlargedObjectNUM;
+};
+
+class FieryLedLampEffectLLand: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectLLand():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t deltaValue, ff_y, ff_z;
+};
+
+class FieryLedLampEffectRings: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectRings():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t deltaHue, deltaHue2, deltaValue;
+	uint8_t noise3d[HEIGHT]; // начальный оттенок каждого кольца (оттенка из палитры) 0-255
+	uint8_t shiftValue[HEIGHT]; // местоположение начального оттенка кольца 0-WIDTH-1
+	uint8_t shiftHue[HEIGHT]; // 4 бита на ringHueShift, 4 на ringHueShift2
+	uint8_t step;
+};
+
+class FieryLedLampEffectComet: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectComet():FieryLedLampEffect(DYNAMIC_DELAY){};
+	~FieryLedLampEffectComet();
+	void setup();
+	void updateInner();
+private:
+	uint32_t noise32_x,noise32_y,noise32_z;
+	uint8_t **noise3d;
+};
+
+class FieryLedLampEffectCometColor: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectCometColor():FieryLedLampEffect(DYNAMIC_DELAY){};
+	~FieryLedLampEffectCometColor();
+	void setup();
+	void updateInner();
+private:
+	uint32_t noise32_x,noise32_y,noise32_z;
+	uint8_t **noise3d;
+};
+
+class FieryLedLampEffectCometCount: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectCometCount(uint8_t v):FieryLedLampEffect(DYNAMIC_DELAY),count(v){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t count, deltaHue;
+};
+
+class FieryLedLampEffectContacts: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectContacts():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+};
+
+class FieryLedLampEffectSparkles: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectSparkles():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+};
+
+class FieryLedLampEffectCube2D: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectCube2D():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t step, deltaValue;
+	uint8_t razmerX, razmerY; // размеры ячеек по горизонтали / вертикали
+	uint8_t deltaHue,deltaHue2;
+	int8_t globalShiftX, globalShiftY; // нужно ли сдвинуть всё поле по окончаии цикла и в каком из направлений (-1, 0, +1)
+	uint8_t shtukX, shtukY; // количество ячеек по горизонтали / вертикали
+	uint8_t poleX, poleY; // размер всего поля по горизонтали / вертикали (в том числе 1 дополнительная пустая дорожка-разделитель с какой-то из сторон)
+	bool seamlessX; // получилось ли сделать поле по Х бесшовным
+	bool krutimVertikalno; // направление вращения в данный момент
+
+	uint8_t noise3d[WIDTH][HEIGHT];
+};
+
+class FieryLedLampEffectLava: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectLava():FieryLedLampEffect(HIGH_DELAY){};
+	void setup();
+	void updateInner();
+private:
+};
+
 class FieryLedLampEffectLavaLamp: public FieryLedLampEffect
 {
 public:
@@ -788,6 +1146,90 @@ private:
 	void drawBlob(uint8_t l, CRGB color);
 
 	uint8_t enlargedObjectNUM;
+};
+
+class FieryLedLampEffectButterflyLamp: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectButterflyLamp(bool colored):FieryLedLampEffect(LOW_DELAY),isColored(colored){};
+	void setup();
+	void updateInner();
+private:
+	bool isColored;
+	float speedfactor;
+	uint8_t deltaValue, step, deltaHue;
+};
+
+class FieryLedLampEffectForest: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectForest():FieryLedLampEffect(HIGH_DELAY){};
+	void setup();
+	void updateInner();
+private:
+};
+
+class FieryLedLampEffectLumenjer: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectLumenjer():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t deltaHue,deltaHue2, step;
+};
+
+class FieryLedLampEffectLeapers: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectLeapers():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+protected:
+	void move(uint8_t l);
+	void restart(uint8_t l);
+
+	uint8_t enlargedObjectNUM;
+};
+
+class FieryLedLampEffectMagma: public FieryLedLampEffectLeapers
+{
+public:
+	FieryLedLampEffectMagma(){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t deltaValue, deltaHue, shiftHue[HEIGHT], ff_y,ff_z;
+};
+
+class FieryLedLampEffectOilPaints: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectOilPaints():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t step,deltaValue, deltaHue, deltaHue2;
+	uint16_t max_val;
+};
+
+class FieryLedLampEffectMatrix: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectMatrix():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+};
+
+class FieryLedLampEffectTwinkles: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectTwinkles():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t deltaValue;
 };
 
 class FieryLedLampEffectList
