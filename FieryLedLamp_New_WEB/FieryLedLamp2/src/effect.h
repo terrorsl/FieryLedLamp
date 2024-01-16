@@ -60,14 +60,14 @@ typedef enum{
 	Paints, // Масляные краски
 	Matrix, // Матрица
 	Twinkles, // Мерцание
-/*#define EFF_METABALLS           ( 48U)    // Метоболз
-#define EFF_WEB_TOOLS           ( 49U)    // Мечта дизайнера
-#define EFF_MOSAIC              ( 50U)    // Мозайка
-#define EFF_BUTTERFLYS          ( 51U)    // Moтыльки
-#define EFF_BBALLS              ( 52U)    // Мячики
-#define EFF_BALLS_BOUNCE        ( 53U)    // Мячики без границ
-#define EFF_CHRISTMAS_TREE      ( 54U)    // Новогодняя Елка
-#define EFF_FIRE                ( 55U)    // Огонь
+  	Metaballs, // Метоболз
+	WebTools, // Мечта дизайнера
+	Mosaic, // Мозайка
+	Butterflys, // Moтыльки
+	BBalls, // Мячики
+	BallsBounce, // Мячики без границ
+	ChristmasTree, // Новогодняя Елка
+/*#define EFF_FIRE                ( 55U)    // Огонь
 #define EFF_FIRE_2012           ( 56U)    // Огонь 2012
 #define EFF_FIRE_2018           ( 57U)    // Огонь 2018
 #define EFF_FIRE_2020           ( 58U)    // Огонь 2020
@@ -140,6 +140,7 @@ typedef enum{
 #define HIGH_DELAY 0
 #define LOW_DELAY 1
 #define DYNAMIC_DELAY 2
+#define SOFT_DELAY 3
 
 // палитра для типа реалистичного водопада (если ползунок Масштаб выставить на 100)
 const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {0x000000, 0x060707, 0x101110, 0x151717, 0x1C1D22, 0x242A28, 0x363B3A, 0x313634, 0x505552, 0x6B6C70, 0x98A4A1, 0xC1C2C1, 0xCACECF, 0xCDDEDD, 0xDEDFE0, 0xB2BAB9};
@@ -213,8 +214,8 @@ protected:
     }
   }
 }
-void drawCircleF(float x0, float y0, float radius, CRGB color);
-void drawCircle(int x0, int y0, int radius, const CRGB &color) {
+	void drawCircleF(float x0, float y0, float radius, CRGB color);
+	void drawCircle(int x0, int y0, int radius, const CRGB &color) {
   int a = radius, b = 0;
   int radiusError = 1 - a;
 
@@ -244,6 +245,13 @@ void drawCircle(int x0, int y0, int radius, const CRGB &color) {
 }
 	void fillNoiseLED(const TProgmemRGBPalette16 *currentPalette);
 	void FillNoise(uint8_t **noise3d, uint32_t noise32_x, uint32_t noise32_y, uint32_t noise32_z, uint32_t scale32_x, uint32_t scale32_y, uint8_t noisesmooth);
+	void drawRecCHSV(uint8_t startX, uint8_t startY, uint8_t endX, uint8_t endY, CHSV color) {
+  for (uint8_t y = startY; y < endY; y++) {
+    for (uint8_t x = startX; x < endX; x++) {
+      drawPixelXY(x, y, color);
+    }
+  }
+}
 
 	//массивы состояния объектов, которые могут использоваться в любом эффекте
 	#define trackingOBJECT_MAX_COUNT                         (100U)  // максимальное количество отслеживаемых объектов (очень влияет на расход памяти)
@@ -272,7 +280,7 @@ void drawCircle(int x0, int y0, int radius, const CRGB &color) {
 
 	const TProgmemRGBPalette16 *curPalette;
 
-	unsigned long effectTimer;
+	unsigned long effectTimer, FPSdelay;
 };
 
 class FieryLedLampEffectWhiteColorStripeRoutine: public FieryLedLampEffect
@@ -1230,6 +1238,75 @@ public:
 	void updateInner();
 private:
 	uint8_t deltaValue;
+};
+
+class FieryLedLampEffectMetaballs: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectMetaballs():FieryLedLampEffect(LOW_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	float speedfactor;
+};
+
+class FieryLedLampEffectWebTool: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectWebTool():FieryLedLampEffect(SOFT_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	int getRandomPos(uint8_t STEP);
+	int getHue(uint8_t x, uint8_t y);
+	uint8_t getSaturationStep();
+	uint8_t getBrightnessStep();
+	void drawPalette(int posX, int posY, uint8_t _STEP);
+
+	float speedfactor;
+	uint8_t step;
+};
+
+class FieryLedLampEffectMosaic: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectMosaic():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t poleX,poleY,line[WIDTH / 3U + 1U], shiftValue[HEIGHT / 3U + 1U];
+};
+
+class FieryLedLampEffectBballs: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectBballs():FieryLedLampEffect(LOW_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t enlargedObjectNUM, deltaHue, deltaValue;
+	unsigned long enlargedObjectTime[enlargedOBJECT_MAX_COUNT];
+};
+
+class FieryLedLampEffectBallsBounce: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectBallsBounce():FieryLedLampEffect(LOW_DELAY){};
+	~FieryLedLampEffectBallsBounce();
+	void setup();
+	void updateInner();
+private:
+	uint8_t enlargedObjectNUM;
+	Boid *boids;
+};
+
+class FieryLedLampEffectChristmasTree: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectChristmasTree():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
 };
 
 class FieryLedLampEffectList

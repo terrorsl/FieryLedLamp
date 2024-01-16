@@ -197,6 +197,9 @@ void FieryLedLampEffect::update()
 		if(millis() - effectTimer < (unsigned long)(256-speed))
 			return;
 		break;
+	case SOFT_DELAY:
+		if(millis()-effectTimer<FPSdelay)
+			return;
 	}
 	//DBG_PRINT("update");
 	effectTimer=millis();
@@ -3710,4 +3713,467 @@ void FieryLedLampEffectTwinkles::updateInner()
     	else
       		leds[idx] = ColorFromPalette(*curPalette, leds[idx].r, leds[idx].b);
   	}
+}
+
+// --------------------------- эффект МетаБолз ----------------------
+// https://gist.github.com/StefanPetrick/170fbf141390fafb9c0c76b8a0d34e54
+// Stefan Petrick's MetaBalls Effect mod by PalPalych for GyverLamp
+/*
+  Metaballs proof of concept by Stefan Petrick (mod by Palpalych for GyverLamp 27/02/2020)
+  ...very rough 8bit math here...
+  read more about the concept of isosurfaces and metaballs:
+  https://www.gamedev.net/articles/programming/graphics/exploring-metaballs-and-isosurfaces-in-2d-r2556
+*/
+void FieryLedLampEffectMetaballs::setup()
+{
+	setCurrentPalette();
+    speedfactor = speed / 127.0;
+}
+
+void FieryLedLampEffectMetaballs::updateInner()
+{
+  	// get some 2 random moving points
+  	uint16_t param1 = millis() * speedfactor;
+  	uint8_t x2 = inoise8(param1, 25355, 685 ) / WIDTH;
+  	uint8_t y2 = inoise8(param1, 355, 11685 ) / HEIGHT;
+
+  	uint8_t x3 = inoise8(param1, 55355, 6685 ) / WIDTH;
+  	uint8_t y3 = inoise8(param1, 25355, 22685 ) / HEIGHT;
+
+  	// and one Lissajou function
+  	uint8_t x1 = beatsin8(23 * speedfactor, 0, WIDTH - 1U);
+  	uint8_t y1 = beatsin8(28 * speedfactor, 0, HEIGHT - 1U);
+
+  	for (uint8_t y = 0; y < HEIGHT; y++) {
+    	for (uint8_t x = 0; x < WIDTH; x++) {
+      		// calculate distances of the 3 points from actual pixel
+      		// and add them together with weightening
+      		uint8_t  dx =  abs(x - x1);
+      		uint8_t  dy =  abs(y - y1);
+      		uint8_t dist = 2 * sqrtf((dx * dx) + (dy * dy));
+
+      		dx =  abs(x - x2);
+      		dy =  abs(y - y2);
+      		dist += sqrtf((dx * dx) + (dy * dy));
+
+      		dx =  abs(x - x3);
+      		dy =  abs(y - y3);
+      		dist += sqrtf((dx * dx) + (dy * dy));
+
+      		// inverse result
+      		//byte color = modes[currentMode].Speed * 10 / dist;
+      		//byte color = 1000U / dist; кажется, проблема была именно тут в делении на ноль
+      		byte color = (dist == 0) ? 255U : 1000U / dist;
+
+      		// map color between thresholds
+      		if (color > 0 && color < 60) {
+        		if (scale == 100U)
+          			drawPixelXY(x, y, CHSV(color * 9, 255, 255));// это оригинальный цвет эффекта
+        		else
+          			drawPixelXY(x, y, ColorFromPalette(*curPalette, color * 9));
+      		} else {
+        		if (scale == 100U)
+          			drawPixelXY(x, y, CHSV(0, 255, 255)); // в оригинале центральный глаз почему-то красный
+        		else
+          			drawPixelXY(x, y, ColorFromPalette(*curPalette, 0U));
+      		}
+      		// show the 3 points, too
+      		drawPixelXY(x1, y1, CRGB(255, 255, 255));
+      		drawPixelXY(x2, y2, CRGB(255, 255, 255));
+      		drawPixelXY(x3, y3, CRGB(255, 255, 255));
+    	}
+  	}
+}
+
+// =====================================
+//             Мечта Дизайнера
+//                WebTools
+//             © SlingMaster
+// =====================================
+/* --------------------------------- */
+int FieryLedLampEffectWebTool::getRandomPos(uint8_t _step) {
+	uint8_t val = floor(random(0, (_step * 16 - WIDTH - 1)) / _step) * _step;
+	return -val;
+}
+
+/* --------------------------------- */
+int FieryLedLampEffectWebTool::getHue(uint8_t x, uint8_t y) {
+	return ( x * 32 +  y * 24U );
+}
+
+/* --------------------------------- */
+uint8_t FieryLedLampEffectWebTool::getSaturationStep() {
+  	return (speed > 170U) ? ((HEIGHT > 24) ? 12 : 24) : 0;
+}
+
+/* --------------------------------- */
+uint8_t FieryLedLampEffectWebTool::getBrightnessStep() {
+	return (speed < 85U) ? ((HEIGHT > 24) ? 16 : 24) : 0;
+}
+
+/* --------------------------------- */
+void FieryLedLampEffectWebTool::drawPalette(int posX, int posY, uint8_t _STEP) {
+  	uint8_t PX, PY;
+  	const uint8_t SZ = _STEP - 1;
+  	const uint8_t maxY = floor(HEIGHT / SZ);
+  	uint8_t sat = getSaturationStep();
+  	uint8_t br  = getBrightnessStep();
+
+  	FastLED.clear();
+  	for (uint8_t y = 0; y < maxY; y++) {
+    	for (uint8_t x = 0; x < 16; x++) {
+      		PY = y * _STEP;
+      		PX = posX + x * _STEP;
+      		if ((PX >= - _STEP ) && (PY >= - _STEP) && (PX < WIDTH) && (PY < HEIGHT)) {
+        		// LOG.printf_P(PSTR("y: %03d | br • %03d | sat • %03d\n"), y, (240U - br * y), sat);
+        		drawRecCHSV(PX, PY, PX + SZ, PY + SZ, CHSV( getHue(x, y), (255U - sat * y), (240U - br * y)));
+      		}
+    	}
+  	}
+}
+
+/* --------------------------------- */
+#if 0
+void selectColor(uint8_t sc) {
+  uint8_t offset = (WIDTH >= 16) ? WIDTH * 0.25 : 0;
+  hue = getHue(random(offset, WIDTH - offset), random(HEIGHT));
+  uint8_t sat = getSaturationStep();
+  uint8_t br  = getBrightnessStep();
+
+  for (uint8_t y = 0; y < HEIGHT; y++) {
+    for (uint8_t x = offset; x < (WIDTH - offset); x++) {
+      CHSV curColor = CHSV(hue, (255U - sat * y), (240U - br * y));
+      if (curColor == getPixColorXY(x, y)) {
+        /* show srlect color */
+        drawRecCHSV(x, y, x + sc, y + sc, CHSV( hue, 64U, 255U));
+        FastLED.show();
+        delay(400);
+        drawRecCHSV(x, y, x + sc, y + sc, CHSV( hue, 255U, 255U));
+        y = HEIGHT;
+        x = WIDTH;
+      }
+    }
+  }
+}
+#endif
+
+void FieryLedLampEffectWebTool::setup()
+{
+	FPSdelay = 1U;
+    step = 0;
+	#if 0
+    STEP = 2U + floor(scale / 35);
+    posX = 0;
+    posY = 0;
+    drawPalette(posX, posY, STEP);
+	#endif
+}
+
+void FieryLedLampEffectWebTool::updateInner()
+{
+	#if 0
+  	const uint8_t FPS_D = 24U;
+  	static uint8_t STEP = 3U;
+  	static int posX = -STEP;
+  	static int posY = 0;
+  	static int nextX = -STEP * 2;
+  	static bool stop_moving = true;
+  	uint8_t speed = constrain(speed, 65, 255);
+  	/* auto scenario */
+  	//switch (step) {
+    if (step == 0){     /* restart ----------- */
+      nextX = 0;
+      FPSdelay = FPS_D;
+    }
+    else 
+    if (step == speed/16+1){    /* start move -------- 16*/
+      nextX = getRandomPos(STEP);
+      FPSdelay = FPS_D;
+    }
+    else
+    if (step == speed/10+1){    /* find --------------100 */
+      nextX = getRandomPos(STEP);
+      FPSdelay = FPS_D;
+    }
+    else
+    if (step == speed/7+1){    /* find 2 ----------- 150*/
+      nextX = getRandomPos(STEP);
+      FPSdelay = FPS_D;
+    }
+    else
+    if (step == speed/6+1){    /* find 3 -----------200 */
+      nextX = - STEP * random(4, 8);
+      // nextX = getRandomPos(STEP);
+      FPSdelay = FPS_D;
+    }
+    else
+    if (step == speed/5+1){   /* select color ------220 */
+      FPSdelay = 200U;
+      selectColor(STEP - 1);
+    }
+    else
+    if (step == speed/4+1){   /* show color -------- 222*/
+      FPSdelay = FPS_D;
+      nextX = WIDTH;
+    }
+    else
+    if (step == speed/4+3){
+      step = 252;
+    }
+    
+  //}
+  if (posX < nextX) posX++;
+  if (posX > nextX) posX--;
+
+  if (stop_moving)   {
+    FPSdelay = 80U;
+    step++;
+  } else {
+    drawPalette(posX, posY, STEP);
+    if ((nextX == WIDTH) || (nextX == 0)) {
+      /* show select color bar gradient */
+      // LOG.printf_P(PSTR("step: %03d | Next x: %03d • %03d | fps %03d\n"), step, nextX, posX, FPSdelay);
+      if (posX > 1) {
+        gradientHorizontal(0, 0, (posX - 1), HEIGHT, hue, hue, 255U, 96U, 255U);
+      }
+      if (posX > 3) DrawLine(posX - 3, CENTER_Y_MINOR, posX - 3, CENTER_Y_MAJOR, CHSV( hue, 192U, 255U));
+    }
+  }
+
+  stop_moving = (posX == nextX); 
+  #endif
+}
+
+// ----------------------------- Эффект Мозайка / Кафель ------------------------------
+// (c) SottNick
+// на основе идеи Idir
+// https://editor.soulmatelights.com/gallery/843-squares-and-dots
+
+void FieryLedLampEffectMosaic::setup()
+{
+	uint8_t shtukX = WIDTH / 3U + 1U;
+    uint8_t shtukY = HEIGHT / 3U + 1U;
+    poleX = speed % 3U;
+    poleY = speed / 3U % 3U;
+
+    for (uint8_t i = 0; i < shtukX; i++)
+    	line[i] = random8(3U);
+    for (uint8_t i = 0; i < shtukY; i++)
+    	shiftValue[i] = random8(3U);
+}
+
+void FieryLedLampEffectMosaic::updateInner()
+{
+  	bool type = random8(2U);
+  	CRGB color = CHSV(random8(), 255U - random8(scale * 2.55), 255U);
+
+  	uint8_t i = random8(WIDTH / 3U + 1U);
+  	uint8_t j = random8(HEIGHT / 3U + 1U);
+  	int16_t x0 = i * 3 + (poleX + ((scale & 0x01) ? line[j] : 0)) % 3 - 2;
+  	int16_t y0 = j * 3 + (poleY + ((scale & 0x01) ? 0 : shiftValue[i])) % 3 - 2;
+  	uint8_t hole = 0U;
+
+  	for (int16_t x = x0; x < x0 + 3; x++) {
+    	for (int16_t y = y0; y < y0 + 3; y++) {
+      		drawPixelXY(x, y, ((hole == 4U) ^ type) ? CRGB::Black : color);
+      		hole++;
+    	}
+  	}
+}
+
+// --------------------------- эффект мячики ----------------------
+//  BouncingBalls2014 is a program that lets you animate an LED strip
+//  to look like a group of bouncing balls
+//  Daniel Wilson, 2014
+//  https://github.com/githubcdr/Arduino/blob/master/bouncingballs/bouncingballs.ino
+//  With BIG thanks to the FastLED community!
+//  адаптация от SottNick
+#define bballsGRAVITY           (-9.81)              // Downward (negative) acceleration of gravity in m/s^2
+#define bballsH0                (1)                  // Starting height, in meters, of the ball (strip length)
+//#define enlargedOBJECT_MAX_COUNT            (WIDTH * 2)          // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
+//uint8_t enlargedObjectNUM;                                   // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way) ... количество мячиков теперь задаётся бегунком, а не константой
+//uint8_t bballsCOLOR[enlargedOBJECT_MAX_COUNT] ;                   // прикручено при адаптации для разноцветных мячиков
+//будем использовать uint8_t trackingObjectHue[trackingOBJECT_MAX_COUNT];
+//uint8_t bballsX[enlargedOBJECT_MAX_COUNT] ;                       // прикручено при адаптации для распределения мячиков по радиусу лампы
+//будем использовать uint8_t trackingObjectState[trackingOBJECT_MAX_COUNT];
+//bool trackingObjectIsShift[enlargedOBJECT_MAX_COUNT] ;                      // прикручено при адаптации для того, чтобы мячики не стояли на месте
+//float bballsVImpact0 = sqrt( -2 * bballsGRAVITY * bballsH0 );  // Impact velocity of the ball when it hits the ground if "dropped" from the top of the strip
+//float bballsVImpact[enlargedOBJECT_MAX_COUNT] ;                   // As time goes on the impact velocity will change, so make an array to store those values
+//будем использовать float trackingObjectSpeedY[trackingOBJECT_MAX_COUNT];
+//uint16_t   bballsPos[enlargedOBJECT_MAX_COUNT] ;                       // The integer position of the dot on the strip (LED index)
+//будем использовать float trackingObjectPosY[trackingOBJECT_MAX_COUNT];
+//long  enlargedObjectTime[enlargedOBJECT_MAX_COUNT] ;                     // The clock time of the last ground strike
+//float bballsCOR[enlargedOBJECT_MAX_COUNT] ;                       // Coefficient of Restitution (bounce damping)
+//будем использовать float trackingObjectShift[trackingOBJECT_MAX_COUNT];
+
+void FieryLedLampEffectBballs::setup()
+{
+	enlargedObjectNUM = (scale - 1U) / 99.0 * (enlargedOBJECT_MAX_COUNT - 1U) + 1U;
+    if (enlargedObjectNUM > enlargedOBJECT_MAX_COUNT)
+		enlargedObjectNUM = enlargedOBJECT_MAX_COUNT;
+    for (uint8_t i = 0 ; i < enlargedObjectNUM ; i++) {             // Initialize variables
+    	trackingObjectHue[i] = random8();
+    	trackingObjectState[i] = random8(0U, WIDTH);
+    	enlargedObjectTime[i] = millis();
+    	trackingObjectPosY[i] = 0U;                                // Balls start on the ground
+    	trackingObjectSpeedY[i] = sqrtf( -2 * bballsGRAVITY * bballsH0 );                // And "pop" up at vImpact0
+      	trackingObjectShift[i] = 0.90 - float(i) / pow(enlargedObjectNUM, 2); // это, видимо, прыгучесть. для каждого мячика уникальная изначально
+      	trackingObjectIsShift[i] = false;
+      	hue2 = (speed > 127U) ? 255U : 0U;                                           // цветные или белые мячики
+      	hue = (speed == 128U) ? 255U : 254U - speed % 128U * 2U;  // скорость угасания хвостов 0 = моментально
+    }
+	deltaValue=0;
+	deltaHue=0;
+}
+
+void FieryLedLampEffectBballs::updateInner()
+{
+	float bballsHi;
+  	float bballsTCycle;
+  	if (deltaValue++ & 0x01)
+		deltaHue++; // постепенное изменение оттенка мячиков (закомментировать строчку, если не нужно)
+  	dimAll(hue);
+  	for (uint8_t i = 0 ; i < enlargedObjectNUM ; i++) {
+    	//leds[XY(trackingObjectState[i], trackingObjectPosY[i])] = CRGB::Black; // off for the next loop around  // теперь пиксели гасятся в dimAll()
+
+    	bballsTCycle =  (millis() - enlargedObjectTime[i]) / 1000. ; // Calculate the time since the last time the ball was on the ground
+
+		// A little kinematics equation calculates positon as a function of time, acceleration (gravity) and intial velocity
+		//bballsHi = 0.5 * bballsGRAVITY * pow(bballsTCycle, 2) + trackingObjectSpeedY[i] * bballsTCycle;
+		bballsHi = 0.5 * bballsGRAVITY * bballsTCycle * bballsTCycle + trackingObjectSpeedY[i] * bballsTCycle;
+
+		if ( bballsHi < 0 ) {
+			enlargedObjectTime[i] = millis();
+			bballsHi = 0; // If the ball crossed the threshold of the "ground," put it back on the ground
+			trackingObjectSpeedY[i] = trackingObjectShift[i] * trackingObjectSpeedY[i] ; // and recalculate its new upward velocity as it's old velocity * COR
+
+      		if ( trackingObjectSpeedY[i] < 0.01 ) // If the ball is barely moving, "pop" it back up at vImpact0
+			{
+				trackingObjectShift[i] = 0.90 - float(random8(9U)) / pow(random8(4U, 9U), 2); // сделал, чтобы мячики меняли свою прыгучесть каждый цикл
+				trackingObjectIsShift[i] = trackingObjectShift[i] >= 0.89;                             // если мячик максимальной прыгучести, то разрешаем ему сдвинуться
+				trackingObjectSpeedY[i] = sqrtf( -2 * bballsGRAVITY * bballsH0 );
+			}
+    	}
+
+		//trackingObjectPosY[i] = round( bballsHi * (HEIGHT - 1) / bballsH0); были жалобы, что эффект вылетает
+		trackingObjectPosY[i] = constrain(round( bballsHi * (HEIGHT - 1) / bballsH0), 0, HEIGHT - 1);             // Map "h" to a "pos" integer index position on the LED strip
+		if (trackingObjectIsShift[i] && (trackingObjectPosY[i] == HEIGHT - 1)) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
+			trackingObjectIsShift[i] = false;
+			if (trackingObjectHue[i] & 0x01) {                                       // нечётные налево, чётные направо
+				if (trackingObjectState[i] == 0U) trackingObjectState[i] = WIDTH - 1U;
+				else --trackingObjectState[i];
+			} else {
+				if (trackingObjectState[i] == WIDTH - 1U) trackingObjectState[i] = 0U;
+				else ++trackingObjectState[i];
+			}
+		}
+    	leds[XY(trackingObjectState[i], trackingObjectPosY[i])] = CHSV(trackingObjectHue[i] + deltaHue, hue2, 255U);
+    	//drawPixelXY(trackingObjectState[i], trackingObjectPosY[i], CHSV(trackingObjectHue[i] + deltaHue, hue2, 255U));  //на случай, если останутся жалобы, что эффект вылетает
+  	}
+}
+
+// ============= BOUNCE / ПРЫЖКИ / МЯЧИКИ БЕЗ ГРАНИЦ ===============
+// Aurora : https://github.com/pixelmatix/aurora/blob/master/PatternBounce.h
+// Copyright(c) 2014 Jason Coon
+// v1.0 - Updating for GuverLamp v1.7 by Palpalych 14.04.2020
+//#define e_bnc_COUNT (WIDTH) // теперь enlargedObjectNUM. хз, почему использовалась ширина матрицы тут, если по параметру идёт обращение к массиву boids, у которого может быть меньший размер
+#define e_bnc_SIDEJUMP (true)
+FieryLedLampEffectBallsBounce::~FieryLedLampEffectBallsBounce()
+{
+	delete[] boids;
+};
+void FieryLedLampEffectBallsBounce::setup()
+{
+	setCurrentPalette();    
+	//AVAILABLE_BOID_COUNT
+    enlargedObjectNUM = (scale - 1U) % 11U / 10.0 * (20 - 1U) + 1U;
+	boids=new Boid[enlargedObjectNUM];
+    uint8_t colorWidth = 256U / enlargedObjectNUM;
+    for (uint8_t i = 0; i < enlargedObjectNUM; i++)
+    {
+      	Boid boid = Boid(i % WIDTH, 0);//random8(HEIGHT));//HEIGHT / 8
+      	boid.velocity.x = 0;
+      	//boid.location.y = 0;//(HEIGHT -1) / 4;
+      	boid.velocity.y = i * -0.01;
+      	boid.colorIndex = colorWidth * i;
+      	boid.maxforce = 10;
+      	boid.maxspeed = 10;
+      	boids[i] = boid;
+    }
+}
+
+void FieryLedLampEffectBallsBounce::updateInner()
+{
+  	blurScreen(beatsin8(5U, 1U, 5U));
+  	dimAll(255U - speed); // dimAll(hue2);
+  	for (uint8_t i = 0; i < enlargedObjectNUM; i++)
+	{
+		Boid boid = boids[i];
+		boid.applyForce(PVector(0, -0.0125));
+		boid.update();
+		if (boid.location.x >= WIDTH) boid.location.x = boid.location.x - WIDTH; // это только
+		else if (boid.location.x < 0) boid.location.x = boid.location.x + WIDTH; // для субпиксельной версии
+		CRGB color = ColorFromPalette(*curPalette, boid.colorIndex); // boid.colorIndex + hue
+		//drawPixelXY((uint32_t)(boid.location.x) % WIDTH, boid.location.y, color);
+		//drawPixelXYFseamless(boid.location.x, boid.location.y, color); вот это я тупанул
+		drawPixelXYF(boid.location.x, boid.location.y, color);
+
+		if (boid.location.y <= 0)
+		{
+			boid.location.y = 0;
+			boid.velocity.y = -boid.velocity.y;
+			boid.velocity.x *= 0.9;
+			if (!random8() || boid.velocity.y < 0.01)
+			{
+		#if e_bnc_SIDEJUMP
+				boid.applyForce(PVector((float)random(127) / 255 - 0.25, (float)random(255) / 255));
+		#else
+				boid.applyForce(PVector(0, (float)random(255) / 255));
+		#endif
+			}
+		}
+		boids[i] = boid;
+	}
+}
+
+void FieryLedLampEffectChristmasTree::setup()
+{
+	#if 0
+  static uint8_t tree_h = HEIGHT;
+    clearNoiseArr();
+    deltaValue = 0;
+    step = deltaValue;
+    FastLED.clear();
+
+    if (HEIGHT > 16) {
+      tree_h = 16;
+    }
+	#endif
+}
+
+void FieryLedLampEffectChristmasTree::updateInner()
+{
+	#if 0
+  	if (HEIGHT > 16) {
+    	if (scale < 60) {
+      		gradientVertical(0, 0, WIDTH, HEIGHT, 160, 160, 64, 128, 255U);
+    	} else {
+      		FastLED.clear();
+    	}
+  	} else {
+    	FastLED.clear();
+  	}
+  	GreenTree(tree_h);
+
+  if (modes[currentMode].Scale < 60) {
+    VirtualSnow(1);
+  }
+  if (modes[currentMode].Scale > 30) {
+    deltaValue++;
+  }
+  if (deltaValue >= 8) {
+    deltaValue = 0;
+  }
+  step++;
+  #endif
 }

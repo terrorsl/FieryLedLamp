@@ -8,6 +8,8 @@
 WiFiUDP ntpUdp;
 #endif
 
+#include <TZ.h>
+
 extern CRGB leds[NUM_LEDS];
 
 void onWiFiConnected(const WiFiEventStationModeConnected &)
@@ -18,21 +20,6 @@ void onWiFiConnected(const WiFiEventStationModeConnected &)
 void onWiFiDisconnected(const WiFiEventStationModeDisconnected &)
 {
 };
-
-#ifdef USE_MQTT
-void mqttOnConnect(bool sessionPresent)
-{
-	lamp.setup_mqtt_subscribe();
-};
-void mqttDisconnect(AsyncMqttClientDisconnectReason reason)
-{
-	lamp.connect_mqtt();
-};
-void mqttOnMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
-{
-	lamp.update_mqtt(payload);
-};
-#endif
 
 void FieryLedLamp::setup()
 {
@@ -76,9 +63,6 @@ void FieryLedLamp::setup_config()
 	JsonDocument doc=load_config();
 	
 	config.currentEffect = 0xff;
-	config.scale=50;
-	config.speed=50;
-	config.brightness=BRIGHTNESS;
 
 	if(doc.isNull())
 	{
@@ -95,6 +79,9 @@ void FieryLedLamp::setup_config()
 		sprintf(name,"ledLamp%lx",id);
 		config.mqtt.clientid=name;
 
+		config.scale=50;
+		config.speed=50;
+		config.brightness=BRIGHTNESS;
 		change_effect(0);
 	}
 	else
@@ -107,6 +94,9 @@ void FieryLedLamp::setup_config()
 		config.mqtt.clientid=doc["mqtt_clientid"].as<std::string>();
 
 		change_effect(doc["effect"].as<uint16_t>());
+		config.scale=doc["scale"].as<uint8_t>();
+		config.speed=doc["speed"].as<uint8_t>();
+		config.brightness=doc["brightness"].as<uint8_t>();
 	}
 };
 
@@ -160,50 +150,23 @@ void FieryLedLamp::setup_pin()
 };
 void FieryLedLamp::setup_time()
 {
+	configTime(TZ_Europe_Moscow, "pool.ntp.org");
 #ifdef USE_NTP
 	ntpClient = new NTPClient(ntpUdp);
+	ntpClient->setUpdateInterval(60*60000);
 #endif
 };
 void FieryLedLamp::connect_web()
 {
 	web->begin();
 };
-#ifdef USE_MQTT
-void FieryLedLamp::setup_mqtt()
-{
-	mqtt.setServer(config.mqtt.server.c_str(), config.mqtt.port);
-	mqtt.setCredentials(config.mqtt.login.c_str(), config.mqtt.password.c_str());
-	mqtt.setKeepAlive(config.mqtt.keep_alive);
-	mqtt.setClientId(config.mqtt.clientid.c_str());
-
-	mqtt.onConnect(mqttOnConnect);
-	mqtt.onMessage(mqttOnMessage);
-	mqtt.onDisconnect(mqttDisconnect);
-};
-void FieryLedLamp::setup_mqtt_subscribe()
-{
-	std::string topic = config.mqtt.clientid + MQTT_COMMAND_TOPIC;
-	mqtt.subscribe(topic.c_str(), 0);
-
-	JsonDocument doc;
-	doc["power"]=config.power_state;
-	doc["effect"]=config.currentEffect;
-	
-	topic=config.mqtt.clientid + MQTT_RESULT_TOPIC;
-	String payload;
-	serializeJson(doc,payload);
-	mqtt.publish(topic.c_str(), 0, true, payload.c_str());
-};
-#endif
 void FieryLedLamp::update_time()
 {
 #ifdef USE_NTP
-	ntpClient->update();
+	if(ntpClient->update())
+	{
+	}
 #endif
-};
-void FieryLedLamp::connect_mqtt()
-{
-	mqtt.connect();
 };
 void FieryLedLamp::update_effect()
 {
@@ -215,6 +178,11 @@ void FieryLedLamp::power_button(bool state)
 	DBG_PRINT("power state:%d\n",state);
 	config.power_state=state;
 	digitalWrite(MOSFET_PIN, state);
+
+	if(state)
+		FastLED.setBrightness(config.brightness);
+	else
+		FastLED.setBrightness(0);
 };
 void FieryLedLamp::update_button()
 {
@@ -235,6 +203,7 @@ void FieryLedLamp::update_button()
 				web->stop();
 
 				WiFiManager manager;
+#if defined(USE_MQTT)
 				WiFiManagerParameter server("mqtt_server","MQTT Server",config.mqtt.server.c_str(),40);
 				WiFiManagerParameter port("mqtt_port","MQTT Port",String(config.mqtt.port).c_str(),6);
 				WiFiManagerParameter login("mqtt_login","MQTT Login",config.mqtt.login.c_str(),40);
@@ -247,15 +216,18 @@ void FieryLedLamp::update_button()
 				manager.addParameter(&password);
 				manager.addParameter(&clientid);
 				manager.addParameter(&keepalive);
+#endif
 				if(manager.startConfigPortal(config.mqtt.clientid.c_str(), "12345678"))
 				{
 					JsonDocument doc=load_config();
+#if defined(USE_MQTT)
 					doc["mqtt_server"]=server.getValue();
 					doc["mqtt_port"]=atol(port.getValue());
 					doc["mqtt_login"]=login.getValue();
 					doc["mqtt_password"]=password.getValue();
 					doc["mqtt_clientid"]=clientid.getValue();
 					doc["mqtt_keepalive"]=atol(keepalive.getValue());
+#endif
 					save_config(&doc);
 				}
 				web->begin();
@@ -319,6 +291,7 @@ void FieryLedLamp::update_button()
 };
 void FieryLedLamp::update()
 {
+	update_time();
 	update_effect();
 	update_button();
 	web->handleClient();
@@ -483,6 +456,24 @@ bool FieryLedLamp::change_effect(unsigned short index)
 		break;
 	case FieryLedLampEffectTypes::Twinkles:
 		config.effect=new FieryLedLampEffectTwinkles();
+		break;
+	case FieryLedLampEffectTypes::Metaballs:
+		config.effect=new FieryLedLampEffectMetaballs();
+		break;
+	case FieryLedLampEffectTypes::Mosaic:
+		config.effect=new FieryLedLampEffectMosaic();
+		break;
+	case FieryLedLampEffectTypes::Butterflys:
+		config.effect=new FieryLedLampEffectButterflyLamp(true);
+		break;
+	case FieryLedLampEffectTypes::BBalls:
+		config.effect=new FieryLedLampEffectBballs();
+		break;
+	case FieryLedLampEffectTypes::BallsBounce:
+		config.effect=new FieryLedLampEffectBallsBounce();
+		break;
+	case FieryLedLampEffectTypes::ChristmasTree:
+		config.effect=new FieryLedLampEffectChristmasTree();
 		break;
 	default:
 		DBG_PRINT("unknown effect:%d\n", index);

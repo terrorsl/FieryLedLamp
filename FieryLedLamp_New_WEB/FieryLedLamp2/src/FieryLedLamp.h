@@ -9,11 +9,7 @@
 
 #ifdef USE_MQTT
 #include <AsyncMqttClient.h>
-#define MQTT_STATUS_TOPIC "status"
-#define MQTT_COMMAND_TOPIC "/command"
-#define MQTT_RESULT_TOPIC "/result"
 #endif
-
 #ifdef USE_NTP
 #include <NTPClient.h>
 #endif
@@ -56,7 +52,7 @@ public:
 
 #ifdef USE_MQTT
 	void setup_mqtt_subscribe();
-	void update_mqtt(const char *payload);
+	void update_mqtt(const char *topic, const char *payload);
 #endif
 	void update();
 
