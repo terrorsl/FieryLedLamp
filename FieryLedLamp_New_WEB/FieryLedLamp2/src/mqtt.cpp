@@ -10,7 +10,8 @@ const char *mqtt_commands[]={
     "speed",
     "scale",
     "brigtness",
-    "effect"
+    "effect",
+    "info"
 };
 typedef enum
 {
@@ -18,7 +19,8 @@ typedef enum
     SPEED_MQTT,
     SCALE_MQTT,
     BRIGHTNESS_MQTT,
-    EFFECT_MQTT
+    EFFECT_MQTT,
+    INFO_MQTT
 }MQTTCommandType;
 
 #define MQTT_COMMANDS_COUNT sizeof(mqtt_commands)/sizeof(mqtt_commands[0])
@@ -89,6 +91,25 @@ void FieryLedLamp::update_mqtt(const char *topic, const char *payload)
                 break;
             case MQTTCommandType::EFFECT_MQTT:
                 change_effect(doc[mqtt_commands[index]].as<unsigned short>());
+                break;
+            case MQTTCommandType::SPEED_MQTT:
+                set_speed(doc[mqtt_commands[index]].as<unsigned char>());
+                break;
+            case MQTTCommandType::INFO_MQTT:
+                {
+                    JsonDocument answer;
+                    String val=doc[mqtt_commands[index]];
+                    if(val=="all")
+                    {
+                        answer["info"]["version"]=FieryLedLampVersion;
+                        answer["info"]["platform"]=FieryLedLampPlatform;
+                    }
+
+                    std::string answer_topic=config.mqtt.clientid + MQTT_RESULT_TOPIC;
+                    String payload;
+                    serializeJson(doc,payload);
+                    mqtt.publish(answer_topic.c_str(), 0, true, payload.c_str());
+                }
                 break;
             }
         }

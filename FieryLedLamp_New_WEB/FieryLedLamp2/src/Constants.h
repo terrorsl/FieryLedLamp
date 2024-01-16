@@ -4,6 +4,16 @@
 
 #pragma once
 
+#define FieryLedLampVersionHigh 0
+#define FieryLedLampVersionLow 1
+#define FieryLedLampVersion (FieryLedLampVersionHigh<<8)|FieryLedLampVersionLow
+
+#if defined(ESP8266)
+#define FieryLedLampPlatform "esp8266"
+#else
+#define FieryLedLampPlatform "esp32"
+#endif
+
 #define FLL_VERSION           (" Ver.3.7.122")
 
 //#include <ESP8266WebServer.h>

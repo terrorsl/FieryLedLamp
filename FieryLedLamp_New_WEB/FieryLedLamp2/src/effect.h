@@ -164,7 +164,7 @@ public:
 	FieryLedLampEffect(uint8_t delayType):delat_type(delayType){};
 	virtual ~FieryLedLampEffect(){}
 
-	void set_bright(unsigned char val){}
+	void set_bright(unsigned char val){brightness=val;}
 	void set_speed(unsigned char val){speed=val;}
 	void set_scale(unsigned char val){scale=val;}
 

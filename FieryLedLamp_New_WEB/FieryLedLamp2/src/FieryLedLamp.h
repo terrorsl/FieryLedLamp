@@ -50,6 +50,8 @@ public:
 	void next_effect();
 	void prev_effect();
 
+	void set_speed(uint8_t speed);
+
 #ifdef USE_MQTT
 	void setup_mqtt_subscribe();
 	void update_mqtt(const char *topic, const char *payload);

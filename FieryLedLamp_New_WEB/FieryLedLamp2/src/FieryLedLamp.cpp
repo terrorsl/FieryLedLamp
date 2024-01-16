@@ -311,9 +311,14 @@ void FieryLedLamp::prev_effect()
 	effect--;
 	change_effect(effect);
 };
+void FieryLedLamp::set_speed(uint8_t speed)
+{
+	config.speed=speed;
+	config.effect->set_speed(speed);
+};
 bool FieryLedLamp::change_effect(unsigned short index)
 {
-	DBG_PRINT("change_effect:%d", index);
+	DBG_PRINT("change_effect:%d\n", index);
 	if(config.currentEffect==index)
 		return true;
 	FieryLedLampEffect *current=config.effect;
@@ -343,6 +348,7 @@ bool FieryLedLamp::change_effect(unsigned short index)
 	case FieryLedLampEffectTypes::Waterfall:
 		config.effect=new FieryLedLampEffectWaterfall();
 		break;
+	case FieryLedLampEffectTypes::Waterfall4_1:
 	case FieryLedLampEffectTypes::Waves:
 		config.effect=new FieryLedLampEffectWave();
 		break;
@@ -483,6 +489,7 @@ bool FieryLedLamp::change_effect(unsigned short index)
 
 	config.effect->set_speed(config.speed);
 	config.effect->set_scale(config.scale);
+	config.effect->set_bright(config.brightness);
 	
 	config.effect->setup();
 	if(current)
