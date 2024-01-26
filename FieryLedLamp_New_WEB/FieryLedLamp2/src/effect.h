@@ -947,7 +947,7 @@ public:
 	void setup();
 	void updateInner();
 private:
-	uint8_t step, deltaValue, deltaHue, deltaHue2;
+	uint8_t step, deltaValue, deltaHue, deltaHue2, custom_eff;
 };
 
 class FieryLedLampEffectStars: public FieryLedLampEffect

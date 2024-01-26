@@ -1514,7 +1514,7 @@ void FieryLedLampEffectWave::updateInner()
   	
 	int n = 0;
 
-  	/*switch (waveRotation)
+  	switch (waveRotation)
 	{
     case 0:
     	for (uint8_t x = 0; x < WIDTH; x++) {
@@ -1567,7 +1567,6 @@ void FieryLedLampEffectWave::updateInner()
   	}
 
 	blurScreen(20); // @Palpalych советует делать размытие. вот в этом эффекте его явно не хватает...
-	*/
 }
 
 // =====================================
@@ -1947,8 +1946,8 @@ void FieryLedLampEffectWhirl::updateInner()
 
     	if (oneColor)	
       		drawPixelXYF(boid->location.x, boid->location.y, CHSV(scale * 2.55, (scale == 100) ? 0U : 255U, 255U)); // цвет белый для .Scale=100
-    	//else
-      	//	drawPixelXYF(boid->location.x, boid->location.y, ColorFromPalette(*curPalette, angle + hue)); // + hue постепенно сдвигает палитру по кругу
+    	else
+      		drawPixelXYF(boid->location.x, boid->location.y, ColorFromPalette(*curPalette, angle + hue)); // + hue постепенно сдвигает палитру по кругу
 
     	if (boid->location.x < 0 || boid->location.x >= WIDTH || boid->location.y < 0 || boid->location.y >= HEIGHT) {
       		boid->location.x = random(WIDTH);
@@ -2479,13 +2478,17 @@ void FieryLedLampEffectSwirl::setup()
     deltaHue2 = 0U;                         // count для замедления смены цвета
     deltaHue = 0U;                          // direction | 0 hue-- | 1 hue++ |
     hue2 = 0U;                              // x
+	custom_eff=0;
 }
 
 void FieryLedLampEffectSwirl::updateInner()
 {
-	#if 0
 	if (scale > 50)
+	{
+#if 0
 		Spindle(); // Якщо масштаб/колір більше 50 - тоді єфект "Веретено"
+#endif
+	}
   	else {
   		uint8_t divider;
   		uint8_t lastHue;
@@ -2536,7 +2539,6 @@ void FieryLedLampEffectSwirl::updateInner()
   		blurScreen(4U + random8(8));
   		step++;
   	} // else у пачатку функції
-	#endif
 }
 
 // =====================================
