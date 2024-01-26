@@ -380,8 +380,8 @@ bool FieryLedLamp::change_effect(unsigned short index)
 		config.effect=new FieryLedLampEffectSmoke(true);
 		break;
 	case FieryLedLampEffectTypes::SmokeBalls:
-		config.effect=new FieryLedLampEffectSmokeBalls();
-		break;
+		//config.effect=new FieryLedLampEffectSmokeBalls();
+		//break;
 	case FieryLedLampEffectTypes::LiqudLamp:
 		config.effect=new FieryLedLampEffectLiquidLamp(true);
 		break;
@@ -395,8 +395,8 @@ bool FieryLedLamp::change_effect(unsigned short index)
 		config.effect=new FieryLedLampEffectStars();
 		break;
 	case FieryLedLampEffectTypes::Zebra:
-		config.effect=new FieryLedLampEffectZebra();
-		break;
+		//config.effect=new FieryLedLampEffectZebra();
+		//break;
 	case FieryLedLampEffectTypes::TixyLand:
 		config.effect=new FieryLedLampEffectTixyLand();
 		break;

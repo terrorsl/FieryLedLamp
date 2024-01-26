@@ -2619,9 +2619,7 @@ void FieryLedLampEffectZebra::setup()
 }
 void FieryLedLampEffectZebra::updateInner()
 {
-	#if 0
-	fillNoiseLED();
-	#endif
+	//fillNoiseLED(currentPalette);
 }
 
 // --------------------------------------
