@@ -67,14 +67,14 @@ typedef enum{
 	BBalls, // Мячики
 	BallsBounce, // Мячики без границ
 	ChristmasTree, // Новогодняя Елка
-/*#define EFF_FIRE                ( 55U)    // Огонь
-#define EFF_FIRE_2012           ( 56U)    // Огонь 2012
-#define EFF_FIRE_2018           ( 57U)    // Огонь 2018
-#define EFF_FIRE_2020           ( 58U)    // Огонь 2020
-#define EFF_FIRE_2021           ( 59U)    // Огонь 2021
-#define EFF_FIREFLY_TOP         ( 60U)    // Огoнь верховой
-#define EFF_FIREFLY             ( 61U)    // Огoнь парящий
-#define EFF_FIRESPARKS          ( 62U)    // Огонь с искрами
+	Fire, // Огонь
+	Fire2012, // Огонь 2012
+	Fire2018, // Огонь 2018
+	Fire2020, // Огонь 2020
+	Fire2021, // Огонь 2021
+	FireFlyTop, // Огoнь верховой
+	FireFly, // Огoнь парящий
+/*#define EFF_FIRESPARKS          ( 62U)    // Огонь с искрами
 #define EFF_COLOR_RAIN          ( 63U)    // Осадки
 #define EFF_OSCILLATING         ( 64U)    // Осциллятор
 #define EFF_CLOUDS              ( 65U)    // Облака
@@ -1307,6 +1307,75 @@ public:
 	void setup();
 	void updateInner();
 private:
+};
+
+class FieryLedLampEffectFire: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectFire():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	void generateLine();
+	void shiftUp();
+	void drawFrame(uint8_t pcnt, bool isColored);
+
+	uint8_t pcnt, matrixValue[WIDTH][HEIGHT], line[WIDTH], shiftHue[HEIGHT], shiftValue[HEIGHT];
+};
+
+class FieryLedLampEffectFire2012: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectFire2012():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t noise3d[WIDTH][HEIGHT];
+};
+
+class FieryLedLampEffectFire2018: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectFire2018():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t noise3d[2][WIDTH][HEIGHT], noise32_x[2], noise32_y[2], noise32_z[2], scale32_x[2], scale32_y[2];
+};
+
+class FieryLedLampEffectFire2020: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectFire2020():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t shiftHue[HEIGHT], deltaValue, deltaHue, step;
+	uint16_t ff_y, ff_z;
+};
+
+class FieryLedLampEffectFire2021: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectFire2021():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t shiftHue[HEIGHT], deltaValue, deltaHue, step, deltaHue2, pcnt;
+	float speedfactor;
+	uint16_t ff_x, ff_y, ff_z;
+};
+
+class FieryLedLampEffectFireFlyTop: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectFireFlyTop():FieryLedLampEffect(DYNAMIC_DELAY){};
+	~FieryLedLampEffectFireFlyTop();
+	void setup();
+	void updateInner();
+private:
+	uint8_t **noise3d;
+	uint16_t noise32_x,noise32_y,noise32_z, scale32_x,scale32_y;
 };
 
 class FieryLedLampEffectList

@@ -481,6 +481,24 @@ bool FieryLedLamp::change_effect(unsigned short index)
 	case FieryLedLampEffectTypes::ChristmasTree:
 		config.effect=new FieryLedLampEffectChristmasTree();
 		break;
+	case FieryLedLampEffectTypes::Fire:
+		config.effect=new FieryLedLampEffectFire();
+		break;
+	case FieryLedLampEffectTypes::Fire2012:
+		config.effect=new FieryLedLampEffectFire2012();
+		break;
+	case FieryLedLampEffectTypes::Fire2018:
+		config.effect=new FieryLedLampEffectFire2018();
+		break;
+	case FieryLedLampEffectTypes::Fire2020:
+		config.effect=new FieryLedLampEffectFire2020();
+		break;
+	case FieryLedLampEffectTypes::Fire2021:
+		config.effect=new FieryLedLampEffectFire2021();
+		break;
+	case FieryLedLampEffectTypes::FireFlyTop:
+		config.effect=new FieryLedLampEffectFireFlyTop();
+		break;
 	default:
 		DBG_PRINT("unknown effect:%d\n", index);
 		return false;
