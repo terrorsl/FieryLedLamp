@@ -73,7 +73,7 @@ typedef enum{
 	Fire2020, // Огонь 2020
 	Fire2021, // Огонь 2021
 	FireFlyTop, // Огoнь верховой
-	FireFly, // Огoнь парящий
+//	FireFly, // Огoнь парящий
 /*#define EFF_FIRESPARKS          ( 62U)    // Огонь с искрами
 #define EFF_COLOR_RAIN          ( 63U)    // Осадки
 #define EFF_OSCILLATING         ( 64U)    // Осциллятор
@@ -1340,7 +1340,8 @@ public:
 	void setup();
 	void updateInner();
 private:
-	uint8_t noise3d[2][WIDTH][HEIGHT], noise32_x[2], noise32_y[2], noise32_z[2], scale32_x[2], scale32_y[2];
+	uint8_t noise3d[2][WIDTH][HEIGHT];
+	uint32_t noise32_x[2], noise32_y[2], noise32_z[2], scale32_x[2], scale32_y[2];
 };
 
 class FieryLedLampEffectFire2020: public FieryLedLampEffect
@@ -1357,7 +1358,7 @@ private:
 class FieryLedLampEffectFire2021: public FieryLedLampEffect
 {
 public:
-	FieryLedLampEffectFire2021():FieryLedLampEffect(DYNAMIC_DELAY){};
+	FieryLedLampEffectFire2021():FieryLedLampEffect(LOW_DELAY){};
 	void setup();
 	void updateInner();
 private:

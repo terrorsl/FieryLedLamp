@@ -62,8 +62,6 @@ void FieryLedLamp::setup_config()
 #endif
 	JsonDocument doc=load_config();
 	
-	config.currentEffect = 0xff;
-
 	if(doc.isNull())
 	{
 		config.mqtt.server="mqtt.dealgate.ru";
@@ -82,7 +80,7 @@ void FieryLedLamp::setup_config()
 		config.scale=50;
 		config.speed=50;
 		config.brightness=BRIGHTNESS;
-		change_effect(0);
+		config.currentEffect = 0;
 	}
 	else
 	{
@@ -93,11 +91,12 @@ void FieryLedLamp::setup_config()
 		config.mqtt.keep_alive=doc["mqtt_keepalive"].as<uint16_t>();
 		config.mqtt.clientid=doc["mqtt_clientid"].as<std::string>();
 
-		change_effect(doc["effect"].as<uint16_t>());
+		config.currentEffect = doc["effect"].as<uint16_t>();
 		config.scale=doc["scale"].as<uint8_t>();
 		config.speed=doc["speed"].as<uint8_t>();
 		config.brightness=doc["brightness"].as<uint8_t>();
 	}
+	change_effect(config.currentEffect);
 };
 
 JsonDocument FieryLedLamp::load_config()
@@ -183,6 +182,7 @@ void FieryLedLamp::power_button(bool state)
 		FastLED.setBrightness(config.brightness);
 	else
 		FastLED.setBrightness(0);
+	FastLED.show();
 };
 void FieryLedLamp::update_button()
 {
@@ -319,7 +319,7 @@ void FieryLedLamp::set_speed(uint8_t speed)
 bool FieryLedLamp::change_effect(unsigned short index)
 {
 	DBG_PRINT("change_effect:%d\n", index);
-	if(config.currentEffect==index)
+	if(config.effect && config.currentEffect==index)
 		return true;
 	FieryLedLampEffect *current=config.effect;
 	switch(index)
