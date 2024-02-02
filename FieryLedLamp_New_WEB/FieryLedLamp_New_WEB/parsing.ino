@@ -75,6 +75,7 @@ enum COMMAND
     BTN,// ON - разблокировать кнопку на лампе
     //BTN OFF, - заблокировать кнопку на лампе
     EQ,// - установить эквалайзер в НОРМАЛЬНО (значения от 0 до 5)
+	BRI_PERCENT,
 	HELP
 };
 
@@ -95,6 +96,7 @@ const char *commands[] = {
 	"fav",
 	"btn",
 	"eq",
+	"briper",
 	"help"
 };
 
@@ -1376,6 +1378,13 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
 		{
 			uint8_t temp = doc[commands[key]];
 			eff(temp);
+		}
+		break;
+	case BRI_PERCENT:
+		{
+			int persent = constrain(doc[commands[key]], 0, 100);
+			unsigned char value = 2.55 * persent;
+			bri(value);
 		}
 		break;
 	case BRI:
