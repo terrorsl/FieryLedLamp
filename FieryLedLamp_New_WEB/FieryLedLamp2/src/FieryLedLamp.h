@@ -7,6 +7,11 @@
 
 #include<ArduinoJson.h>
 
+#include<Wire.h>
+#include <Adafruit_SSD1306.h>
+#include <U8g2_for_Adafruit_GFX.h>
+//#include<SSD1306Wire.h>
+
 #ifdef USE_MQTT
 #include <AsyncMqttClient.h>
 #endif
@@ -63,6 +68,7 @@ public:
 	WebServer *Web(){return web;}
 private:
 	void setup_pin();
+	void setup_display();
 	void setup_time();
 	void setup_config();
 #ifdef USE_MQTT
@@ -72,6 +78,8 @@ private:
 
 	void update_effect();
 	void update_button();
+
+	void update_display();
 
 	void power_button(bool state);
 
@@ -91,6 +99,11 @@ private:
 
 	unsigned long current_time;
 	FieryLedLampConfig config;
+
+	Adafruit_SSD1306 *display;
+	U8G2_FOR_ADAFRUIT_GFX u8g2_for_adafruit_gfx;
+	time_t display_update_time;
+	int pos_x;
 };
 
 extern FieryLedLamp lamp;

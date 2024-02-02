@@ -6,10 +6,10 @@
 #include<FastLED.h>
 
 //константы размера матрицы вычисляется только здесь и не меняется в эффектах
-#define CENTER_X_MINOR ((WIDTH / 2) -  ((WIDTH - 1) & 0x01)) // центр матрицы по ИКСУ, сдвинутый в меньшую сторону, если ширина чётная
-#define CENTER_Y_MINOR ((HEIGHT / 2) - ((HEIGHT - 1) & 0x01)) // центр матрицы по ИГРЕКУ, сдвинутый в меньшую сторону, если высота чётная
-const uint8_t CENTER_X_MAJOR =   WIDTH / 2  + (WIDTH % 2);           // центр матрицы по ИКСУ, сдвинутый в большую сторону, если ширина чётная
-const uint8_t CENTER_Y_MAJOR =  HEIGHT / 2  + (HEIGHT % 2);          // центр матрицы по ИГРЕКУ, сдвинутый в большую сторону, если высота чётная
+#define CENTER_X_MINOR ((LED_WIDTH / 2) -  ((LED_WIDTH - 1) & 0x01)) // центр матрицы по ИКСУ, сдвинутый в меньшую сторону, если ширина чётная
+#define CENTER_Y_MINOR ((LED_HEIGHT / 2) - ((LED_HEIGHT - 1) & 0x01)) // центр матрицы по ИГРЕКУ, сдвинутый в меньшую сторону, если высота чётная
+const uint8_t CENTER_X_MAJOR =   LED_WIDTH / 2  + (LED_WIDTH % 2);           // центр матрицы по ИКСУ, сдвинутый в большую сторону, если ширина чётная
+const uint8_t CENTER_Y_MAJOR =  LED_HEIGHT / 2  + (LED_HEIGHT % 2);          // центр матрицы по ИГРЕКУ, сдвинутый в большую сторону, если высота чётная
 
 typedef enum{
 	WhiteColor, // Бeлый cвeт
@@ -264,10 +264,10 @@ protected:
 	uint8_t trackingObjectState[trackingOBJECT_MAX_COUNT];
 	bool    trackingObjectIsShift[trackingOBJECT_MAX_COUNT];
 
-	#if (WIDTH > HEIGHT)
+	#if (LED_WIDTH > LED_HEIGHT)
 	uint8_t noise[WIDTH][WIDTH];
 	#else
-	uint8_t noise[HEIGHT][HEIGHT];
+	uint8_t noise[LED_HEIGHT][LED_HEIGHT];
 	#endif
 	uint8_t colorLoop = 1;
 	uint8_t ihue = 0;
@@ -314,7 +314,7 @@ private:
 	uint32_t t;
 
 	#define NUM_LAYERSMAX 2
-	uint8_t noise3d[NUM_LAYERSMAX][WIDTH][HEIGHT];     // двухслойная маска или хранилище свойств в размер всей матрицы
+	uint8_t noise3d[NUM_LAYERSMAX][LED_WIDTH][LED_HEIGHT];     // двухслойная маска или хранилище свойств в размер всей матрицы
 };
 
 class FieryLedLampEffectPool: public FieryLedLampEffect
@@ -361,7 +361,7 @@ public:
 	void updateInner();
 private:
 	#define NUM_LAYERSMAX 2
-	uint8_t noise3d[NUM_LAYERSMAX][WIDTH][HEIGHT];     // двухслойная маска или хранилище свойств в размер всей матрицы
+	uint8_t noise3d[NUM_LAYERSMAX][LED_WIDTH][LED_HEIGHT];     // двухслойная маска или хранилище свойств в размер всей матрицы
 };
 
 class FieryLedLampEffectMagicLantern: public FieryLedLampEffect
@@ -410,7 +410,7 @@ public:
 private:
 	void fillnoise8();
 
-	uint8_t noise[WIDTH][WIDTH];
+	uint8_t noise[LED_WIDTH][LED_WIDTH];
 	uint16_t x,y,z;
 };
 
@@ -787,19 +787,19 @@ class Boid {
     }
 
     void wrapAroundBorders() {
-      if (location.x < 0) location.x = WIDTH - 1;
-      if (location.y < 0) location.y = HEIGHT - 1;
-      if (location.x >= WIDTH) location.x = 0;
-      if (location.y >= HEIGHT) location.y = 0;
+      if (location.x < 0) location.x = LED_WIDTH - 1;
+      if (location.y < 0) location.y = LED_HEIGHT - 1;
+      if (location.x >= LED_WIDTH) location.x = 0;
+      if (location.y >= LED_HEIGHT) location.y = 0;
     }
 
     void avoidBorders() {
       PVector desired = velocity;
 
       if (location.x < 8) desired = PVector(maxspeed, velocity.y);
-      if (location.x >= WIDTH - 8) desired = PVector(-maxspeed, velocity.y);
+      if (location.x >= LED_WIDTH - 8) desired = PVector(-maxspeed, velocity.y);
       if (location.y < 8) desired = PVector(velocity.x, maxspeed);
-      if (location.y >= HEIGHT - 8) desired = PVector(velocity.x, -maxspeed);
+      if (location.y >= LED_HEIGHT - 8) desired = PVector(velocity.x, -maxspeed);
 
       if (desired != velocity) {
         PVector steer = desired - velocity;
@@ -809,15 +809,15 @@ class Boid {
 
       if (location.x < 0) location.x = 0;
       if (location.y < 0) location.y = 0;
-      if (location.x >= WIDTH) location.x = WIDTH - 1;
-      if (location.y >= HEIGHT) location.y = HEIGHT - 1;
+      if (location.x >= LED_WIDTH) location.x = LED_WIDTH - 1;
+      if (location.y >= LED_HEIGHT) location.y = LED_HEIGHT - 1;
     }
 
     bool bounceOffBorders(float bounce) {
       bool bounced = false;
 
-      if (location.x >= WIDTH) {
-        location.x = WIDTH - 1;
+      if (location.x >= LED_WIDTH) {
+        location.x = LED_WIDTH - 1;
         velocity.x *= -bounce;
         bounced = true;
       }
@@ -827,8 +827,8 @@ class Boid {
         bounced = true;
       }
 
-      if (location.y >= HEIGHT) {
-        location.y = HEIGHT - 1;
+      if (location.y >= LED_HEIGHT) {
+        location.y = LED_HEIGHT - 1;
         velocity.y *= -bounce;
         bounced = true;
       }
@@ -920,7 +920,7 @@ private:
 	float speedfactor;
 };
 
-#define enlargedOBJECT_MAX_COUNT                     (WIDTH * 2) // максимальное количество сложных отслеживаемых объектов (меньше, чем trackingOBJECT_MAX_COUNT)
+#define enlargedOBJECT_MAX_COUNT                     (LED_WIDTH * 2) // максимальное количество сложных отслеживаемых объектов (меньше, чем trackingOBJECT_MAX_COUNT)
 class FieryLedLampEffectLiquidLamp: public FieryLedLampEffect
 {
 public:
@@ -1025,8 +1025,8 @@ public:
 	void setup();
 	void updateInner();
 private:
-	int rad[(HEIGHT + WIDTH) / 8];
-	byte posx[(HEIGHT + WIDTH) / 8], posy[(HEIGHT + WIDTH) / 8];
+	int rad[(LED_HEIGHT + LED_WIDTH) / 8];
+	byte posx[(LED_HEIGHT + LED_WIDTH) / 8], posy[(LED_HEIGHT + LED_WIDTH) / 8];
 };
 
 class FieryLedLampEffectDrops: public FieryLedLampEffect
@@ -1057,9 +1057,9 @@ public:
 	void updateInner();
 private:
 	uint8_t deltaHue, deltaHue2, deltaValue;
-	uint8_t noise3d[HEIGHT]; // начальный оттенок каждого кольца (оттенка из палитры) 0-255
-	uint8_t shiftValue[HEIGHT]; // местоположение начального оттенка кольца 0-WIDTH-1
-	uint8_t shiftHue[HEIGHT]; // 4 бита на ringHueShift, 4 на ringHueShift2
+	uint8_t noise3d[LED_HEIGHT]; // начальный оттенок каждого кольца (оттенка из палитры) 0-255
+	uint8_t shiftValue[LED_HEIGHT]; // местоположение начального оттенка кольца 0-WIDTH-1
+	uint8_t shiftHue[LED_HEIGHT]; // 4 бита на ringHueShift, 4 на ringHueShift2
 	uint8_t step;
 };
 
@@ -1131,7 +1131,7 @@ private:
 	bool seamlessX; // получилось ли сделать поле по Х бесшовным
 	bool krutimVertikalno; // направление вращения в данный момент
 
-	uint8_t noise3d[WIDTH][HEIGHT];
+	uint8_t noise3d[LED_WIDTH][LED_HEIGHT];
 };
 
 class FieryLedLampEffectLava: public FieryLedLampEffect
@@ -1207,7 +1207,7 @@ public:
 	void setup();
 	void updateInner();
 private:
-	uint8_t deltaValue, deltaHue, shiftHue[HEIGHT], ff_y,ff_z;
+	uint8_t deltaValue, deltaHue, shiftHue[LED_HEIGHT], ff_y,ff_z;
 };
 
 class FieryLedLampEffectOilPaints: public FieryLedLampEffect
@@ -1274,7 +1274,7 @@ public:
 	void setup();
 	void updateInner();
 private:
-	uint8_t poleX,poleY,line[WIDTH / 3U + 1U], shiftValue[HEIGHT / 3U + 1U];
+	uint8_t poleX,poleY,line[LED_WIDTH / 3U + 1U], shiftValue[LED_HEIGHT / 3U + 1U];
 };
 
 class FieryLedLampEffectBballs: public FieryLedLampEffect
@@ -1320,7 +1320,7 @@ private:
 	void shiftUp();
 	void drawFrame(uint8_t pcnt, bool isColored);
 
-	uint8_t pcnt, matrixValue[WIDTH][HEIGHT], line[WIDTH], shiftHue[HEIGHT], shiftValue[HEIGHT];
+	uint8_t pcnt, matrixValue[LED_WIDTH][LED_HEIGHT], line[LED_WIDTH], shiftHue[LED_HEIGHT], shiftValue[LED_HEIGHT];
 };
 
 class FieryLedLampEffectFire2012: public FieryLedLampEffect
@@ -1330,7 +1330,7 @@ public:
 	void setup();
 	void updateInner();
 private:
-	uint8_t noise3d[WIDTH][HEIGHT];
+	uint8_t noise3d[LED_WIDTH][LED_HEIGHT];
 };
 
 class FieryLedLampEffectFire2018: public FieryLedLampEffect
@@ -1340,7 +1340,7 @@ public:
 	void setup();
 	void updateInner();
 private:
-	uint8_t noise3d[2][WIDTH][HEIGHT];
+	uint8_t noise3d[2][LED_WIDTH][LED_HEIGHT];
 	uint32_t noise32_x[2], noise32_y[2], noise32_z[2], scale32_x[2], scale32_y[2];
 };
 
@@ -1351,7 +1351,7 @@ public:
 	void setup();
 	void updateInner();
 private:
-	uint8_t shiftHue[HEIGHT], deltaValue, deltaHue, step;
+	uint8_t shiftHue[LED_HEIGHT], deltaValue, deltaHue, step;
 	uint16_t ff_y, ff_z;
 };
 
@@ -1362,7 +1362,7 @@ public:
 	void setup();
 	void updateInner();
 private:
-	uint8_t shiftHue[HEIGHT], deltaValue, deltaHue, step, deltaHue2, pcnt;
+	uint8_t shiftHue[LED_HEIGHT], deltaValue, deltaHue, step, deltaHue2, pcnt;
 	float speedfactor;
 	uint16_t ff_x, ff_y, ff_z;
 };

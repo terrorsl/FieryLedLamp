@@ -1,6 +1,8 @@
 #include"FieryLedLamp.h"
 #include"Constants.h"
 
+#include"sansserif.h"
+
 #include<WiFiManager.h>
 
 #ifdef USE_NTP
@@ -41,6 +43,8 @@ void FieryLedLamp::setup()
 	FastLED.setMaxPowerInVoltsAndMilliamps(5, 3000);
   	FastLED.clear();
   	FastLED.show();
+
+	setup_display();
 	
 	setup_config();
 	setup_mqtt();
@@ -147,6 +151,19 @@ void FieryLedLamp::setup_pin()
 #endif
 #endif
 };
+void FieryLedLamp::setup_display()
+{
+	//display = new Adafruit_SSD1306(DISPLAY_ADDRESS, DISPLAY_SDA, DISPLAY_SCL, GEOMETRY_128_64);
+	//display->flipScreenVertically();
+	//display->init();
+	Wire.begin(DISPLAY_SDA, DISPLAY_SCL);
+	display = new Adafruit_SSD1306(128,64,&Wire, -1);
+	display->begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDRESS);
+	u8g2_for_adafruit_gfx.begin(*display);
+
+	pos_x=display->width();
+	display_update_time=0;
+};
 void FieryLedLamp::setup_time()
 {
 	configTime(TZ_Europe_Moscow, "pool.ntp.org");
@@ -235,15 +252,6 @@ void FieryLedLamp::update_button()
 				digitalWrite(BUILDIN_LED_PIN, HIGH);
 				button_down=false;
 			}
-			/*else
-			{
-				if(delta>=POWER_BUTTON_TIME)
-				{
-					DBG_PRINT("power mode\n");
-					power_button(!config.power_state);
-					button_down=false;
-				}
-			}*/
 		}
 		else
 		{
@@ -292,9 +300,69 @@ void FieryLedLamp::update_button()
 void FieryLedLamp::update()
 {
 	update_time();
+	update_display();
 	update_effect();
 	update_button();
 	web->handleClient();
+};
+void FieryLedLamp::update_display()
+{
+	if(config.power_state==false)
+	{
+		time_t t=time(0);
+		if(t-display_update_time>0)
+		{
+			display_update_time=t;
+			tm timeSt;
+			gmtime_r(&t, &timeSt);
+
+			display->clearDisplay();
+			
+			char str[256];
+			u8g2_for_adafruit_gfx.setFont(u8g2_font_inr16_mr);
+			u8g2_for_adafruit_gfx.setFontMode(1);                 // use u8g2 transparent mode (this is default)
+			u8g2_for_adafruit_gfx.setFontDirection(0);            // left to right (this is default)
+			u8g2_for_adafruit_gfx.setForegroundColor(WHITE);      // apply Adafruit GFX color
+
+			sprintf(str, "%02d:%02d:%02d", timeSt.tm_hour, timeSt.tm_min, timeSt.tm_sec);
+			int size=u8g2_for_adafruit_gfx.getUTF8Width(str);
+			int posx=(display->width()-size)/2;
+			u8g2_for_adafruit_gfx.drawUTF8(posx, 32, str);
+			display->display();
+		}
+	}
+	else
+	{
+		display->clearDisplay();
+		//display->setTextSize(3);
+		display->setTextWrap(false);
+		
+		char str[256];
+		u8g2_for_adafruit_gfx.setFont(u8g2_font_cu12_t_cyrillic);  // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
+		u8g2_for_adafruit_gfx.setFontMode(1);                 // use u8g2 transparent mode (this is default)
+		u8g2_for_adafruit_gfx.setFontDirection(0);            // left to right (this is default)
+		u8g2_for_adafruit_gfx.setForegroundColor(WHITE);      // apply Adafruit GFX color
+		u8g2_for_adafruit_gfx.setCursor(0,20);                // start writing at this position
+		
+		sprintf(str, "0: Жидкая лампа авто");
+		u8g2_for_adafruit_gfx.setCursor(pos_x,40);                // start writing at this position
+		//u8g2_for_adafruit_gfx.print("Umlaut ÄÖÜ");            // UTF-8 string with german umlaut chars
+		u8g2_for_adafruit_gfx.drawUTF8(pos_x, 40, str);
+		display->display();
+
+		pos_x=pos_x-4;
+		if(pos_x < -1*u8g2_for_adafruit_gfx.getUTF8Width(str))
+			pos_x=display->width();
+
+
+		//display->startscrollleft(0,0xf);
+
+		//display->print(str);
+		//display->setFont((uint8_t*)SansSerif_plain_16);
+		//display->flipScreenVertically();
+		//display->setTextAlignment(TEXT_ALIGN_CENTER);
+		//display->drawString(64,32,str);
+	}
 };
 void FieryLedLamp::next_effect()
 {

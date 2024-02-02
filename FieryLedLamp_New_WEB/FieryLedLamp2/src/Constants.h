@@ -137,8 +137,8 @@
 // --- МАТРИЦА -------------------------
 #define CURRENT_LIMIT         (4000U)                       // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
 
-#define WIDTH                 (16)                          // ширина матрицы
-#define HEIGHT                (16)                          // высота матрицы
+#define LED_WIDTH                 (16)                          // ширина матрицы
+#define LED_HEIGHT                (16)                          // высота матрицы
 
 #define COLOR_ORDER           (GRB)                         // порядок цветов на ленте. Если цвет отображается некорректно - меняйте. Начать можно с RGB
 
@@ -428,7 +428,7 @@ static const uint8_t defaultSettings[MODE_AMOUNT][3] PROGMEM = {
 #define FASTLED_ESP8266_RAW_PIN_ORDER                       // FASTLED_ESP8266_RAW_PIN_ORDER, FASTLED_ESP8266_D1_PIN_ORDER or FASTLED_ESP8266_NODEMCU_PIN_ORDER
 
 
-#define NUM_LEDS              (uint16_t)(WIDTH * HEIGHT)
+#define NUM_LEDS              (uint16_t)(LED_WIDTH * LED_HEIGHT)
 #define SEGMENTS              (1U)                          // диодов в одном "пикселе" (для создания матрицы из кусков ленты). вряд ли эффекты будут корректно работать, если изменить этот параметр
 
 //#define DYNAMIC                (0U)   // динамическая задержка для кадров ( будет использоваться бегунок Скорость )

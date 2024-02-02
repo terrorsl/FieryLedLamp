@@ -20,6 +20,10 @@
 #define BUTTON_PIN 4
 #define MOSFET_PIN 5 
 
+#define DISPLAY_ADDRESS 0x3c
+#define DISPLAY_SDA 12
+#define DISPLAY_SCL 13
+
 #elif defined(ESP32)
 #include<WiFi.h>
 
