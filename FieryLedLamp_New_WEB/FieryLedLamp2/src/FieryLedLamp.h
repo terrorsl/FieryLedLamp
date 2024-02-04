@@ -4,6 +4,7 @@
 #include"platform.h"
 #include"Constants.h"
 #include"effect.h"
+#include"lang.h"
 
 #include<ArduinoJson.h>
 
@@ -30,6 +31,10 @@ struct FieryLedLampConfigMQTT
 struct FieryLedLampConfig
 {
 	bool power_state;
+	
+	Languages language;
+	//const char **effect_name;
+
 	unsigned short currentEffect;
 	FieryLedLampEffect *effect;
 #if defined(USE_MQTT)
@@ -56,6 +61,7 @@ public:
 	void prev_effect();
 
 	void set_speed(uint8_t speed);
+	void set_brightness(uint8_t bright);
 
 #ifdef USE_MQTT
 	void setup_mqtt_subscribe();
@@ -92,6 +98,8 @@ private:
 	AsyncMqttClient mqtt;
 #endif
 	WebServer *web;
+
+	unsigned long remote_time_ms;
 
 	bool button_down;
 	unsigned long button_down_time, button_up_time;

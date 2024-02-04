@@ -27,6 +27,7 @@ typedef enum
 
 void mqttOnConnect(bool sessionPresent)
 {
+    DBG_PRINT("mqttOnConnect\n");
 	lamp.setup_mqtt_subscribe();
 };
 void mqttDisconnect(AsyncMqttClientDisconnectReason reason)
@@ -40,6 +41,7 @@ void mqttOnMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
 
 void FieryLedLamp::setup_mqtt()
 {
+    DBG_PRINT("setup mqtt\n");
 	mqtt.setServer(config.mqtt.server.c_str(), config.mqtt.port);
 	mqtt.setCredentials(config.mqtt.login.c_str(), config.mqtt.password.c_str());
 	mqtt.setKeepAlive(config.mqtt.keep_alive);
@@ -84,16 +86,30 @@ void FieryLedLamp::update_mqtt(const char *topic, const char *payload)
             if(doc.containsKey(mqtt_commands[index])==false)
                 continue;
             
+            DBG_PRINT("mqtt command %s ,payload %s\n",mqtt_commands[index], doc[mqtt_commands[index]].as<String>().c_str());
             switch(index)
             {
             case MQTTCommandType::POWER_MQTT:
-                power_button(doc[mqtt_commands[index]].as<bool>());
+                {
+                    bool result = doc[mqtt_commands[index]].as<int>();
+                    power_button(result);
+                }
                 break;
             case MQTTCommandType::EFFECT_MQTT:
                 change_effect(doc[mqtt_commands[index]].as<unsigned short>());
                 break;
             case MQTTCommandType::SPEED_MQTT:
                 set_speed(doc[mqtt_commands[index]].as<unsigned char>());
+                break;
+            case MQTTCommandType::BRIGHTNESS_MQTT:
+                {
+                    // percent
+                    unsigned char v=doc[mqtt_commands[index]].as<unsigned char>();
+                    if(v==0)
+                        v=1;
+                    v=v*2.55;
+                    set_brightness(v);
+                }
                 break;
             case MQTTCommandType::INFO_MQTT:
                 {

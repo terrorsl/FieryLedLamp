@@ -1,7 +1,7 @@
 #include"FieryLedLamp.h"
 #include"Constants.h"
 
-#include"sansserif.h"
+#include"lang_ru.h"
 
 #include<WiFiManager.h>
 
@@ -14,19 +14,24 @@ WiFiUDP ntpUdp;
 
 extern CRGB leds[NUM_LEDS];
 
+WiFiEventHandler stationConnectedHandler;
+
 void onWiFiConnected(const WiFiEventStationModeConnected &)
 {
-	lamp.connect_web();
-	lamp.connect_mqtt();
+	DBG_PRINT("onWiFiConnected\n");
+	//lamp.connect_web();
+	//lamp.connect_mqtt();
 };
 void onWiFiDisconnected(const WiFiEventStationModeDisconnected &)
 {
+	DBG_PRINT("onWiFiDisconnected\n");
+	WiFi.reconnect();
 };
 
 void FieryLedLamp::setup()
 {
-	DBG_START(9600);
-	DBG_PRINT("start");
+	DBG_START(115200);
+	DBG_PRINT("start\n");
 	
 	config.power_state=false;
 	
@@ -35,7 +40,7 @@ void FieryLedLamp::setup()
 	setup_pin();
 	
 	FastLED.addLeds<WS2812B,LED_PIN,GRB>(leds,NUM_LEDS);
-	FastLED.setBrightness(BRIGHTNESS);
+	//FastLED.setBrightness(BRIGHTNESS);
   	/*if (current_limit > 0)
   	{
     	FastLED.setMaxPowerInVoltsAndMilliamps(5, current_limit);
@@ -50,10 +55,15 @@ void FieryLedLamp::setup()
 	setup_mqtt();
 	setup_web_server();
 
-	WiFi.onStationModeConnected(onWiFiConnected);
-	WiFi.onStationModeDisconnected(onWiFiDisconnected);
+	//WiFi.mode(WIFI_STA);
+
+	//stationConnectedHandler = WiFi.onStationModeConnected(&onWiFiConnected);
+	WiFi.onStationModeDisconnected(&onWiFiDisconnected);
+
+	WiFi.setAutoConnect(true);
 
 	WiFi.persistent(true);
+	WiFi.begin();
 };
 
 void FieryLedLamp::setup_config()
@@ -100,6 +110,15 @@ void FieryLedLamp::setup_config()
 		config.speed=doc["speed"].as<uint8_t>();
 		config.brightness=doc["brightness"].as<uint8_t>();
 	}
+
+	config.language.setLanguage(RUSSIAN);
+	//config.effect_name=effect_name_ru;
+
+	DBG_PRINT("mqtt_server:%s\n", config.mqtt.server.c_str());
+	DBG_PRINT("mqtt_port:%d\n", config.mqtt.port);
+	DBG_PRINT("mqtt_login:%s\n", config.mqtt.login.c_str());
+	DBG_PRINT("mqtt_pass:%s\n", config.mqtt.password.c_str());
+
 	change_effect(config.currentEffect);
 };
 
@@ -126,7 +145,7 @@ void FieryLedLamp::save_config(JsonDocument *doc)
 
 void FieryLedLamp::setup_pin()
 {
-	DBG_PRINT("setup_pin");
+	DBG_PRINT("setup_pin\n");
 
 	pinMode(BUILDIN_LED_PIN, OUTPUT);
 	digitalWrite(BUILDIN_LED_PIN, HIGH);
@@ -194,6 +213,8 @@ void FieryLedLamp::power_button(bool state)
 	DBG_PRINT("power state:%d\n",state);
 	config.power_state=state;
 	digitalWrite(MOSFET_PIN, state);
+
+	display_update_time=time(0);
 
 	if(state)
 		FastLED.setBrightness(config.brightness);
@@ -303,6 +324,24 @@ void FieryLedLamp::update()
 	update_display();
 	update_effect();
 	update_button();
+
+	unsigned long t=millis();
+	if(WiFi.isConnected()==false && t-remote_time_ms>2000)
+    {
+        Serial.println("Try connect to WIFI");
+        //WiFi.begin();
+		//delay(2000);
+		remote_time_ms=t;
+        return;
+    }
+	else
+	{
+		if(mqtt.connected()==false && t-remote_time_ms>2000)
+		{
+			connect_mqtt();
+			remote_time_ms=t;
+		}
+	}
 	web->handleClient();
 };
 void FieryLedLamp::update_display()
@@ -333,6 +372,10 @@ void FieryLedLamp::update_display()
 	}
 	else
 	{
+		unsigned long t = millis();
+		if(t - display_update_time < 200)
+			return;
+		display_update_time = t;
 		display->clearDisplay();
 		//display->setTextSize(3);
 		display->setTextWrap(false);
@@ -344,7 +387,7 @@ void FieryLedLamp::update_display()
 		u8g2_for_adafruit_gfx.setForegroundColor(WHITE);      // apply Adafruit GFX color
 		u8g2_for_adafruit_gfx.setCursor(0,20);                // start writing at this position
 		
-		sprintf(str, "0: Жидкая лампа авто");
+		sprintf(str, "%d: %s", config.currentEffect, config.language.GetEffect(config.currentEffect));//config.effect_name[config.currentEffect]);
 		u8g2_for_adafruit_gfx.setCursor(pos_x,40);                // start writing at this position
 		//u8g2_for_adafruit_gfx.print("Umlaut ÄÖÜ");            // UTF-8 string with german umlaut chars
 		u8g2_for_adafruit_gfx.drawUTF8(pos_x, 40, str);
@@ -353,15 +396,6 @@ void FieryLedLamp::update_display()
 		pos_x=pos_x-4;
 		if(pos_x < -1*u8g2_for_adafruit_gfx.getUTF8Width(str))
 			pos_x=display->width();
-
-
-		//display->startscrollleft(0,0xf);
-
-		//display->print(str);
-		//display->setFont((uint8_t*)SansSerif_plain_16);
-		//display->flipScreenVertically();
-		//display->setTextAlignment(TEXT_ALIGN_CENTER);
-		//display->drawString(64,32,str);
 	}
 };
 void FieryLedLamp::next_effect()
@@ -383,6 +417,11 @@ void FieryLedLamp::set_speed(uint8_t speed)
 {
 	config.speed=speed;
 	config.effect->set_speed(speed);
+};
+void FieryLedLamp::set_brightness(uint8_t bright)
+{
+	config.brightness=bright;
+	config.effect->set_bright(bright);
 };
 bool FieryLedLamp::change_effect(unsigned short index)
 {
