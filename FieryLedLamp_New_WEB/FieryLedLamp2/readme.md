@@ -22,6 +22,15 @@ Sending messages to the lamp:
 Topic name: \<lamp name>/command  
 Payload: string in the format JSON
 
+### Control commands
+|Command|Payload|
+|--|--|
+|Turn on|{"power":1}|
+|Turn off|{"power":0}|
+|Set effect|{"effect":<Number(0-122)>}|
+|Set brightness|{"brighness":<Percent(1-100)>}|
+
+
 ## Management via Yandex Alice
 
 Select a MQTT broker that allows you to interact with Alice.
