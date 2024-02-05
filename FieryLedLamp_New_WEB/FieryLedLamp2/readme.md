@@ -1,4 +1,10 @@
 # FieryLedLamp 2
+
+[Lamp control with button](#Control-via-button)  
+[Lamp control via mqtt](#Control-via-MQTT)  
+[Sceme](#Sceme)  
+[Installation and update](#Installation-and-update)
+
 ## Control via button
 **Turning the lamp on/off**:  
 Pressing the button once turns the lamp on or off.
