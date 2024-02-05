@@ -1,4 +1,60 @@
+#include"web.h"
 #include"FieryLedLamp.h"
+
+AsyncWebServer server(80);
+
+const char *template_list[]=
+{
+    "EFFECT_LIST"
+};
+
+String template_processor(const String& var)
+{
+    String ret;
+    for(int index=0;index<sizeof(template_list)/sizeof(template_list[0]);index++)
+    {
+        if(var!=template_list[index])
+            continue;
+        switch(index)
+        {
+        case 0:
+            {
+                Languages lang = lamp.get_language();
+                for(int index=0;index<FieryLedLampEffectTypes::MaxEffect;index++)
+                {
+                    ret += (String("<option>")+lang.GetEffect(index)+String("</option>"));
+                }
+            }
+            break;
+        }
+        break;
+    }
+    return ret;
+}
+
+void notFound(AsyncWebServerRequest *request) {
+    request->send(404, "text/plain", "Not found");
+}
+void onBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+  //Handle body
+}
+void mainPage(AsyncWebServerRequest *request) {
+    request->send(LittleFS, "/web/index.html",String(), false, template_processor);
+}
+
+void FieryLedLamp::setup_web_server()
+{
+    server.onNotFound(notFound);
+    server.onRequestBody(onBody);
+
+    server.on("/", HTTP_GET, mainPage);
+    server.begin();
+}
+void FieryLedLamp::connect_web()
+{
+};
+
+/*#include"FieryLedLamp.h"
 
 String getContentType(String filename)
 {
@@ -41,4 +97,4 @@ void handleFileRead()
 void FieryLedLamp::setup_web_server()
 {
     web->onNotFound(handleFileRead);
-}
+}*/

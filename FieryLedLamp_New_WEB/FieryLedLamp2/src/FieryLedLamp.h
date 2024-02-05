@@ -63,6 +63,7 @@ public:
 	void set_speed(uint8_t speed);
 	void set_brightness(uint8_t bright);
 
+	Languages get_language(){return config.language;}
 #ifdef USE_MQTT
 	void setup_mqtt_subscribe();
 	void update_mqtt(const char *topic, const char *payload);
@@ -70,8 +71,6 @@ public:
 	void update();
 
 	void update_time();
-
-	WebServer *Web(){return web;}
 private:
 	void setup_pin();
 	void setup_display();
@@ -97,7 +96,6 @@ private:
 #ifdef USE_MQTT
 	AsyncMqttClient mqtt;
 #endif
-	WebServer *web;
 
 	unsigned long remote_time_ms;
 

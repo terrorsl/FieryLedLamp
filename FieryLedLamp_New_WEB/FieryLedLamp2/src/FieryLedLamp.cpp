@@ -34,9 +34,7 @@ void FieryLedLamp::setup()
 	DBG_PRINT("start\n");
 	
 	config.power_state=false;
-	
-	web=new WebServer(80);
-	
+		
 	setup_pin();
 	
 	FastLED.addLeds<WS2812B,LED_PIN,GRB>(leds,NUM_LEDS);
@@ -191,10 +189,6 @@ void FieryLedLamp::setup_time()
 	ntpClient->setUpdateInterval(60*60000);
 #endif
 };
-void FieryLedLamp::connect_web()
-{
-	web->begin();
-};
 void FieryLedLamp::update_time()
 {
 #ifdef USE_NTP
@@ -238,8 +232,6 @@ void FieryLedLamp::update_button()
 				DBG_PRINT("setup mode\n");
 				digitalWrite(BUILDIN_LED_PIN, LOW);
 
-				web->stop();
-
 				WiFiManager manager;
 #if defined(USE_MQTT)
 				WiFiManagerParameter server("mqtt_server","MQTT Server",config.mqtt.server.c_str(),40);
@@ -268,7 +260,6 @@ void FieryLedLamp::update_button()
 #endif
 					save_config(&doc);
 				}
-				web->begin();
 
 				digitalWrite(BUILDIN_LED_PIN, HIGH);
 				button_down=false;
@@ -342,7 +333,6 @@ void FieryLedLamp::update()
 			remote_time_ms=t;
 		}
 	}
-	web->handleClient();
 };
 void FieryLedLamp::update_display()
 {

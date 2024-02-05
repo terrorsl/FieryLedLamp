@@ -13,8 +13,8 @@ Languages::Languages()
 #endif
 #ifdef SUPPORT_RUSSIAN
     #include"lang_ru.h"
-    supports[RUSSIAN].name=GetName(RUSSIAN);
-    supports[RUSSIAN].effect_name=GetEffect(RUSSIAN);
+    supports[RUSSIAN].name=RUSSIAN_NAME;
+    supports[RUSSIAN].effect_name=RUSSIAN_EFFECT;
 #endif
 };
 void Languages::setLanguage(LanguageType index)
