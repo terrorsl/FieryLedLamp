@@ -3,6 +3,11 @@
 
 #define RUSSIAN_NAME "Русский"
 
+static const char *RUSSIAN_TEMPLATE_NAME[]=
+{
+	"Эффекты",
+	"Яркость"
+};
 static const char *RUSSIAN_EFFECT[]=
 {
     "Бeлый cвeт",

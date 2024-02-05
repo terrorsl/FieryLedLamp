@@ -18,6 +18,7 @@ struct Language
 {
     const char *name;
     const char **effect_name;
+    const char **template_manes;
 };
 
 class Languages
@@ -28,6 +29,7 @@ public:
 
     const char *GetName(){return current->name;}
     const char *GetEffect(unsigned short index){return current->effect_name[index];}
+    const char *GetTemplateName(int index){return current->template_manes[index];}
 private:
     Language supports[MAX_LANGUAGE];
     Language *current;

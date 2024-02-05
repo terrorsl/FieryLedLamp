@@ -5,13 +5,35 @@ AsyncWebServer server(80);
 
 const char *template_list[]=
 {
-    "EFFECT_LIST"
+    "EFFECT_LIST",
+    "Effect",
+    "Brightness"
 };
+
+String getContentType(AsyncWebServerRequest *request, String filename)
+{
+    if (request->hasArg("download")) return F("application/octet-stream");
+    else if (filename.endsWith(".htm")) return F("text/html");
+    else if (filename.endsWith(".html")) return F("text/html");
+    else if (filename.endsWith(".json")) return F("application/json");
+    else if (filename.endsWith(".css")) return F("text/css");
+    else if (filename.endsWith(".js")) return F("application/javascript");
+    else if (filename.endsWith(".png")) return F("image/png");
+    else if (filename.endsWith(".gif")) return F("image/gif");
+    else if (filename.endsWith(".jpg")) return F("image/jpeg");
+    else if (filename.endsWith(".ico")) return F("image/x-icon");
+    else if (filename.endsWith(".xml")) return F("text/xml");
+    else if (filename.endsWith(".pdf")) return F("application/x-pdf");
+    else if (filename.endsWith(".zip")) return F("application/x-zip");
+    else if (filename.endsWith(".gz")) return F("application/x-gzip");
+    return F("text/plain");
+}
 
 String template_processor(const String& var)
 {
     String ret;
-    for(int index=0;index<sizeof(template_list)/sizeof(template_list[0]);index++)
+    Languages lang = lamp.get_language();
+    for(unsigned int index=0;index<sizeof(template_list)/sizeof(template_list[0]);index++)
     {
         if(var!=template_list[index])
             continue;
@@ -19,11 +41,15 @@ String template_processor(const String& var)
         {
         case 0:
             {
-                Languages lang = lamp.get_language();
                 for(int index=0;index<FieryLedLampEffectTypes::MaxEffect;index++)
                 {
                     ret += (String("<option>")+lang.GetEffect(index)+String("</option>"));
                 }
+            }
+            break;
+        default:
+            {
+                ret = lang.GetTemplateName(index-1);
             }
             break;
         }
@@ -33,10 +59,17 @@ String template_processor(const String& var)
 }
 
 void notFound(AsyncWebServerRequest *request) {
-    request->send(404, "text/plain", "Not found");
+    String contentType = getContentType(request, request->url());
+    if(LittleFS.exists(request->url()))
+    {
+        request->send(LittleFS, request->url(),contentType);
+    }
+    else
+        request->send(404, "text/plain", "Not found");
 }
 void onBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
   //Handle body
+  DBG_PRINT("%s",request->url().c_str());
 }
 void mainPage(AsyncWebServerRequest *request) {
     request->send(LittleFS, "/web/index.html",String(), false, template_processor);

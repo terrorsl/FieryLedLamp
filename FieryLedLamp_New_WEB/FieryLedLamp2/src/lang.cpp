@@ -15,6 +15,7 @@ Languages::Languages()
     #include"lang_ru.h"
     supports[RUSSIAN].name=RUSSIAN_NAME;
     supports[RUSSIAN].effect_name=RUSSIAN_EFFECT;
+    supports[RUSSIAN].template_manes=RUSSIAN_TEMPLATE_NAME;
 #endif
 };
 void Languages::setLanguage(LanguageType index)

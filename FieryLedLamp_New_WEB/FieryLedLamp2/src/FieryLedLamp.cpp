@@ -377,7 +377,7 @@ void FieryLedLamp::update_display()
 		u8g2_for_adafruit_gfx.setForegroundColor(WHITE);      // apply Adafruit GFX color
 		u8g2_for_adafruit_gfx.setCursor(0,20);                // start writing at this position
 		
-		sprintf(str, "%d: %s", config.currentEffect, config.language.GetEffect(config.currentEffect));//config.effect_name[config.currentEffect]);
+		sprintf(str, "%d: %s ip:%s", config.currentEffect, config.language.GetEffect(config.currentEffect), WiFi.localIP().toString().c_str());
 		u8g2_for_adafruit_gfx.setCursor(pos_x,40);                // start writing at this position
 		//u8g2_for_adafruit_gfx.print("Umlaut ÄÖÜ");            // UTF-8 string with german umlaut chars
 		u8g2_for_adafruit_gfx.drawUTF8(pos_x, 40, str);
