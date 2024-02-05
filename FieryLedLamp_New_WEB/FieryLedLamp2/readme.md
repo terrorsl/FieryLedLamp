@@ -1,8 +1,19 @@
 # FieryLedLamp 2
+The firmware and idea from the [project](https://github.com/MishanyaTS/FieryLedLamp_New_WEB) were taken as a basis.
+
+The firmware has been completely rewritten. Added a setup mode that makes it easier to connect the lamp to the router and describe the broker.
+A display has been added that displays the time when turned off and the name and number of the effect when turned on.
+Using the button you can not only turn the lamp on/off, but also switch effects.
+Added the ability to select a language.
+
+What to do:
+- [ ] Add music.
+- [ ] Add on/off by time.
+- [ ] Add an alarm.
 
 [Lamp control with button](#Control-via-button)  
 [Lamp control via mqtt](#Control-via-MQTT)  
-[Sceme](#Sceme)  
+[Scheme](#Scheme)  
 [Installation and update](#Installation-and-update)
 
 ## Control via button
