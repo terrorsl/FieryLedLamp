@@ -37,6 +37,57 @@
 					%{context}%
 
 				<div class="column">
+
+					<form class="box" method="post">
+						<div class="select">
+							<select id="provider" onchange="on_provider_change();">
+								<option value="dealgate">Dealgate</option>
+								<option value="homeassistant">Homeassistant</option>
+								<option value="custom">Custom</option>
+							</select>
+						</div>
+						<div class="field">
+							<label class="label">Server</label>
+							<input class="input" id="server">
+						</div>
+						<div class="field">
+							<label class="label">Port</label>
+							<input class="input" id="port">
+						</div>
+						<div class="field">
+							<label class="label">Client ID</label>
+							<input class="input" id="clientid" value="%clientid%">
+						</div>
+						<div class="field is-grouped">
+							<div class="control">
+								<label class="label">Login</label>
+								<input class="input" id="login">
+							</div>
+							<div class="control">
+								<label class="label">Password</label>
+								<input class="input" type="password" id="password">	
+							</div>
+						</div>
+						<div class="field is-grouped">
+							<div class="control">
+								<label class="label">Discovery prefix</label>
+								<input class="input" id="discovery">
+							</div>
+							<div class="control">
+								<label class="label">Component</label>
+								<input class="input" id="component">
+							</div>
+						</div>
+						<div class="field">
+							<p id="topic"></p>
+						</div>
+						<div class="field">
+							<div class="control">
+								<button class="button">Save</button>
+							</div>
+						</div>
+					</form>
+
 					<div class="field">
 						<button class="button is-success is-large is-responsive" onclick="on_power()">%Power%</button>
 					</div>

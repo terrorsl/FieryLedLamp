@@ -68,6 +68,9 @@ public:
 	void setup_mqtt_subscribe();
 	void update_mqtt(const char *topic, const char *payload);
 #endif
+
+	void power_button(bool state);
+	
 	void update();
 
 	void update_time();
@@ -85,8 +88,6 @@ private:
 	void update_button();
 
 	void update_display();
-
-	void power_button(bool state);
 
 	JsonDocument load_config();
 	void save_config(JsonDocument *doc);

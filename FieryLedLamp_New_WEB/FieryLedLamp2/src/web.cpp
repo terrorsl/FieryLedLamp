@@ -39,6 +39,7 @@ String findTemplate(String &content)
             String temp_content=openTemplate(temp.substring(pos+7).c_str());
             content.replace(content.substring(first, second), temp_content);
             first +=temp_content.length();
+            continue;
         }
         pos=temp.indexOf("begin");
         if(pos!=-1)
@@ -119,15 +120,38 @@ void notFound(AsyncWebServerRequest *request) {
         request->send(404, "text/plain", "Not found");
 }
 void onBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
-  //Handle body
-  DBG_PRINT("%s",request->url().c_str());
+    //Handle body
+    DBG_PRINT("%s",request->url().c_str());
 }
 void mainPage(AsyncWebServerRequest *request) {
-    request->send(LittleFS, "/web/index.html",String(), false, template_processor);
+    request->send(LittleFS, "/web/main.html",String(), false, template_processor);
 }
 void effectPage(AsyncWebServerRequest *request) {
     String content = openTemplate("/web/effect.html");
-    request->send(LittleFS, "/web/effect.html",String(), false, template_processor);
+    content = findTemplate(content);
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", content.c_str(), template_processor);
+    request->send(response);
+    //request->send(LittleFS, "/web/effect.html",String(), false, template_processor);
+}
+/*void effectPostPage(AsyncWebServerRequest *request) {
+    request->params();
+}*/
+void effectPostPage(AsyncWebServerRequest *request, JsonVariant &json)
+{
+    if(json.containsKey("power"))
+    {
+        lamp.power_button(json["power"].as<bool>());
+        request->send(200);
+        return;
+    }
+    if(json.containsKey("effect"))
+    {
+        
+    }
+    request->send(403);
+};
+void saveMqttPage(AsyncWebServerRequest *request) {
+    request->params();
 }
 
 void FieryLedLamp::setup_web_server()
@@ -137,6 +161,13 @@ void FieryLedLamp::setup_web_server()
 
     server.on("/", HTTP_GET, mainPage);
     server.on("/effect", HTTP_GET, effectPage);
+    //server.on("/effect", HTTP_POST, effectPostPage);
+    server.on("/wifi", HTTP_GET, effectPage);
+    server.on("/mqtt", HTTP_GET, effectPage);
+    server.on("/mqtt", HTTP_POST, saveMqttPage);
+
+    AsyncCallbackJsonWebHandler* handler = new AsyncCallbackJsonWebHandler("/effect", effectPostPage);
+    server.addHandler(handler);
     server.begin();
 }
 void FieryLedLamp::connect_web()
