@@ -7,7 +7,57 @@ const char *template_list[]=
 {
     "EFFECT_LIST",
     "Effect",
-    "Brightness"
+    "Brightness",
+};
+
+String openTemplate(const char *page_name)
+{
+    String content;
+    fs::File file = LittleFS.open(page_name,"r");
+    for(size_t index=0;index<file.size();index++)
+    {
+        content += file.read();
+    }
+    file.close();
+    return content;
+}
+
+String findTemplate(String &content)
+{
+    int first=0;
+    while(true)
+    {
+        first=content.indexOf("%",first);
+        if(first==-1)
+            break;
+        int second=content.indexOf("%",first+1);
+        String temp=content.substring(first+1, second-1);
+        int pos;
+        pos=temp.indexOf("include");
+        if(pos!=-1)
+        {
+            String temp_content=openTemplate(temp.substring(pos+7).c_str());
+            content.replace(content.substring(first, second), temp_content);
+            first +=temp_content.length();
+        }
+        pos=temp.indexOf("begin");
+        if(pos!=-1)
+        {
+            String end_content=content.substring(first, second);
+            String content_name = temp.substring(pos+6, temp.length()-1);
+            end_content.replace("begin", "end");
+            int end=content.indexOf(end_content);
+
+            String tmp=content.substring(second+1, end);
+
+            content.remove(first, end-first+end_content.length());
+
+            content_name = "%{"+ content_name + "}%";
+            content.replace(content_name, tmp);
+            //String temp_content = temp
+        }
+    }
+    return content;
 };
 
 String getContentType(AsyncWebServerRequest *request, String filename)
@@ -32,6 +82,7 @@ String getContentType(AsyncWebServerRequest *request, String filename)
 String template_processor(const String& var)
 {
     String ret;
+
     Languages lang = lamp.get_language();
     for(unsigned int index=0;index<sizeof(template_list)/sizeof(template_list[0]);index++)
     {
@@ -74,6 +125,10 @@ void onBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t in
 void mainPage(AsyncWebServerRequest *request) {
     request->send(LittleFS, "/web/index.html",String(), false, template_processor);
 }
+void effectPage(AsyncWebServerRequest *request) {
+    String content = openTemplate("/web/effect.html");
+    request->send(LittleFS, "/web/effect.html",String(), false, template_processor);
+}
 
 void FieryLedLamp::setup_web_server()
 {
@@ -81,6 +136,7 @@ void FieryLedLamp::setup_web_server()
     server.onRequestBody(onBody);
 
     server.on("/", HTTP_GET, mainPage);
+    server.on("/effect", HTTP_GET, effectPage);
     server.begin();
 }
 void FieryLedLamp::connect_web()

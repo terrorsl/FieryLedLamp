@@ -6,7 +6,9 @@
 static const char *RUSSIAN_TEMPLATE_NAME[]=
 {
 	"Эффекты",
-	"Яркость"
+	"Яркость",
+	"Скорость",
+	"Масштаб"
 };
 static const char *RUSSIAN_EFFECT[]=
 {

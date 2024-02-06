@@ -8,7 +8,7 @@ $(document).ready(function(){
 });
 function on_power()
 {
-	$.ajax({url:"power", success: function(result){
+	$.ajax({url:"/power", success: function(result){
 		console.log(result);
 	}});
 };
