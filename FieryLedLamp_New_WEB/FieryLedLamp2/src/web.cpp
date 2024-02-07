@@ -6,8 +6,11 @@ AsyncWebServer server(80);
 const char *template_list[]=
 {
     "EFFECT_LIST",
-    "Effect",
-    "Brightness",
+    "POWER",
+    "EFFECT",
+    "BRIGHTNESS",
+    "SPEED",
+    "SCALE"
 };
 
 String openTemplate(const char *page_name)
