@@ -95,7 +95,7 @@ String template_processor(const String& var)
             {
                 for(int index=0;index<FieryLedLampEffectTypes::MaxEffect;index++)
                 {
-                    ret += (String("<option>")+lang.GetEffect(index)+String("</option>"));
+                    ret += (String("<option value=\"")+index+String("\">")+lang.GetEffect(index)+String("</option>"));
                 }
             }
             break;
@@ -133,6 +133,9 @@ void effectPage(AsyncWebServerRequest *request) {
     request->send(response);
     //request->send(LittleFS, "/web/effect.html",String(), false, template_processor);
 }
+void effectGroupPage(AsyncWebServerRequest *request) {
+
+}
 /*void effectPostPage(AsyncWebServerRequest *request) {
     request->params();
 }*/
@@ -161,6 +164,7 @@ void FieryLedLamp::setup_web_server()
 
     server.on("/", HTTP_GET, mainPage);
     server.on("/effect", HTTP_GET, effectPage);
+    server.on("/effect/fire", HTTP_GET, effectGroupPage);
     //server.on("/effect", HTTP_POST, effectPostPage);
     server.on("/wifi", HTTP_GET, effectPage);
     server.on("/mqtt", HTTP_GET, effectPage);

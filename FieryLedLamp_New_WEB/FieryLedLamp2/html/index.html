@@ -9,34 +9,64 @@
 		<script type="text/javascript" src="index.js"></script>
 		<link rel="stylesheet" href="slider/css/bulma-slider.min.css">
 		<script type="text/javascript" src="slider/js/bulma-slider.min.js"></script>
+		<link rel="icon" href="favicon.ico" type="image/x-icon">
 	</head>
 	<body>
 		<section class="section">
 			<div class="container">
 				<h1 class="title">Fiery Led Lamp</h1>
 				<p class="subtitle">
-					My first website with <strong>Bulma</strong>!
+					LED lamp control
 				</p>
 				<div class="columns">
 					<div class="column is-2">
 						<aside class="menu">
-							<p class="menu-label">General</p>
+							<p class="menu-label">%General%</p>
 							<ul class="menu-list">
-								<li><a href="/effect">Effects</a></li>
+								<li><a href="/effect">%Effects%</a></li>
 								<li><a>Alarm</a></li>
-								<!-- <li><a></a></li> -->
+								<li><a href="/schedule">Schedule</a></li>
 							</ul>
-  							<p class="menu-label">Settings</p>
+  							<p class="menu-label">%Settings%</p>
   							<ul class="menu-list">
-    							<li><a>WIFI</a></li>
-								<li><a>MQTT</a></li>
+    							<li><a href="/wifi">WIFI</a></li>
+								<li><a href="/mqtt">MQTT</a></li>
     						<li>
 						</aside>
 					</div>
 
 					%{context}%
-
-				<div class="column">
+					
+					<div class="column">
+						<div class="tile is-ancestor">
+							<div class="tile is-4 is-parent is-vertical">
+								<div class="tile is-child box">
+									<a href="/effect/fire">
+										<p class="title">Fire</p>
+										<p>Collection of fire effects</p>
+									</a>
+								</div>
+								<div class="tile is-child box">
+									<p class="title">Nature</p>
+								</div>
+								<div class="tile is-child box">
+									<p class="title">Water</p>
+									<p>Collection of water effects</p>
+								</div>
+							</div>
+							<div class="tile is-parent">
+								<div class="tile is-child box">
+									<p class="title">Space</p>
+									<p>Collection of space effects</p>
+								</div>
+								<div class="tile is-child box">
+									<p class="title">All</p>
+									<p>Collection of space effects</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				<!-- <div class="column">
 
 					<form class="box" method="post">
 						<div class="select">
@@ -124,7 +154,7 @@
 							<output for="scale">0</output>
 						</div>
 					</div>
-				</div>
+				</div> -->
 			</div>
 		</div>
 	</section>
@@ -133,6 +163,12 @@
     <!-- <script> -->
         <!-- bulmaSlider.attach(); -->
     <!-- </script> -->
-	
+	<footer class="footer">
+		<div class="content has-text-centered">
+			<p>
+				The source code is licensed <a href="http://opensource.org/licenses/mit-license.php">MIT</a>.
+			</p>
+		</div>
+	</footer>
   </body>
 </html>
