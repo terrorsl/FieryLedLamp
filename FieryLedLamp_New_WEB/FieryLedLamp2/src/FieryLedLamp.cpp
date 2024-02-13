@@ -103,7 +103,10 @@ void FieryLedLamp::setup_config()
 		config.mqtt.keep_alive=doc["mqtt_keepalive"].as<uint16_t>();
 		config.mqtt.clientid=doc["mqtt_clientid"].as<std::string>();
 
-		config.currentEffect = doc["effect"].as<uint16_t>();
+		if(doc.containsKey("effect"))
+			config.currentEffect = doc["effect"].as<uint16_t>();
+		else
+			config.currentEffect = 0;
 		config.scale=doc["scale"].as<uint8_t>();
 		config.speed=doc["speed"].as<uint8_t>();
 		config.brightness=doc["brightness"].as<uint8_t>();
@@ -349,6 +352,7 @@ void FieryLedLamp::update_display()
 			
 			char str[256];
 			u8g2_for_adafruit_gfx.setFont(u8g2_font_inr16_mr);
+			//u8g2_for_adafruit_gfx.setFont(u8g2_font_inr19_mr);
 			u8g2_for_adafruit_gfx.setFontMode(1);                 // use u8g2 transparent mode (this is default)
 			u8g2_for_adafruit_gfx.setFontDirection(0);            // left to right (this is default)
 			u8g2_for_adafruit_gfx.setForegroundColor(WHITE);      // apply Adafruit GFX color
@@ -356,7 +360,7 @@ void FieryLedLamp::update_display()
 			sprintf(str, "%02d:%02d:%02d", timeSt.tm_hour, timeSt.tm_min, timeSt.tm_sec);
 			int size=u8g2_for_adafruit_gfx.getUTF8Width(str);
 			int posx=(display->width()-size)/2;
-			u8g2_for_adafruit_gfx.drawUTF8(posx, 32, str);
+			u8g2_for_adafruit_gfx.drawUTF8(posx, 45, str);
 			display->display();
 		}
 	}
@@ -371,16 +375,17 @@ void FieryLedLamp::update_display()
 		display->setTextWrap(false);
 		
 		char str[256];
-		u8g2_for_adafruit_gfx.setFont(u8g2_font_cu12_t_cyrillic);  // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
-		u8g2_for_adafruit_gfx.setFontMode(1);                 // use u8g2 transparent mode (this is default)
+		//u8g2_for_adafruit_gfx.setFont(u8g2_font_cu12_t_cyrillic);  // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
+		u8g2_for_adafruit_gfx.setFont(u8g2_font_inr24_t_cyrillic);  // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
+		u8g2_for_adafruit_gfx.setFontMode(0);                 // use u8g2 transparent mode (this is default)
 		u8g2_for_adafruit_gfx.setFontDirection(0);            // left to right (this is default)
 		u8g2_for_adafruit_gfx.setForegroundColor(WHITE);      // apply Adafruit GFX color
-		u8g2_for_adafruit_gfx.setCursor(0,20);                // start writing at this position
+		//u8g2_for_adafruit_gfx.setCursor(0,20);                // start writing at this position
 		
 		sprintf(str, "%d: %s ip:%s", config.currentEffect, config.language.GetEffect(config.currentEffect), WiFi.localIP().toString().c_str());
-		u8g2_for_adafruit_gfx.setCursor(pos_x,40);                // start writing at this position
+		//u8g2_for_adafruit_gfx.setCursor(pos_x,4);                // start writing at this position
 		//u8g2_for_adafruit_gfx.print("Umlaut ÄÖÜ");            // UTF-8 string with german umlaut chars
-		u8g2_for_adafruit_gfx.drawUTF8(pos_x, 40, str);
+		u8g2_for_adafruit_gfx.drawUTF8(pos_x, 43, str);
 		display->display();
 
 		pos_x=pos_x-4;
