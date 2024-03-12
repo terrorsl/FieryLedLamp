@@ -84,6 +84,8 @@ private:
 #endif
 	void setup_web_server();
 
+	void goto_setup_mode();
+
 	void update_effect();
 	void update_button();
 

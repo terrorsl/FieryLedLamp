@@ -219,53 +219,65 @@ void FieryLedLamp::power_button(bool state)
 		FastLED.setBrightness(0);
 	FastLED.show();
 };
+void FieryLedLamp::goto_setup_mode()
+{
+	DBG_PRINT("setup mode\n");
+	digitalWrite(BUILDIN_LED_PIN, LOW);
+
+	WiFiManager manager;
+#if defined(USE_MQTT)
+	WiFiManagerParameter server("mqtt_server","MQTT Server",config.mqtt.server.c_str(),40);
+	WiFiManagerParameter port("mqtt_port","MQTT Port",String(config.mqtt.port).c_str(),6);
+	WiFiManagerParameter login("mqtt_login","MQTT Login",config.mqtt.login.c_str(),40);
+	WiFiManagerParameter password("mqtt_password","MQTT Password",config.mqtt.password.c_str(),40);
+	WiFiManagerParameter clientid("mqtt_clientid","MQTT Client ID",config.mqtt.clientid.c_str(),40);
+	WiFiManagerParameter keepalive("mqtt_keepalive","MQTT Keep alive",String(config.mqtt.keep_alive).c_str(),6);
+	manager.addParameter(&server);
+	manager.addParameter(&port);
+	manager.addParameter(&login);
+	manager.addParameter(&password);
+	manager.addParameter(&clientid);
+	manager.addParameter(&keepalive);
+#endif
+	if(manager.startConfigPortal(config.mqtt.clientid.c_str(), "12345678"))
+	{
+		JsonDocument doc=load_config();
+#if defined(USE_MQTT)
+		doc["mqtt_server"]=server.getValue();
+		doc["mqtt_port"]=atol(port.getValue());
+		doc["mqtt_login"]=login.getValue();
+		doc["mqtt_password"]=password.getValue();
+		doc["mqtt_clientid"]=clientid.getValue();
+		doc["mqtt_keepalive"]=atol(keepalive.getValue());
+#endif
+		save_config(&doc);
+	}
+};
 void FieryLedLamp::update_button()
 {
-#if BUTTON_IS_SENSORY
-	if(digitalRead(BUTTON_PIN)==HIGH)
-#else
-	if(digitalRead(BUTTON_PIN)==LOW)
-#endif
+	if(digitalRead(BUTTON_PIN)==BUTTON_IS_SENSORY)
 	{
 		if(button_down)
 		{
 			unsigned long delta=millis()-button_down_time;
-			if(delta>=SETUP_BUTTON_TIME)
+			// power off -> setup mode enable
+			if(config.power_state==false)
 			{
-				DBG_PRINT("setup mode\n");
-				digitalWrite(BUILDIN_LED_PIN, LOW);
-
-				WiFiManager manager;
-#if defined(USE_MQTT)
-				WiFiManagerParameter server("mqtt_server","MQTT Server",config.mqtt.server.c_str(),40);
-				WiFiManagerParameter port("mqtt_port","MQTT Port",String(config.mqtt.port).c_str(),6);
-				WiFiManagerParameter login("mqtt_login","MQTT Login",config.mqtt.login.c_str(),40);
-				WiFiManagerParameter password("mqtt_password","MQTT Password",config.mqtt.password.c_str(),40);
-				WiFiManagerParameter clientid("mqtt_clientid","MQTT Client ID",config.mqtt.clientid.c_str(),40);
-				WiFiManagerParameter keepalive("mqtt_keepalive","MQTT Keep alive",String(config.mqtt.keep_alive).c_str(),6);
-				manager.addParameter(&server);
-				manager.addParameter(&port);
-				manager.addParameter(&login);
-				manager.addParameter(&password);
-				manager.addParameter(&clientid);
-				manager.addParameter(&keepalive);
-#endif
-				if(manager.startConfigPortal(config.mqtt.clientid.c_str(), "12345678"))
+				if(delta>=SETUP_BUTTON_TIME)
 				{
-					JsonDocument doc=load_config();
-#if defined(USE_MQTT)
-					doc["mqtt_server"]=server.getValue();
-					doc["mqtt_port"]=atol(port.getValue());
-					doc["mqtt_login"]=login.getValue();
-					doc["mqtt_password"]=password.getValue();
-					doc["mqtt_clientid"]=clientid.getValue();
-					doc["mqtt_keepalive"]=atol(keepalive.getValue());
-#endif
-					save_config(&doc);
+					goto_setup_mode();
+					digitalWrite(BUILDIN_LED_PIN, HIGH);
+					button_down=false;
 				}
-
-				digitalWrite(BUILDIN_LED_PIN, HIGH);
-				button_down=false;
+			}
+			else
+			{
+				if(delta>=POWER_BUTTON_TIME)
+				{
+					// power turn off
+					power_button(false);
+					button_down=false;
+				}
 			}
 		}
 		else
@@ -293,19 +305,23 @@ void FieryLedLamp::update_button()
 		{
 			if(button_down_count && millis()-button_up_time>DELTA_BUTTON_DOWN)
 			{
-				switch(button_down_count)
+				if(config.power_state)
 				{
-				case POWER_BUTTON_COUNT:
-					power_button(!config.power_state);
-					break;
-				case NEXT_BUTTON_COUNT:
-					DBG_PRINT("next mode\n");
-					next_effect();
-					break;
-				case BEFOR_BUTTON_COUNT:
-					DBG_PRINT("before mode\n");
-					prev_effect();
-					break;
+					switch(button_down_count)
+					{
+					case NEXT_BUTTON_COUNT:
+						DBG_PRINT("next mode\n");
+						next_effect();
+						break;
+					case BEFOR_BUTTON_COUNT:
+						DBG_PRINT("before mode\n");
+						prev_effect();
+						break;
+					}
+				}
+				else
+				{
+					power_button(true);
 				}
 				button_down_count=0;
 			}
@@ -567,6 +583,9 @@ bool FieryLedLamp::change_effect(unsigned short index)
 		break;
 	case FieryLedLampEffectTypes::Metaballs:
 		config.effect=new FieryLedLampEffectMetaballs();
+		break;
+	case FieryLedLampEffectTypes::WebTools:
+		config.effect=new FieryLedLampEffectWebTool();
 		break;
 	case FieryLedLampEffectTypes::Mosaic:
 		config.effect=new FieryLedLampEffectMosaic();
