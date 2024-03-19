@@ -173,15 +173,9 @@ void FieryLedLamp::setup_pin()
 };
 void FieryLedLamp::setup_display()
 {
-	//display = new Adafruit_SSD1306(DISPLAY_ADDRESS, DISPLAY_SDA, DISPLAY_SCL, GEOMETRY_128_64);
-	//display->flipScreenVertically();
-	//display->init();
-	Wire.begin(DISPLAY_SDA, DISPLAY_SCL);
-	display = new Adafruit_SSD1306(128,64,&Wire, -1);
-	display->begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDRESS);
-	u8g2_for_adafruit_gfx.begin(*display);
+	display.init();
 
-	pos_x=display->width();
+	pos_x=display.width();
 	display_update_time=0;
 };
 void FieryLedLamp::setup_time()
@@ -355,6 +349,18 @@ void FieryLedLamp::update()
 };
 void FieryLedLamp::update_display()
 {
+	time_t t=time(0);
+	if(config.power_state==false)
+	{
+		tm timeSt;
+		gmtime_r(&t, &timeSt);
+
+		char str[256];
+		sprintf(str, "%02d:%02d:%02d", timeSt.tm_hour, timeSt.tm_min, timeSt.tm_sec);
+		display.draw(str);
+	}
+	display.update();
+#if 0
 	if(config.power_state==false)
 	{
 		time_t t=time(0);
@@ -408,6 +414,7 @@ void FieryLedLamp::update_display()
 		if(pos_x < -1*u8g2_for_adafruit_gfx.getUTF8Width(str))
 			pos_x=display->width();
 	}
+#endif
 };
 void FieryLedLamp::next_effect()
 {
@@ -633,5 +640,9 @@ bool FieryLedLamp::change_effect(unsigned short index)
 	config.effect->setup();
 	if(current)
 		delete current;
+
+	char str[256];
+	sprintf(str, "%d: %s ip:%s", config.currentEffect, config.language.GetEffect(config.currentEffect), WiFi.localIP().toString().c_str());
+	display.draw(str);
 	return true;
 };
