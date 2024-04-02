@@ -30,7 +30,6 @@ struct FieryLedLampConfig
 	bool power_state;
 	
 	Languages language;
-	//const char **effect_name;
 
 	unsigned short currentEffect;
 	FieryLedLampEffect *effect;
@@ -53,9 +52,15 @@ public:
 	void connect_web();
 	void connect_mqtt();
 
+	// set effect by index
 	bool change_effect(unsigned short index);
+	// set next effect
 	void next_effect();
+	// set previe effect
 	void prev_effect();
+
+	// set next effect after some delay
+	void auto_change_effect(unsigned char minutes);
 
 	void set_speed(uint8_t speed);
 	void set_brightness(uint8_t bright);
