@@ -55,13 +55,14 @@ public:
     };
 
     int width(){return display->width();}
+    unsigned char state(){return state_current;}
 
     void set_state(unsigned char state){
         state_current=state;
         switch(state_current)
         {
         case OFF_STATE:
-            delay=brightness.off_time;
+            delay=5000;//brightness.off_time;
             level=brightness.off_level;
 
             u8g2_for_adafruit_gfx.setFont(u8g2_font_inr16_mr);
@@ -84,7 +85,8 @@ public:
     void draw(const char *text){
         pos_x=0;
         text_size=u8g2_for_adafruit_gfx.getUTF8Width(text);
-        strcat(this->text,text);
+        strcpy(this->text,text);
+        //Serial.printf("!display update %s\n", this->text);
     }
 
     void update(){
@@ -98,16 +100,29 @@ public:
             if(delay>0)
             {
                 delay-=delta;
+                //Serial.printf("delay %d\n", delay);
             }
             else
             {
+                switch(state_current)
+                {
+                case OFF_STATE:
+                    display->ssd1306_command(SSD1306_DISPLAYOFF);
+                    break;
+                case ON_STATE:
+                case LOW_STATE:
+                    display->ssd1306_command(SSD1306_DISPLAYON);
+                    break;
+                }
+                /*Serial.printf("contrast %d\n", level);
                 display->ssd1306_command(SSD1306_SETCONTRAST);
-                display->ssd1306_command(level);
+                display->ssd1306_command(level);*/
                 state_before=state_current;
             }
         }
-        else
+        //else
         {
+            //Serial.printf("display update %s\n", text);
             display->clearDisplay();
             u8g2_for_adafruit_gfx.drawUTF8(pos_x, 43, text);
 		    display->display();
@@ -120,7 +135,7 @@ public:
 private:
     DisplayBrightness brightness;
     
-    unsigned long delay;
+    long delay;
     unsigned char level;
     
     char text[256];

@@ -39,6 +39,23 @@ struct FieryLedLampConfig
 	unsigned char speed, scale, brightness;
 };
 
+#define FieryButtonUnknownState 0
+#define FieryButtonPowerState 1
+#define FieryButtonSetupState 2
+
+struct FieryButton
+{
+	bool is_down;
+	// current state
+	unsigned char state;
+	// switch to state when release button
+	unsigned char switch_state;
+	// time when button pressed
+	unsigned long down_time;
+
+	unsigned char klick_count;
+};
+
 typedef enum
 {
 	POWER,
@@ -104,6 +121,7 @@ private:
 
 	unsigned long remote_time_ms;
 
+	FieryButton button;
 	bool button_down;
 	unsigned long button_down_time, button_up_time;
 	unsigned char button_down_count;

@@ -110,6 +110,7 @@ void FieryLedLamp::setup_config()
 		config.scale=doc["scale"].as<uint8_t>();
 		config.speed=doc["speed"].as<uint8_t>();
 		config.brightness=doc["brightness"].as<uint8_t>();
+		//config.brightness=BRIGHTNESS;
 	}
 
 	config.language.setLanguage(RUSSIAN);
@@ -156,6 +157,9 @@ void FieryLedLamp::setup_pin()
 #else
 	pinMode(BUTTON_PIN, INPUT_PULLUP);
 #endif
+	button.is_down = false;
+	button.klick_count = 0;
+	//button.state = 
 
 	pinMode(LED_PIN, OUTPUT);
 
@@ -207,6 +211,11 @@ void FieryLedLamp::power_button(bool state)
 
 	display_update_time=time(0);
 
+	if(state == true)
+		display.set_state(ON_STATE);
+	else
+		display.set_state(OFF_STATE);
+
 	if(state)
 		FastLED.setBrightness(config.brightness);
 	else
@@ -251,7 +260,31 @@ void FieryLedLamp::update_button()
 {
 	if(digitalRead(BUTTON_PIN)==BUTTON_IS_SENSORY)
 	{
-		if(button_down)
+		if(button.is_down)
+		{
+			unsigned long delta=millis()-button.down_time;
+			if(config.power_state==false)
+			{
+				if(delta>=SETUP_BUTTON_TIME)
+				{
+					button.state=FieryButtonSetupState;
+				}
+			}
+			else
+			{
+				if(delta>=POWER_BUTTON_TIME)
+				{
+					button.state=FieryButtonPowerState;
+				}
+			}
+		}
+		else
+		{
+			button.is_down = true;
+			button.down_time = millis();
+		}
+
+		/*if(button_down)
 		{
 			unsigned long delta=millis()-button_down_time;
 			// power off -> setup mode enable
@@ -278,14 +311,65 @@ void FieryLedLamp::update_button()
 		{
 			button_down=true;
 			button_down_time=millis();
-		}
+		}*/
 	}
 	else
 	{
+		if(button.is_down)
+		{
+			button.is_down = false;
+			unsigned long delta=millis()-button.down_time;
+			if(delta<=DELTA_BUTTON_DOWN)	
+				button.klick_count++;
+			else
+				button.klick_count=1;
+		}
+		else
+		{
+			if(button.klick_count)
+			{
+				if(config.power_state)
+				{
+					switch(button.state)
+					{
+					case FieryButtonUnknownState:
+						switch(button.klick_count)
+						{
+						case NEXT_BUTTON_COUNT:
+							DBG_PRINT("next mode\n");
+							next_effect();
+							break;
+						case BEFOR_BUTTON_COUNT:
+							DBG_PRINT("before mode\n");
+							prev_effect();
+							break;
+						}
+						display.set_state(LOW_STATE);
+						break;
+					case FieryButtonSetupState:
+						goto_setup_mode();
+						digitalWrite(BUILDIN_LED_PIN, HIGH);
+						break;
+					case FieryButtonPowerState:
+						power_button(false);
+						display.set_state(OFF_STATE);
+						break;
+					}
+				}
+				else
+				{
+					power_button(true);
+					display.set_state(LOW_STATE);
+				}
+				button.state=FieryButtonUnknownState;
+				button.klick_count=0;
+			}
+		}
+
+		/*unsigned long delta=millis()-button_up_time;
 		if(button_down)
 		{
 			button_down=false;
-			unsigned long delta=millis()-button_up_time;
 			if(delta<=DELTA_BUTTON_DOWN)
 			{
 				button_down_count++;
@@ -297,7 +381,7 @@ void FieryLedLamp::update_button()
 		}
 		else
 		{
-			if(button_down_count && millis()-button_up_time>DELTA_BUTTON_DOWN)
+			if(button_down_count && delta>DELTA_BUTTON_DOWN)
 			{
 				if(config.power_state)
 				{
@@ -319,7 +403,7 @@ void FieryLedLamp::update_button()
 				}
 				button_down_count=0;
 			}
-		}
+		}*/
 	}
 };
 void FieryLedLamp::update()
