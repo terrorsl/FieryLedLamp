@@ -108,7 +108,7 @@ private:
 	void update_effect();
 	void update_button();
 
-	void update_display();
+	void update_display(unsigned long delta_ms);
 
 	JsonDocument load_config();
 	void save_config(JsonDocument *doc);
@@ -119,7 +119,7 @@ private:
 	AsyncMqttClient mqtt;
 #endif
 
-	unsigned long remote_time_ms;
+	unsigned long remote_time_ms, loop_time_ms;
 
 	FieryButton button;
 	bool button_down;
@@ -129,6 +129,7 @@ private:
 	unsigned long current_time;
 	FieryLedLampConfig config;
 
+	//FieryDisplay display;
 	Display display;
 	time_t display_update_time;
 	int pos_x;

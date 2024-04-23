@@ -162,6 +162,7 @@ void saveMqttPage(AsyncWebServerRequest *request) {
 
 void FieryLedLamp::setup_web_server()
 {
+    DBG_PRINT("setup web\n");
     server.onNotFound(notFound);
     server.onRequestBody(onBody);
 

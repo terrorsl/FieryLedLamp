@@ -53,9 +53,6 @@ void FieryLedLamp::setup()
 	setup_mqtt();
 	setup_web_server();
 
-	//WiFi.mode(WIFI_STA);
-
-	//stationConnectedHandler = WiFi.onStationModeConnected(&onWiFiConnected);
 	WiFi.onStationModeDisconnected(&onWiFiDisconnected);
 
 	WiFi.setAutoConnect(true);
@@ -74,6 +71,8 @@ void FieryLedLamp::setup_config()
 #endif
 	JsonDocument doc=load_config();
 	
+	config.effect = 0;
+
 	if(doc.isNull())
 	{
 		config.mqtt.server="mqtt.dealgate.ru";
@@ -122,6 +121,7 @@ void FieryLedLamp::setup_config()
 	DBG_PRINT("mqtt_pass:%s\n", config.mqtt.password.c_str());
 
 	change_effect(config.currentEffect);
+	DBG_PRINT("setup_config done\n");
 };
 
 JsonDocument FieryLedLamp::load_config()
@@ -177,6 +177,7 @@ void FieryLedLamp::setup_pin()
 };
 void FieryLedLamp::setup_display()
 {
+	Wire.begin(DISPLAY_SDA, DISPLAY_SCL);
 	display.init();
 
 	pos_x=display.width();
@@ -344,7 +345,7 @@ void FieryLedLamp::update_button()
 							prev_effect();
 							break;
 						}
-						display.set_state(LOW_STATE);
+						display.set_state(ON_STATE);
 						break;
 					case FieryButtonSetupState:
 						goto_setup_mode();
@@ -352,14 +353,14 @@ void FieryLedLamp::update_button()
 						break;
 					case FieryButtonPowerState:
 						power_button(false);
-						display.set_state(OFF_STATE);
+						display.set_state(OFF_STATE, true);
 						break;
 					}
 				}
 				else
 				{
 					power_button(true);
-					display.set_state(LOW_STATE);
+					display.set_state(ON_STATE, true);
 				}
 				button.state=FieryButtonUnknownState;
 				button.klick_count=0;
@@ -408,17 +409,18 @@ void FieryLedLamp::update_button()
 };
 void FieryLedLamp::update()
 {
+	unsigned long t=millis();
+
+	unsigned long delta = t - loop_time_ms;
+
 	update_time();
-	update_display();
+	update_display(delta);
 	update_effect();
 	update_button();
 
-	unsigned long t=millis();
 	if(WiFi.isConnected()==false && t-remote_time_ms>2000)
     {
-        Serial.println("Try connect to WIFI");
-        //WiFi.begin();
-		//delay(2000);
+        //DBG_PRINT("Try connect to WIFI");
 		remote_time_ms=t;
         return;
     }
@@ -430,20 +432,34 @@ void FieryLedLamp::update()
 			remote_time_ms=t;
 		}
 	}
+	if(delta)
+		loop_time_ms = t;
 };
-void FieryLedLamp::update_display()
+void FieryLedLamp::update_display(unsigned long delta_ms)
 {
-	time_t t=time(0);
+	if(delta_ms==0)
+		return;
+	static unsigned short sec=1000;
 	if(config.power_state==false)
 	{
-		tm timeSt;
-		gmtime_r(&t, &timeSt);
+		if(delta_ms>=sec)
+		{
 
-		char str[256];
-		sprintf(str, "%02d:%02d:%02d", timeSt.tm_hour, timeSt.tm_min, timeSt.tm_sec);
-		display.draw(str);
+			sec=1000;
+			time_t t=time(0);
+			tm timeSt;
+			gmtime_r(&t, &timeSt);
+
+			char str[32];
+			sprintf(str, "%02d:%02d:%02d", timeSt.tm_hour, timeSt.tm_min, timeSt.tm_sec);
+			display.draw(str);
+		}
+		else
+		{
+			sec -= delta_ms;
+		}
 	}
-	display.update();
+	display.update(delta_ms);
 #if 0
 	if(config.power_state==false)
 	{
