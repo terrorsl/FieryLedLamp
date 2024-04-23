@@ -14,6 +14,10 @@
 #define FieryLedLampPlatform "esp32"
 #endif
 
+// time iterval save config to file
+#define SAVE_TIME_INTERVAL 10000
+
+
 #define FLL_VERSION           (" Ver.3.7.122")
 
 //#include <ESP8266WebServer.h>

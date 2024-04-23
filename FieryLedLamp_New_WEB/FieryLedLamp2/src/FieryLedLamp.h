@@ -25,8 +25,10 @@ struct FieryLedLampConfigMQTT
 	std::string clientid;
 };
 #endif
+
 struct FieryLedLampConfig
 {
+	bool need_save;
 	bool power_state;
 	
 	Languages language;
@@ -109,6 +111,9 @@ private:
 	void update_button();
 
 	void update_display(unsigned long delta_ms);
+	void update_effect_display();
+
+	void update_save(unsigned long delta_ms);
 
 	JsonDocument load_config();
 	void save_config(JsonDocument *doc);
@@ -120,6 +125,7 @@ private:
 #endif
 
 	unsigned long remote_time_ms, loop_time_ms;
+	unsigned short save_interval;
 
 	FieryButton button;
 	bool button_down;

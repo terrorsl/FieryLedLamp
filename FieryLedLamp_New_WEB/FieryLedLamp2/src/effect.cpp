@@ -421,7 +421,8 @@ void FieryLedLampEffectLavaLamp::drawBlob(uint8_t l, CRGB color)
   	{
     	for (int8_t x = -1; x < 3; x++)
       		for (int8_t y = -1; y < 3; y++)
-        		if (!(x == -1 && (y == -1 || y == 2) || x == 2 && (y == -1 || y == 2)))
+        		//if (!(x == -1 && (y == -1 || y == 2) || x == 2 && (y == -1 || y == 2)))
+				if (!((x == -1 && (y == -1 || y == 2)) || (x == 2 && (y == -1 || y == 2))))
           			drawPixelXYF(fmod(trackingObjectPosX[l] + x + LED_WIDTH, LED_WIDTH), trackingObjectPosY[l] + y, color);
   	}
 }
@@ -2203,8 +2204,9 @@ void FieryLedLampEffectSmoke::updateInner()
       		hue2 = 0U;
       		hue = random8();
     	}
-    	if (deltaHue & 0x01) // какой-то умножитель охота подключить к задержке смены цвета, но хз какой...
+		if(deltaHue & 0x01){ // какой-то умножитель охота подключить к задержке смены цвета, но хз какой...
       		hue2++;
+		}
 		hsv2rgb_spectrum(CHSV(hue, 255U, 127U), color);
   	}
   	else {
@@ -2491,7 +2493,7 @@ void FieryLedLampEffectSwirl::updateInner()
 	}
   	else {
   		uint8_t divider;
-  		uint8_t lastHue;
+  		uint8_t lastHue=0;
   		static const uint32_t colors[5][6] PROGMEM = {
     		{CRGB::Blue, CRGB::DarkRed, CRGB::Aqua, CRGB::Magenta, CRGB::Gold, CRGB::Green },
     		{CRGB::Yellow, CRGB::LemonChiffon, CRGB::LightYellow, CRGB::Gold, CRGB::Chocolate, CRGB::Goldenrod},

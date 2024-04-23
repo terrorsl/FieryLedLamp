@@ -221,7 +221,7 @@ public:
             else
             {
                 state_before=state_current;
-                Serial.printf("contrast %d delay:%d\n", level, delay);
+                //Serial.printf("contrast %d delay:%d\n", level, delay);
                 switch(state_current)
                 {
                 case OFF_STATE:

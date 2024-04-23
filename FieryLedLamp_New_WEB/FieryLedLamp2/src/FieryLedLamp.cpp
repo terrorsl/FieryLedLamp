@@ -159,7 +159,6 @@ void FieryLedLamp::setup_pin()
 #endif
 	button.is_down = false;
 	button.klick_count = 0;
-	//button.state = 
 
 	pinMode(LED_PIN, OUTPUT);
 
@@ -168,7 +167,7 @@ void FieryLedLamp::setup_pin()
 	digitalWrite(MOSFET_PIN, !MOSFET_LEVEL);
 #endif
 
-#ifdef ALARM_PIN                                          // ������������� ����, ������������ ����������� � ��������� "��������"
+#ifdef ALARM_PIN
 	pinMode(ALARM_PIN, OUTPUT);
 #ifdef ALARM_LEVEL
 	digitalWrite(ALARM_PIN, !ALARM_LEVEL);
@@ -181,7 +180,7 @@ void FieryLedLamp::setup_display()
 	display.init();
 
 	pos_x=display.width();
-	display_update_time=0;
+	//display_update_time=0;
 };
 void FieryLedLamp::setup_time()
 {
@@ -210,7 +209,7 @@ void FieryLedLamp::power_button(bool state)
 	config.power_state=state;
 	digitalWrite(MOSFET_PIN, state);
 
-	display_update_time=time(0);
+	//display_update_time=time(0);
 
 	if(state == true)
 		display.set_state(ON_STATE);
@@ -222,6 +221,8 @@ void FieryLedLamp::power_button(bool state)
 	else
 		FastLED.setBrightness(0);
 	FastLED.show();
+
+	update_effect_display();
 };
 void FieryLedLamp::goto_setup_mode()
 {
@@ -407,6 +408,19 @@ void FieryLedLamp::update_button()
 		}*/
 	}
 };
+void FieryLedLamp::update_save(unsigned long delta_ms)
+{
+	save_interval+=delta_ms;
+	if(save_interval < SAVE_TIME_INTERVAL || config.need_save==false)
+		return;
+	save_interval=0;
+	config.need_save=false;
+	JsonDocument doc=load_config();
+
+	doc["effect"]=config.currentEffect;
+
+	save_config(&doc);
+};
 void FieryLedLamp::update()
 {
 	unsigned long t=millis();
@@ -417,6 +431,8 @@ void FieryLedLamp::update()
 	update_display(delta);
 	update_effect();
 	update_button();
+
+	update_save(delta);
 
 	if(WiFi.isConnected()==false && t-remote_time_ms>2000)
     {
@@ -540,6 +556,12 @@ void FieryLedLamp::set_brightness(uint8_t bright)
 {
 	config.brightness=bright;
 	config.effect->set_bright(bright);
+};
+void FieryLedLamp::update_effect_display()
+{
+	char str[256];
+	sprintf(str, "%d: %s ip:%s", config.currentEffect, config.language.GetEffect(config.currentEffect), WiFi.localIP().toString().c_str());
+	display.draw(str);
 };
 bool FieryLedLamp::change_effect(unsigned short index)
 {
@@ -741,8 +763,7 @@ bool FieryLedLamp::change_effect(unsigned short index)
 	if(current)
 		delete current;
 
-	char str[256];
-	sprintf(str, "%d: %s ip:%s", config.currentEffect, config.language.GetEffect(config.currentEffect), WiFi.localIP().toString().c_str());
-	display.draw(str);
+	update_effect_display();
+	config.need_save=true;
 	return true;
 };
