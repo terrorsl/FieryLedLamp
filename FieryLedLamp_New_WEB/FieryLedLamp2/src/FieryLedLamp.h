@@ -26,6 +26,12 @@ struct FieryLedLampConfigMQTT
 };
 #endif
 
+struct FieryLedLampPin
+{
+	unsigned char pin;
+	unsigned char mode;
+};
+
 struct FieryLedLampConfig
 {
 	bool need_save;

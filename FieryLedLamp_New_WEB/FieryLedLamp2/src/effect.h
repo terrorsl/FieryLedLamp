@@ -8,8 +8,8 @@
 //константы размера матрицы вычисляется только здесь и не меняется в эффектах
 #define CENTER_X_MINOR ((LED_WIDTH / 2) -  ((LED_WIDTH - 1) & 0x01)) // центр матрицы по ИКСУ, сдвинутый в меньшую сторону, если ширина чётная
 #define CENTER_Y_MINOR ((LED_HEIGHT / 2) - ((LED_HEIGHT - 1) & 0x01)) // центр матрицы по ИГРЕКУ, сдвинутый в меньшую сторону, если высота чётная
-const uint8_t CENTER_X_MAJOR =   LED_WIDTH / 2  + (LED_WIDTH % 2);           // центр матрицы по ИКСУ, сдвинутый в большую сторону, если ширина чётная
-const uint8_t CENTER_Y_MAJOR =  LED_HEIGHT / 2  + (LED_HEIGHT % 2);          // центр матрицы по ИГРЕКУ, сдвинутый в большую сторону, если высота чётная
+const uint8_t CENTER_X_MAJOR = LED_WIDTH / 2  + (LED_WIDTH % 2); // центр матрицы по ИКСУ, сдвинутый в большую сторону, если ширина чётная
+const uint8_t CENTER_Y_MAJOR = LED_HEIGHT / 2  + (LED_HEIGHT % 2); // центр матрицы по ИГРЕКУ, сдвинутый в большую сторону, если высота чётная
 
 typedef enum{
 	WhiteColor, // Бeлый cвeт
@@ -185,73 +185,19 @@ protected:
 	//https://gist.github.com/sutaburosu/32a203c2efa2bb584f4b846a91066583
 	void drawPixelXYF(float x, float y, CRGB color);
 	// функция получения цвета пикселя по его номеру
-	uint32_t getPixColor(uint32_t thisSegm);
+	CRGB getPixelColor(uint32_t thisSegm);
 	// функция получения цвета пикселя в матрице по его координатам
-	uint32_t getPixColorXY(uint8_t x, uint8_t y);
+	CRGB getPixColorXY(uint8_t x, uint8_t y);
 	// залить все
 	void fillAll(CRGB color);
 	void fadePixel(uint8_t i, uint8_t j, uint8_t step);
 	void drawStar(float xlocl, float ylocl, float biggy, float little, int16_t points, float dangle, uint8_t koler);
-	void DrawLine(int x1, int y1, int x2, int y2, CRGB color)
-{
-  int deltaX = abs(x2 - x1);
-  int deltaY = abs(y2 - y1);
-  int signX = x1 < x2 ? 1 : -1;
-  int signY = y1 < y2 ? 1 : -1;
-  int error = deltaX - deltaY;
-
-  drawPixelXY(x2, y2, color);
-  while (x1 != x2 || y1 != y2) {
-    drawPixelXY(x1, y1, color);
-    int error2 = error * 2;
-    if (error2 > -deltaY) {
-      error -= deltaY;
-      x1 += signX;
-    }
-    if (error2 < deltaX) {
-      error += deltaX;
-      y1 += signY;
-    }
-  }
-}
+	void DrawLine(int x1, int y1, int x2, int y2, CRGB color);
 	void drawCircleF(float x0, float y0, float radius, CRGB color);
-	void drawCircle(int x0, int y0, int radius, const CRGB &color) {
-  int a = radius, b = 0;
-  int radiusError = 1 - a;
-
-  if (radius == 0) {
-    drawPixelXY(x0, y0, color);
-    return;
-  }
-
-  while (a >= b)  {
-    drawPixelXY(a + x0, b + y0, color);
-    drawPixelXY(b + x0, a + y0, color);
-    drawPixelXY(-a + x0, b + y0, color);
-    drawPixelXY(-b + x0, a + y0, color);
-    drawPixelXY(-a + x0, -b + y0, color);
-    drawPixelXY(-b + x0, -a + y0, color);
-    drawPixelXY(a + x0, -b + y0, color);
-    drawPixelXY(b + x0, -a + y0, color);
-    b++;
-    if (radiusError < 0)
-      radiusError += 2 * b + 1;
-    else
-    {
-      a--;
-      radiusError += 2 * (b - a + 1);
-    }
-  }
-}
+	void drawCircle(int x0, int y0, int radius, const CRGB &color);
 	void fillNoiseLED(const TProgmemRGBPalette16 *currentPalette);
 	void FillNoise(uint8_t **noise3d, uint32_t noise32_x, uint32_t noise32_y, uint32_t noise32_z, uint32_t scale32_x, uint32_t scale32_y, uint8_t noisesmooth);
-	void drawRecCHSV(uint8_t startX, uint8_t startY, uint8_t endX, uint8_t endY, CHSV color) {
-  for (uint8_t y = startY; y < endY; y++) {
-    for (uint8_t x = startX; x < endX; x++) {
-      drawPixelXY(x, y, color);
-    }
-  }
-}
+	void drawRecCHSV(uint8_t startX, uint8_t startY, uint8_t endX, uint8_t endY, CHSV color);
 
 	//массивы состояния объектов, которые могут использоваться в любом эффекте
 	#define trackingOBJECT_MAX_COUNT                         (100U)  // максимальное количество отслеживаемых объектов (очень влияет на расход памяти)
@@ -301,6 +247,7 @@ private:
 	void SmearPaint(uint8_t *obj);
 
 	uint8_t step, deltaValue, deltaHue;
+  uint8_t trackingObject[6];
 };
 
 class FieryLedLampEffectFlowerRuta:public FieryLedLampEffect
@@ -351,6 +298,11 @@ public:
 private:
 	uint8_t waveCount;
 	uint8_t waveRotation;
+  uint8_t waveThetaUpdate;
+  uint8_t waveThetaUpdateFrequency;
+  uint8_t waveTheta;
+	uint8_t hueUpdate;
+	uint8_t hueUpdateFrequency;
 };
 
 class FieryLedLampEffectWaterfall: public FieryLedLampEffect

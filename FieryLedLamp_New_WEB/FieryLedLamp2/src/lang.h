@@ -4,6 +4,13 @@
 #define SUPPORT_ENGLISH
 #define SUPPORT_RUSSIAN
 
+#if defined(SUPPORT_ENGLISH)
+#include"lang_en.h"
+#endif
+#if defined(SUPPORT_RUSSIAN)
+#include"lang_ru.h"
+#endif
+
 typedef enum{
 #ifdef SUPPORT_ENGLISH
     ENGLISH,

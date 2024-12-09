@@ -37,16 +37,6 @@ void FieryLedLamp::setup()
 		
 	setup_pin();
 	
-	FastLED.addLeds<WS2812B,LED_PIN,GRB>(leds,NUM_LEDS);
-	//FastLED.setBrightness(BRIGHTNESS);
-  	/*if (current_limit > 0)
-  	{
-    	FastLED.setMaxPowerInVoltsAndMilliamps(5, current_limit);
-  	}*/
-	FastLED.setMaxPowerInVoltsAndMilliamps(5, 3000);
-  	FastLED.clear();
-  	FastLED.show();
-
 	setup_display();
 	
 	setup_config();
@@ -173,6 +163,11 @@ void FieryLedLamp::setup_pin()
 	digitalWrite(ALARM_PIN, !ALARM_LEVEL);
 #endif
 #endif
+
+	FastLED.addLeds<WS2812B,LED_PIN,GRB>(leds,NUM_LEDS);
+	FastLED.setMaxPowerInVoltsAndMilliamps(5, 3000);
+  	FastLED.clear();
+  	FastLED.show();
 };
 void FieryLedLamp::setup_display()
 {
@@ -367,45 +362,6 @@ void FieryLedLamp::update_button()
 				button.klick_count=0;
 			}
 		}
-
-		/*unsigned long delta=millis()-button_up_time;
-		if(button_down)
-		{
-			button_down=false;
-			if(delta<=DELTA_BUTTON_DOWN)
-			{
-				button_down_count++;
-			}
-			else
-				button_down_count=1;
-			button_up_time=millis();
-			DBG_PRINT("delta:%d\n",delta);
-		}
-		else
-		{
-			if(button_down_count && delta>DELTA_BUTTON_DOWN)
-			{
-				if(config.power_state)
-				{
-					switch(button_down_count)
-					{
-					case NEXT_BUTTON_COUNT:
-						DBG_PRINT("next mode\n");
-						next_effect();
-						break;
-					case BEFOR_BUTTON_COUNT:
-						DBG_PRINT("before mode\n");
-						prev_effect();
-						break;
-					}
-				}
-				else
-				{
-					power_button(true);
-				}
-				button_down_count=0;
-			}
-		}*/
 	}
 };
 void FieryLedLamp::update_save(unsigned long delta_ms)
