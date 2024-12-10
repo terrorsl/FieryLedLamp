@@ -110,6 +110,10 @@ void FieryLedLamp::setup_config()
 	DBG_PRINT("mqtt_login:%s\n", config.mqtt.login.c_str());
 	DBG_PRINT("mqtt_pass:%s\n", config.mqtt.password.c_str());
 
+	DBG_PRINT("effect:%d\n", config.currentEffect);
+	DBG_PRINT("scale:%d\n", config.scale);
+	DBG_PRINT("speed:%d\n", config.speed);
+
 	change_effect(config.currentEffect);
 	DBG_PRINT("setup_config done\n");
 };
@@ -117,17 +121,42 @@ void FieryLedLamp::setup_config()
 JsonDocument FieryLedLamp::load_config()
 {
 	JsonDocument doc;
+	if(LittleFS.exists("/config.json.tmp"))
+	{
+		DBG_PRINT("swap config\n");
+		fs::File file=LittleFS.open("/config.json.tmp", "r");
+		if(file)
+		{
+			/*while(file.available())
+				DBG_PRINT("%s:\n", file.readString().c_str());
+			file.seek(0);*/
+			if(deserializeJson(doc, file)==DeserializationError::Ok)
+			{
+				file.close();
+				LittleFS.remove("/config.json");
+				LittleFS.rename("/config.json.tmp","/config.json");
+				return doc;
+			}
+		}
+	}
 	fs::File file=LittleFS.open("/config.json", "r");
 	if(file)
 	{
-		deserializeJson(doc, file);
+		while(file.available())
+			DBG_PRINT("%s:\n", file.readString().c_str());
+		file.seek(0);
+		if(deserializeJson(doc, file)!=DeserializationError::Ok)
+		{
+			DBG_PRINT("error:\n");
+			doc.clear();
+		}
 		file.close();
 	}
 	return doc;
 };
 void FieryLedLamp::save_config(JsonDocument *doc)
 {
-	fs::File file=LittleFS.open("/config.json", "w");
+	fs::File file=LittleFS.open("/config.json.tmp", "w");
 	if(file)
 	{
 		serializeJson(*doc, file);
@@ -316,14 +345,18 @@ void FieryLedLamp::update_button()
 		{
 			button.is_down = false;
 			unsigned long delta=millis()-button.down_time;
-			if(delta<=DELTA_BUTTON_DOWN)	
+			if(delta<=DELTA_BUTTON_DOWN)
+			{
 				button.klick_count++;
+				DBG_PRINT("delta %d, %d\n", delta, button.klick_count);
+			}
 			else
 				button.klick_count=1;
 		}
 		else
 		{
-			if(button.klick_count)
+			unsigned long delta=millis()-button.down_time;
+			if(delta >= DELTA_BUTTON_DOWN && button.klick_count)
 			{
 				if(config.power_state)
 				{
@@ -373,8 +406,18 @@ void FieryLedLamp::update_save(unsigned long delta_ms)
 	config.need_save=false;
 	JsonDocument doc=load_config();
 
+	doc["scale"]=config.scale;
+	doc["speed"]=config.speed;
+	doc["brightness"]=config.brightness;
 	doc["effect"]=config.currentEffect;
 
+#if defined(USE_MQTT)
+	doc["mqtt_server"]=config.mqtt.server;
+	doc["mqtt_port"]=config.mqtt.port;
+	doc["mqtt_login"]=config.mqtt.login;
+	doc["mqtt_password"]=config.mqtt.password;
+	doc["mqtt_clientid"]=config.mqtt.clientid;
+#endif
 	save_config(&doc);
 };
 void FieryLedLamp::update()
@@ -615,12 +658,13 @@ bool FieryLedLamp::change_effect(unsigned short index)
 	case FieryLedLampEffectTypes::Drops:
 		config.effect=new FieryLedLampEffectDrops();
 		break;
+	case FieryLedLampEffectTypes::LLand:
 	case FieryLedLampEffectTypes::Rings:
 		config.effect=new FieryLedLampEffectRings();
 		break;
 	case FieryLedLampEffectTypes::Comet:
-		config.effect=new FieryLedLampEffectComet();
-		break;
+		//config.effect=new FieryLedLampEffectComet();
+		//break;
 	case FieryLedLampEffectTypes::CometColor:
 		config.effect=new FieryLedLampEffectCometColor();
 		break;
