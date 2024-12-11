@@ -6,6 +6,12 @@
 #include"effect.h"
 #include"lang.h"
 
+#include"effects/fire_effect.h"
+#include"effects/liquid_effect.h"
+#include"effects/weather_effect.h"
+#include"effects/nature_effect.h"
+#include"effects/color_effect.h"
+
 #include"display.h"
 
 #include<ArduinoJson.h>
@@ -45,6 +51,10 @@ struct FieryLedLampConfig
 	FieryLedLampConfigMQTT mqtt;
 #endif
 	unsigned char speed, scale, brightness;
+
+	bool auto_change_effect;
+	unsigned char auto_change_time;
+	FieryLedLampEffectCategoryType auto_change_category;
 };
 
 #define FieryButtonUnknownState 0
@@ -85,7 +95,7 @@ public:
 	void prev_effect();
 
 	// set next effect after some delay
-	void auto_change_effect(unsigned char minutes);
+	void auto_change_effect(unsigned char minutes, FieryLedLampEffectCategoryType type);
 
 	void set_speed(uint8_t speed);
 	void set_brightness(uint8_t bright);
@@ -145,6 +155,8 @@ private:
 	Display display;
 	time_t display_update_time;
 	int pos_x;
+
+	FieryLedLampEffectCategory categoryes[FieryLedLampEffectCategoryType::FieryLedLampEffectCategoryType_MaxSize];
 };
 
 extern FieryLedLamp lamp;

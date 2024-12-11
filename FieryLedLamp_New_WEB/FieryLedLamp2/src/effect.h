@@ -11,8 +11,10 @@
 const uint8_t CENTER_X_MAJOR = LED_WIDTH / 2  + (LED_WIDTH % 2); // центр матрицы по ИКСУ, сдвинутый в большую сторону, если ширина чётная
 const uint8_t CENTER_Y_MAJOR = LED_HEIGHT / 2  + (LED_HEIGHT % 2); // центр матрицы по ИГРЕКУ, сдвинутый в большую сторону, если высота чётная
 
-typedef enum{
+typedef enum
+{
 	WhiteColor, // Бeлый cвeт
+	Aurora, // Аврора
 	WaterColor, // Акварель
 	FlowerRuta, // Аленький цветочек
 	Pool, // Бассейн
@@ -67,75 +69,90 @@ typedef enum{
 	BBalls, // Мячики
 	BallsBounce, // Мячики без границ
 	ChristmasTree, // Новогодняя Елка
+	NightCity, // Ночной Город
 	Fire, // Огонь
 	Fire2012, // Огонь 2012
 	Fire2018, // Огонь 2018
 	Fire2020, // Огонь 2020
 	Fire2021, // Огонь 2021
 	FireFlyTop, // Огoнь верховой
-//	FireFly, // Огoнь парящий
-/*#define EFF_FIRESPARKS          ( 62U)    // Огонь с искрами
-#define EFF_COLOR_RAIN          ( 63U)    // Осадки
-#define EFF_OSCILLATING         ( 64U)    // Осциллятор
-#define EFF_CLOUDS              ( 65U)    // Облака
-#define EFF_OCEAN               ( 66U)    // Океан
-#define EFF_OCTOPUS             ( 67U)    // Осьминог
-#define EFF_RAINBOW_STRIPE      ( 68U)    // Павлин
-#define EFF_HOURGLASS           ( 69U)    // Песочные часы
-#define EFF_PAINTBALL           ( 70U)    // Пейнтбол
-#define EFF_PICASSO             ( 71U)    // Пикассо
-#define EFF_PLASMA              ( 72U)    // Плазма
-#define EFF_SPIDER              ( 73U)    // Плазменная лампа
-#define EFF_PLASMA_WAVES        ( 74U)    // Плазменные волны
-#define EFF_FLAME               ( 75U)    // Пламя
-#define EFF_PLANETEARTH         ( 76U)    // Планета Земля
-#define EFF_BY_EFFECT           ( 77U)    // Побочный эффект
-#define EFF_POPCORN             ( 78U)    // Попкорн
-#define EFF_PRISMATA            ( 79U)    // Призмата
-#define EFF_ATTRACT             ( 80U)    // Притяжение
-#define EFF_LEAPERS             ( 81U)    // Пpыгyны
-#define EFF_PULSE               ( 82U)    // Пульс
-#define EFF_PULSE_WHITE         ( 83U)    // Пульс белый
-#define EFF_PULSE_RAINBOW       ( 84U)    // Пульс радужный
-#define EFF_RADIAL_WAWE         ( 85U)    // Радиальная волна
-#define EFF_RAINBOW_VER         ( 86U)    // Радуга
-#define EFF_RAINBOW             ( 87U)    // Радуга 3D
-#define EFF_SNAKE               ( 88U)    // Радужный змей
-#define EFF_DANDELIONS          ( 89U)    // Разноцветные одуванчики
-#define EFF_RAIN                ( 90U)    // Разноцветный дождь
-#define EFF_RIVERS              ( 91U)    // Реки Ботсваны
-#define EFF_LIGHTERS            ( 92U)    // Светлячки
-#define EFF_LIGHTER_TRACES      ( 93U)    // Светлячки со шлейфом
-#define EFF_FEATHER_CANDLE      ( 94U)    // Свеча
-#define EFF_AURORA              ( 95U)    // Северное сияние
-#define EFF_SERPENTINE          ( 96U)    // Серпантин
-#define EFF_SINUSOID3           ( 97U)    // Синусоид
-#define EFF_COLORS              ( 98U)    // Смена цвета
-#define EFF_SNOW                ( 99U)    // Снегопад
-#define EFF_SPECTRUM            (100U)    // Спектрум
-#define EFF_SPIRO               (101U)    // Спирали
-#define EFF_FLOCK               (102U)    // Стая
-#define EFF_FLOCK_N_PR          (103U)    // Стая и хищник
-#define EFF_ARROWS              (104U)    // Стрелки
-#define EFF_STROBE              (105U)    // Строб.Хаос.Дифузия
-#define EFF_SHADOWS             (106U)    // Тени
-#define EFF_PACIFIC             (107U)    // Тихий океан
-#define EFF_TORNADO             (108U)    // Торнадо
-#define EFF_SIMPLE_RAIN         (109U)    // Tyчкa в банке
-#define EFF_FIREWORK            (110U)    // Фейерверк
-#define EFF_FIREWORK_2          (111U)    // Фейерверк 2
-#define EFF_FAIRY               (112U)    // Фея
-#define EFF_COLOR               (113U)    // Цвет
-#define EFF_EFF_COLORED_PYTHON  (114U)    // Цветной Питон
-#define EFF_EFF_SAND            (115U)    // Цветные драже
-#define EFF_COLOR_FRIZZLES      (116U)    // Цветные кудри
-#define EFF_EFF_LOTUS           (117U)    // Цветок лотоса
-#define EFF_TURBULENCE          (118U)    // Цифровая турбулентность
-#define EFF_SPHERES             (119U)    // Шapы
-#define EFF_NEXUS               (120U)    // Nexus
-#define EFF_CLOCK               (121U)    // Часы*/
+	FireFly, // Огoнь парящий
+	FireSparks, // Огонь с искрами
+	ColorRain, // Осадки
+/*	Oscillating, // Осциллятор
+	Clouds, // Облака
+	Ocean, // Океан
+	Octopus, // Осьминог
+#define EFF_RAINBOW_STRIPE      ( 70U)    // Павлин
+#define EFF_HOURGLASS           ( 71U)    // Песочные часы
+#define EFF_PAINTBALL           ( 72U)    // Пейнтбол
+#define EFF_PICASSO             ( 73U)    // Пикассо
+#define EFF_PLASMA              ( 74U)    // Плазма
+#define EFF_SPIDER              ( 75U)    // Плазменная лампа
+#define EFF_PLASMA_WAVES        ( 76U)    // Плазменные волны
+#define EFF_FLAME               ( 77U)    // Пламя
+#define EFF_PLANETEARTH         ( 78U)    // Планета Земля
+#define EFF_BY_EFFECT           ( 79U)    // Побочный эффект
+#define EFF_POPCORN             ( 80U)    // Попкорн
+#define EFF_PRISMATA            ( 81U)    // Призмата
+#define EFF_ATTRACT             ( 82U)    // Притяжение
+#define EFF_LEAPERS             ( 83U)    // Пpыгyны
+#define EFF_PULSE               ( 84U)    // Пульс
+#define EFF_PULSE_WHITE         ( 85U)    // Пульс белый
+#define EFF_PULSE_RAINBOW       ( 86U)    // Пульс радужный
+#define EFF_RADIAL_WAWE         ( 87U)    // Радиальная волна
+#define EFF_RAINBOW_VER         ( 88U)    // Радуга
+#define EFF_RAINBOW             ( 89U)    // Радуга 3D
+#define EFF_RAINBOW_SPOT        ( 90U)    // Радужное Пятно
+#define EFF_SNAKE               ( 91U)    // Радужный змей
+#define EFF_DANDELIONS          ( 92U)    // Разноцветные одуванчики
+#define EFF_RAIN                ( 93U)    // Разноцветный дождь
+#define EFF_RIVERS              ( 94U)    // Реки Ботсваны
+#define EFF_LIGHTERS            ( 95U)    // Светлячки
+#define EFF_LIGHTER_TRACES      ( 96U)    // Светлячки со шлейфом
+#define EFF_FEATHER_CANDLE      ( 97U)    // Свеча
+#define EFF_AURORA              ( 98U)    // Северное сияние
+#define EFF_SERPENTINE          ( 99U)    // Серпантин
+#define EFF_SCANNER             (100U)    // Сканер
+#define EFF_SINUSOID3           (101U)    // Синусоид
+#define EFF_COLORS              (102U)    // Смена цвета
+#define EFF_SNOW                (103U)    // Снегопад
+#define EFF_SPECTRUM            (104U)    // Спектрум
+#define EFF_SPIRO               (105U)    // Спирали
+#define EFF_FLOCK               (106U)    // Стая
+#define EFF_FLOCK_N_PR          (107U)    // Стая и хищник
+#define EFF_ARROWS              (108U)    // Стрелки
+#define EFF_STROBE              (109U)    // Строб.Хаос.Дифузия
+#define EFF_SHADOWS             (110U)    // Тени
+#define EFF_PACIFIC             (111U)    // Тихий океан
+#define EFF_TORNADO             (112U)    // Торнадо
+#define EFF_SIMPLE_RAIN         (113U)    // Tyчкa в банке
+#define EFF_FIREWORK            (114U)    // Фейерверк
+#define EFF_FIREWORK_2          (115U)    // Фейерверк 2
+#define EFF_FAIRY               (116U)    // Фея
+#define EFF_FONTAN              (117U)    // Фонтан
+#define EFF_COLOR               (118U)    // Цвет
+#define EFF_EFF_COLORED_PYTHON  (119U)    // Цветной Питон
+#define EFF_EFF_SAND            (120U)    // Цветные драже
+#define EFF_COLOR_FRIZZLES      (121U)    // Цветные кудри
+#define EFF_EFF_LOTUS           (122U)    // Цветок лотоса
+#define EFF_TURBULENCE          (123U)    // Цифровая турбулентность
+#define EFF_SPHERES             (124U)    // Шapы
+#define EFF_NEXUS               (125U)    // Nexus
+#define EFF_CLOCK               (126U)    // Часы*/
 	MaxEffect
 }FieryLedLampEffectTypes;
+
+typedef enum
+{
+	FieryLedLampEffectCategoryType_Fire,
+	FieryLedLampEffectCategoryType_MaxSize
+}FieryLedLampEffectCategoryType;
+
+struct FieryLedLampEffectCategory
+{
+	const FieryLedLampEffectTypes *effects;
+};
 
 #define HIGH_DELAY 0
 #define LOW_DELAY 1
@@ -158,6 +175,36 @@ static const TProgmemRGBPalette16 *palette_arr[] = {
   &RainbowStripeColors_p
 };
 
+// дополнительные палитры для пламени
+// для записи в PROGMEM преобразовывал из 4 цветов в 16 на сайте https://colordesigner.io/gradient-generator, но не уверен, что это эквивалент CRGBPalette16()
+// значения цветовых констант тут: https://github.com/FastLED/FastLED/wiki/Pixel-reference
+const TProgmemRGBPalette16 WoodFireColors_p FL_PROGMEM = {CRGB::Black, 0x330e00, 0x661c00, 0x992900, 0xcc3700, CRGB::OrangeRed, 0xff5800, 0xff6b00, 0xff7f00, 0xff9200, CRGB::Orange, 0xffaf00, 0xffb900, 0xffc300, 0xffcd00, CRGB::Gold};             //* Orange
+const TProgmemRGBPalette16 NormalFire_p FL_PROGMEM = {CRGB::Black, 0x330000, 0x660000, 0x990000, 0xcc0000, CRGB::Red, 0xff0c00, 0xff1800, 0xff2400, 0xff3000, 0xff3c00, 0xff4800, 0xff5400, 0xff6000, 0xff6c00, 0xff7800};                             // пытаюсь сделать что-то более приличное
+const TProgmemRGBPalette16 NormalFire2_p FL_PROGMEM = {CRGB::Black, 0x560000, 0x6b0000, 0x820000, 0x9a0011, CRGB::FireBrick, 0xc22520, 0xd12a1c, 0xe12f17, 0xf0350f, 0xff3c00, 0xff6400, 0xff8300, 0xffa000, 0xffba00, 0xffd400};                      // пытаюсь сделать что-то более приличное
+const TProgmemRGBPalette16 LithiumFireColors_p FL_PROGMEM = {CRGB::Black, 0x240707, 0x470e0e, 0x6b1414, 0x8e1b1b, CRGB::FireBrick, 0xc14244, 0xd16166, 0xe08187, 0xf0a0a9, CRGB::Pink, 0xff9ec0, 0xff7bb5, 0xff59a9, 0xff369e, CRGB::DeepPink};        //* Red
+const TProgmemRGBPalette16 SodiumFireColors_p FL_PROGMEM = {CRGB::Black, 0x332100, 0x664200, 0x996300, 0xcc8400, CRGB::Orange, 0xffaf00, 0xffb900, 0xffc300, 0xffcd00, CRGB::Gold, 0xf8cd06, 0xf0c30d, 0xe9b913, 0xe1af1a, CRGB::Goldenrod};           //* Yellow
+const TProgmemRGBPalette16 CopperFireColors_p FL_PROGMEM = {CRGB::Black, 0x001a00, 0x003300, 0x004d00, 0x006600, CRGB::Green, 0x239909, 0x45b313, 0x68cc1c, 0x8ae626, CRGB::GreenYellow, 0x94f530, 0x7ceb30, 0x63e131, 0x4bd731, CRGB::LimeGreen};     //* Green
+const TProgmemRGBPalette16 AlcoholFireColors_p FL_PROGMEM = {CRGB::Black, 0x000033, 0x000066, 0x000099, 0x0000cc, CRGB::Blue, 0x0026ff, 0x004cff, 0x0073ff, 0x0099ff, CRGB::DeepSkyBlue, 0x1bc2fe, 0x36c5fd, 0x51c8fc, 0x6ccbfb, CRGB::LightSkyBlue};  //* Blue
+const TProgmemRGBPalette16 RubidiumFireColors_p FL_PROGMEM = {CRGB::Black, 0x0f001a, 0x1e0034, 0x2d004e, 0x3c0068, CRGB::Indigo, CRGB::Indigo, CRGB::Indigo, CRGB::Indigo, CRGB::Indigo, CRGB::Indigo, 0x3c0084, 0x2d0086, 0x1e0087, 0x0f0089, CRGB::DarkBlue};        //* Indigo
+const TProgmemRGBPalette16 PotassiumFireColors_p FL_PROGMEM = {CRGB::Black, 0x0f001a, 0x1e0034, 0x2d004e, 0x3c0068, CRGB::Indigo, 0x591694, 0x682da6, 0x7643b7, 0x855ac9, CRGB::MediumPurple, 0xa95ecd, 0xbe4bbe, 0xd439b0, 0xe926a1, CRGB::DeepPink}; //* Violet
+static const TProgmemRGBPalette16 *firePalettes[] = {
+  //    &HeatColors_p, // эта палитра уже есть в основном наборе. если в эффекте подключены оба набора палитр, тогда копия не нужна
+  &WoodFireColors_p,
+  &NormalFire_p,
+  &NormalFire2_p,
+  &LithiumFireColors_p,
+  &SodiumFireColors_p,
+  &CopperFireColors_p,
+  &AlcoholFireColors_p,
+  &RubidiumFireColors_p,
+  &PotassiumFireColors_p
+};
+
+extern CRGB leds[NUM_LEDS];
+void blurScreen(fract8 blur_amount, CRGB *LEDarray = leds);
+void dimAll(uint8_t value, CRGB *LEDarray = leds);
+uint16_t XY(uint8_t x, uint8_t y);
+
 class FieryLedLampEffect
 {
 public:
@@ -172,25 +219,27 @@ public:
 	virtual void updateInner() = 0;
 
 	void update();
-protected:
-	void setCurrentPalette() {
-		if (scale > 100U)
-			scale = 100U; // чтобы не было проблем при прошивке без очистки памяти
-  		curPalette = palette_arr[(uint8_t)(scale / 100.0F * ((sizeof(palette_arr) / sizeof(TProgmemRGBPalette16 *)) - 0.01F))];
-	}
 
-  	// функция отрисовки точки по координатам X Y
+	// функция отрисовки точки по координатам X Y
 	void drawPixelXY(int8_t x, int8_t y, CRGB color);
 	//по мотивам
 	//https://gist.github.com/sutaburosu/32a203c2efa2bb584f4b846a91066583
 	void drawPixelXYF(float x, float y, CRGB color);
+protected:
+	void setCurrentPalette() {
+		if (scale > 100U)
+			scale = 100U; // чтобы не было проблем при прошивке без очистки памяти
+  		//curPalette = palette_arr[(uint8_t)(scale / 100.0F * ((sizeof(palette_arr) / sizeof(TProgmemRGBPalette16 *)) - 0.01F))];
+		unsigned char index = map(scale, 0, 100, 0, (sizeof(palette_arr) / sizeof(TProgmemRGBPalette16 *))-1);
+		curPalette = palette_arr[index];
+	}
 	// функция получения цвета пикселя по его номеру
 	CRGB getPixelColor(uint32_t thisSegm);
 	// функция получения цвета пикселя в матрице по его координатам
-	CRGB getPixColorXY(uint8_t x, uint8_t y);
+	CRGB getPixelColorXY(uint8_t x, uint8_t y);
 	// залить все
 	void fillAll(CRGB color);
-	void fadePixel(uint8_t i, uint8_t j, uint8_t step);
+	void fadePixel(uint8_t x, uint8_t y, uint8_t step);
 	void drawStar(float xlocl, float ylocl, float biggy, float little, int16_t points, float dangle, uint8_t koler);
 	void DrawLine(int x1, int y1, int x2, int y2, CRGB color);
 	void drawCircleF(float x0, float y0, float radius, CRGB color);
@@ -198,6 +247,8 @@ protected:
 	void fillNoiseLED(const TProgmemRGBPalette16 *currentPalette);
 	void FillNoise(uint8_t **noise3d, uint32_t noise32_x, uint32_t noise32_y, uint32_t noise32_z, uint32_t scale32_x, uint32_t scale32_y, uint8_t noisesmooth);
 	void drawRecCHSV(uint8_t startX, uint8_t startY, uint8_t endX, uint8_t endY, CHSV color);
+
+	uint8_t speed, scale, brightness;
 
 	//массивы состояния объектов, которые могут использоваться в любом эффекте
 	#define trackingOBJECT_MAX_COUNT                         (100U)  // максимальное количество отслеживаемых объектов (очень влияет на расход памяти)
@@ -215,11 +266,10 @@ protected:
 	#else
 	uint8_t noise[LED_HEIGHT][LED_HEIGHT];
 	#endif
-	uint8_t colorLoop = 1;
+	uint8_t colorLoop;
 	uint8_t ihue = 0;
 
 	uint8_t delat_type;
-	uint8_t speed, scale, brightness;
 	uint8_t hue,hue2;
 
 	uint16_t x,y,z;
@@ -227,27 +277,6 @@ protected:
 	const TProgmemRGBPalette16 *curPalette;
 
 	unsigned long effectTimer, FPSdelay;
-};
-
-class FieryLedLampEffectWhiteColorStripeRoutine: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectWhiteColorStripeRoutine():FieryLedLampEffect(HIGH_DELAY){};
-	void setup();
-	void updateInner();
-};
-
-class FieryLedLampEffectWaterColor: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectWaterColor():FieryLedLampEffect(DYNAMIC_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	void SmearPaint(uint8_t *obj);
-
-	uint8_t step, deltaValue, deltaHue;
-  uint8_t trackingObject[6];
 };
 
 class FieryLedLampEffectFlowerRuta:public FieryLedLampEffect
@@ -264,16 +293,6 @@ private:
 	uint8_t noise3d[NUM_LAYERSMAX][LED_WIDTH][LED_HEIGHT];     // двухслойная маска или хранилище свойств в размер всей матрицы
 };
 
-class FieryLedLampEffectPool: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectPool():FieryLedLampEffect(DYNAMIC_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	uint8_t deltaHue,deltaHue2,step;
-};
-
 class FieryLedLampEffectBamboo: public FieryLedLampEffect
 {
 public:
@@ -287,33 +306,6 @@ private:
 	float deltaX;
 	bool direct;
 	uint8_t colLine;
-};
-
-class FieryLedLampEffectWave: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectWave():FieryLedLampEffect(DYNAMIC_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	uint8_t waveCount;
-	uint8_t waveRotation;
-  uint8_t waveThetaUpdate;
-  uint8_t waveThetaUpdateFrequency;
-  uint8_t waveTheta;
-	uint8_t hueUpdate;
-	uint8_t hueUpdateFrequency;
-};
-
-class FieryLedLampEffectWaterfall: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectWaterfall():FieryLedLampEffect(DYNAMIC_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	#define NUM_LAYERSMAX 2
-	uint8_t noise3d[NUM_LAYERSMAX][LED_WIDTH][LED_HEIGHT];     // двухслойная маска или хранилище свойств в размер всей матрицы
 };
 
 class FieryLedLampEffectMagicLantern: public FieryLedLampEffect
@@ -970,17 +962,6 @@ private:
 	uint8_t enlargedObjectNUM, deltaValue;
 };
 
-class FieryLedLampEffectDropInWater: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectDropInWater():FieryLedLampEffect(DYNAMIC_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	int rad[(LED_HEIGHT + LED_WIDTH) / 8];
-	byte posx[(LED_HEIGHT + LED_WIDTH) / 8], posy[(LED_HEIGHT + LED_WIDTH) / 8];
-};
-
 class FieryLedLampEffectDrops: public FieryLedLampEffect
 {
 public:
@@ -989,16 +970,6 @@ public:
 	void updateInner();
 private:
 	uint8_t enlargedObjectNUM;
-};
-
-class FieryLedLampEffectLLand: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectLLand():FieryLedLampEffect(DYNAMIC_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	uint8_t deltaValue, ff_y, ff_z;
 };
 
 class FieryLedLampEffectRings: public FieryLedLampEffect
@@ -1259,64 +1230,6 @@ public:
 	void setup();
 	void updateInner();
 private:
-};
-
-class FieryLedLampEffectFire: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectFire():FieryLedLampEffect(DYNAMIC_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	void generateLine();
-	void shiftUp();
-	void drawFrame(uint8_t pcnt, bool isColored);
-
-	uint8_t pcnt, matrixValue[LED_WIDTH][LED_HEIGHT], line[LED_WIDTH], shiftHue[LED_HEIGHT], shiftValue[LED_HEIGHT];
-};
-
-class FieryLedLampEffectFire2012: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectFire2012():FieryLedLampEffect(DYNAMIC_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	uint8_t noise3d[LED_WIDTH][LED_HEIGHT];
-};
-
-class FieryLedLampEffectFire2018: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectFire2018():FieryLedLampEffect(DYNAMIC_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	uint8_t noise3d[2][LED_WIDTH][LED_HEIGHT];
-	uint32_t noise32_x[2], noise32_y[2], noise32_z[2], scale32_x[2], scale32_y[2];
-};
-
-class FieryLedLampEffectFire2020: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectFire2020():FieryLedLampEffect(DYNAMIC_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	uint8_t shiftHue[LED_HEIGHT], deltaValue, deltaHue, step;
-	uint16_t ff_y, ff_z;
-};
-
-class FieryLedLampEffectFire2021: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectFire2021():FieryLedLampEffect(LOW_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	uint8_t shiftHue[LED_HEIGHT], deltaValue, deltaHue, step, deltaHue2, pcnt;
-	float speedfactor;
-	uint16_t ff_x, ff_y, ff_z;
 };
 
 class FieryLedLampEffectFireFlyTop: public FieryLedLampEffect

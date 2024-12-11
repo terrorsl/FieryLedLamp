@@ -1,0 +1,3 @@
+#ifndef SPACE_EFFECT_FILE
+#define SPACE_EFFECT_FILE
+#endif

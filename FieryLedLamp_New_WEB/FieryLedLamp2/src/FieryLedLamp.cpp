@@ -30,6 +30,8 @@ void onWiFiDisconnected(const WiFiEventStationModeDisconnected &)
 
 void FieryLedLamp::setup()
 {
+	categoryes[FieryLedLampEffectCategoryType::FieryLedLampEffectCategoryType_Fire].effects=fire_effects;
+
 	DBG_START(115200);
 	DBG_PRINT("start\n");
 	
@@ -573,6 +575,7 @@ bool FieryLedLamp::change_effect(unsigned short index)
 	case FieryLedLampEffectTypes::WhiteColor:
 		config.effect=new FieryLedLampEffectWhiteColorStripeRoutine();
 		break;
+	case FieryLedLampEffectTypes::Aurora:
 	case FieryLedLampEffectTypes::WaterColor:
 		config.effect=new FieryLedLampEffectWaterColor();
 		break;
@@ -659,6 +662,8 @@ bool FieryLedLamp::change_effect(unsigned short index)
 		config.effect=new FieryLedLampEffectDrops();
 		break;
 	case FieryLedLampEffectTypes::LLand:
+		config.effect=new FieryLedLampEffectLLand();
+		break;
 	case FieryLedLampEffectTypes::Rings:
 		config.effect=new FieryLedLampEffectRings();
 		break;
@@ -731,6 +736,7 @@ bool FieryLedLamp::change_effect(unsigned short index)
 	case FieryLedLampEffectTypes::ChristmasTree:
 		config.effect=new FieryLedLampEffectChristmasTree();
 		break;
+	case FieryLedLampEffectTypes::NightCity:
 	case FieryLedLampEffectTypes::Fire:
 		config.effect=new FieryLedLampEffectFire();
 		break;
@@ -748,6 +754,12 @@ bool FieryLedLamp::change_effect(unsigned short index)
 		break;
 	case FieryLedLampEffectTypes::FireFlyTop:
 		config.effect=new FieryLedLampEffectFireFlyTop();
+		break;
+	case FieryLedLampEffectTypes::FireFly:
+		config.effect=new FieryLedLampEffectFireFly();
+		break;
+	case FieryLedLampEffectTypes::FireSparks:
+		config.effect=new FieryLedLampEffectFireSparks();
 		break;
 	default:
 		DBG_PRINT("unknown effect:%d\n", index);
