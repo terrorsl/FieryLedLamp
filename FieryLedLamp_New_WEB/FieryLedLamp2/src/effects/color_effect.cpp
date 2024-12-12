@@ -4,8 +4,6 @@
 #define BORDERLAND   2 // две дополнительные единицы бегунка Масштаб на границе вертикального и горизонтального варианта эффекта (с каждой стороны границы) будут для света всеми светодиодами в полную силу
 void FieryLedLampEffectWhiteColorStripeRoutine::setup()
 {
-	FastLED.clear();
-
 	uint8_t thisSize = LED_HEIGHT;
 	uint8_t halfScale = scale;
 	if (halfScale > 50U)
@@ -55,7 +53,7 @@ void FieryLedLampEffectWhiteColorStripeRoutine::updateInner()
 //            EFF_WATERCOLOR
 //               Акварель
 //---------------------------------------
-void FieryLedLampEffectWaterColor::SmearPaint(uint8_t *obj)
+void FieryLedLampEffectWaterColor::SmearPaint()
 {
   	uint8_t divider;
   	int temp;
@@ -67,47 +65,7 @@ void FieryLedLampEffectWaterColor::SmearPaint(uint8_t *obj)
     	{0x2F002F, 0xFF4040, 0x6F004A, 0xFF0030, CRGB::DarkMagenta, CRGB::Magenta, 0x480048, 0x3F00FF},
     	{CRGB::Blue, CRGB::Red, CRGB::Gold, CRGB::Green, CRGB::DarkCyan, CRGB::DarkMagenta, 0x000000, 0xFF7F00 }
   	};
-#if 0	
-  	if (trackingObject[5] == 1) {  // direction >>>
-    	obj[1]++;
-    	if (obj[1] >= obj[2]) {
-      		trackingObject[5] = 0;     // swap direction
-      		obj[3]--;                     // new line
-      		if (step % 2 == 0) {
-        		obj[1]++;
-      		} else {
-        		obj[1]--;
-      		}
-      		obj[0]--;
-    	}
-  	} else {                          // direction <<<
-    	obj[1]--;
-    	if (obj[1] <= (obj[2] - obj[0])) {
-      		trackingObject[5] = 1;     // swap direction
-      		obj[3]--;                     // new line
-      		if (obj[0] >= 1) {
-        		temp = obj[0] - 1;
-        		if (temp < 0) {
-          			temp = 0;
-        		}
-        		obj[0] = temp;
-        		obj[1]++;
-      		}
-    	}
-  	}
 
-  	if (obj[3] == 255) {
-    	deltaHue = 255;
-  	}
-
-  	divider = floor((scale - 1) / 16.7);
-  	if( (obj[1] >= LED_WIDTH) || (obj[3] == obj[4]) ) {
-    	// deltaHue value == 255 activate -------
-    	// set new parameter for new smear ------
-    	deltaHue = 255;
-  	}
-	drawPixelXY(obj[1], obj[3], colors[divider][hue]);
-#else
 	if (direction == 1) {  // direction >>>
     	x++;
     	if (x >= end_x) {
@@ -147,20 +105,13 @@ void FieryLedLampEffectWaterColor::SmearPaint(uint8_t *obj)
     	lastColor = true;
   	}
 	drawPixelXY(x, y, colors[divider][hue]);
-#endif
 }
 
 void FieryLedLampEffectWaterColor::setup()
 {
-    FastLED.clear();
-    //deltaValue = 255U - speed + 1;
 	deltaValue = map(speed, 0, 255, 1, 255);
     step = deltaValue; // чтообы при старте эффекта сразу покрасить лампу
     hue = 0;
-    deltaHue = 255; // last color
-    trackingObject[1] = floor(LED_WIDTH * 0.25);
-    trackingObject[3] = floor(LED_HEIGHT * 0.25);
-
 	lastColor = true; // last color
 	x=LED_WIDTH/4;
 	y=LED_HEIGHT/4;
@@ -171,36 +122,6 @@ void FieryLedLampEffectWaterColor::updateInner()
     	step = 0U;
   	}
 
-  	// ******************************
-  	// set random parameter for smear
-  	// ******************************
-#if 0
-  	if (deltaHue == 255) {
-    	trackingObject[0] = 4 + random8(floor(LED_WIDTH * 0.25));                // width
-    	trackingObject[1] = random8(LED_WIDTH - trackingObject[0]);           // x
-    	int temp =  trackingObject[1] + trackingObject[0];
-    	if (temp >= (LED_WIDTH - 1)) {
-      		temp = LED_WIDTH - 1;
-      		if (trackingObject[1] > 1) {
-        		trackingObject[1]--;
-      		} else {
-        		trackingObject[1]++;
-      		}
-    	}
-		trackingObject[2] = temp;                                            // x end
-		trackingObject[3] = 3 + random8(LED_HEIGHT - 4);                         // y
-		temp = trackingObject[3] - random8(3) - 3;
-    	if (temp <= 0) {
-      		temp = 0;
-    	}
-    	trackingObject[4] = temp;                                            // y end
-    	trackingObject[5] = 1;
-    	//divider = floor((modes[currentMode].Scale - 1) / 16.7);                 // маштаб задает смену палитры
-    	hue = random8(8);
-    	hue2 = 255;
-    	deltaHue = 0;
-  	}
-#else
 	if (lastColor)
 	{
     	width = 4 + random8(LED_WIDTH/4);                // width
@@ -222,14 +143,10 @@ void FieryLedLampEffectWaterColor::updateInner()
     	}
     	end_y = temp;                                            // y end
     	direction = 1;
-    	//divider = floor((modes[currentMode].Scale - 1) / 16.7);                 // маштаб задает смену палитры
     	hue = random8(8);
     	lastColor=false;
   	}
-#endif
-  	// ******************************
-  	SmearPaint(trackingObject);
-
+  	SmearPaint();
   	if (step % 2 == 0) {
     	blurScreen(beatsin8(1U, 1U, 6U));
   	}

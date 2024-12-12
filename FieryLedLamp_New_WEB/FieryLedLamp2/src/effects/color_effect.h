@@ -18,12 +18,11 @@ public:
 	void setup();
 	void updateInner();
 private:
-	void SmearPaint(uint8_t *obj);
+	void SmearPaint();
 
 	bool lastColor;
 	uint8_t x,end_x,y,end_y,direction, width;
 
 	uint8_t step, deltaValue, deltaHue;
-  	uint8_t trackingObject[6];
 };
 #endif

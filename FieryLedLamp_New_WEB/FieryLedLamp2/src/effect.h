@@ -215,6 +215,8 @@ public:
 	void set_speed(unsigned char val){speed=val;}
 	void set_scale(unsigned char val){scale=val;}
 
+  void clear();
+  
 	virtual void setup() = 0;
 	virtual void updateInner() = 0;
 

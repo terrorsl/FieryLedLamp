@@ -1,9 +1,9 @@
-#include"FieryLedLamp.h"
-#include"Constants.h"
+#include "FieryLedLamp.h"
+#include "Constants.h"
 
-#include"lang_ru.h"
+#include "lang_ru.h"
 
-#include<WiFiManager.h>
+#include <WiFiManager.h>
 
 #ifdef USE_NTP
 #include <WiFiUdp.h>
@@ -19,8 +19,8 @@ WiFiEventHandler stationConnectedHandler;
 void onWiFiConnected(const WiFiEventStationModeConnected &)
 {
 	DBG_PRINT("onWiFiConnected\n");
-	//lamp.connect_web();
-	//lamp.connect_mqtt();
+	// lamp.connect_web();
+	// lamp.connect_mqtt();
 };
 void onWiFiDisconnected(const WiFiEventStationModeDisconnected &)
 {
@@ -30,17 +30,17 @@ void onWiFiDisconnected(const WiFiEventStationModeDisconnected &)
 
 void FieryLedLamp::setup()
 {
-	categoryes[FieryLedLampEffectCategoryType::FieryLedLampEffectCategoryType_Fire].effects=fire_effects;
+	categoryes[FieryLedLampEffectCategoryType::FieryLedLampEffectCategoryType_Fire].effects = fire_effects;
 
 	DBG_START(115200);
 	DBG_PRINT("start\n");
-	
-	config.power_state=false;
-		
+
+	config.power_state = false;
+
 	setup_pin();
-	
+
 	setup_display();
-	
+
 	setup_config();
 	setup_mqtt();
 	setup_web_server();
@@ -61,51 +61,51 @@ void FieryLedLamp::setup_config()
 #else
 	LittleFS.begin(true);
 #endif
-	JsonDocument doc=load_config();
-	
+	JsonDocument doc = load_config();
+
 	config.effect = 0;
 
-	if(doc.isNull())
+	if (doc.isNull())
 	{
-		config.mqtt.server="mqtt.dealgate.ru";
-		config.mqtt.port=1883;
-		config.mqtt.login="";
-		config.mqtt.password="";
-		config.mqtt.keep_alive=MQTT_KEEPALIVE;
+		config.mqtt.server = "mqtt.dealgate.ru";
+		config.mqtt.port = 1883;
+		config.mqtt.login = "";
+		config.mqtt.password = "";
+		config.mqtt.keep_alive = MQTT_KEEPALIVE;
 #if defined(ESP8266)
-		unsigned long id=ESP.getChipId();
+		unsigned long id = ESP.getChipId();
 #else
 #endif
 		char name[256];
-		sprintf(name,"ledLamp%lx",id);
-		config.mqtt.clientid=name;
+		sprintf(name, "ledLamp%lx", id);
+		config.mqtt.clientid = name;
 
-		config.scale=50;
-		config.speed=50;
-		config.brightness=BRIGHTNESS;
+		config.scale = 50;
+		config.speed = 50;
+		config.brightness = BRIGHTNESS;
 		config.currentEffect = 0;
 	}
 	else
 	{
-		config.mqtt.server=doc["mqtt_server"].as<std::string>();
-		config.mqtt.port=doc["mqtt_port"].as<uint16_t>();
-		config.mqtt.login=doc["mqtt_login"].as<std::string>();
-		config.mqtt.password=doc["mqtt_password"].as<std::string>();
-		config.mqtt.keep_alive=doc["mqtt_keepalive"].as<uint16_t>();
-		config.mqtt.clientid=doc["mqtt_clientid"].as<std::string>();
+		config.mqtt.server = doc["mqtt_server"].as<std::string>();
+		config.mqtt.port = doc["mqtt_port"].as<uint16_t>();
+		config.mqtt.login = doc["mqtt_login"].as<std::string>();
+		config.mqtt.password = doc["mqtt_password"].as<std::string>();
+		config.mqtt.keep_alive = doc["mqtt_keepalive"].as<uint16_t>();
+		config.mqtt.clientid = doc["mqtt_clientid"].as<std::string>();
 
-		if(doc.containsKey("effect"))
+		if (doc.containsKey("effect"))
 			config.currentEffect = doc["effect"].as<uint16_t>();
 		else
 			config.currentEffect = 0;
-		config.scale=doc["scale"].as<uint8_t>();
-		config.speed=doc["speed"].as<uint8_t>();
-		config.brightness=doc["brightness"].as<uint8_t>();
-		//config.brightness=BRIGHTNESS;
+		config.scale = doc["scale"].as<uint8_t>();
+		config.speed = doc["speed"].as<uint8_t>();
+		config.brightness = doc["brightness"].as<uint8_t>();
+		// config.brightness=BRIGHTNESS;
 	}
 
 	config.language.setLanguage(RUSSIAN);
-	//config.effect_name=effect_name_ru;
+	// config.effect_name=effect_name_ru;
 
 	DBG_PRINT("mqtt_server:%s\n", config.mqtt.server.c_str());
 	DBG_PRINT("mqtt_port:%d\n", config.mqtt.port);
@@ -123,31 +123,31 @@ void FieryLedLamp::setup_config()
 JsonDocument FieryLedLamp::load_config()
 {
 	JsonDocument doc;
-	if(LittleFS.exists("/config.json.tmp"))
+	if (LittleFS.exists("/config.json.tmp"))
 	{
 		DBG_PRINT("swap config\n");
-		fs::File file=LittleFS.open("/config.json.tmp", "r");
-		if(file)
+		fs::File file = LittleFS.open("/config.json.tmp", "r");
+		if (file)
 		{
 			/*while(file.available())
 				DBG_PRINT("%s:\n", file.readString().c_str());
 			file.seek(0);*/
-			if(deserializeJson(doc, file)==DeserializationError::Ok)
+			if (deserializeJson(doc, file) == DeserializationError::Ok)
 			{
 				file.close();
 				LittleFS.remove("/config.json");
-				LittleFS.rename("/config.json.tmp","/config.json");
+				LittleFS.rename("/config.json.tmp", "/config.json");
 				return doc;
 			}
 		}
 	}
-	fs::File file=LittleFS.open("/config.json", "r");
-	if(file)
+	fs::File file = LittleFS.open("/config.json", "r");
+	if (file)
 	{
-		while(file.available())
+		while (file.available())
 			DBG_PRINT("%s:\n", file.readString().c_str());
 		file.seek(0);
-		if(deserializeJson(doc, file)!=DeserializationError::Ok)
+		if (deserializeJson(doc, file) != DeserializationError::Ok)
 		{
 			DBG_PRINT("error:\n");
 			doc.clear();
@@ -158,8 +158,8 @@ JsonDocument FieryLedLamp::load_config()
 };
 void FieryLedLamp::save_config(JsonDocument *doc)
 {
-	fs::File file=LittleFS.open("/config.json.tmp", "w");
-	if(file)
+	fs::File file = LittleFS.open("/config.json.tmp", "w");
+	if (file)
 	{
 		serializeJson(*doc, file);
 		file.close();
@@ -195,54 +195,54 @@ void FieryLedLamp::setup_pin()
 #endif
 #endif
 
-	FastLED.addLeds<WS2812B,LED_PIN,GRB>(leds,NUM_LEDS);
+	FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
 	FastLED.setMaxPowerInVoltsAndMilliamps(5, 3000);
-  	FastLED.clear();
-  	FastLED.show();
+	FastLED.clear();
+	FastLED.show();
 };
 void FieryLedLamp::setup_display()
 {
 	Wire.begin(DISPLAY_SDA, DISPLAY_SCL);
 	display.init();
 
-	pos_x=display.width();
-	//display_update_time=0;
+	pos_x = display.width();
+	// display_update_time=0;
 };
 void FieryLedLamp::setup_time()
 {
 	configTime(TZ_Europe_Moscow, "pool.ntp.org");
 #ifdef USE_NTP
 	ntpClient = new NTPClient(ntpUdp);
-	ntpClient->setUpdateInterval(60*60000);
+	ntpClient->setUpdateInterval(60 * 60000);
 #endif
 };
 void FieryLedLamp::update_time()
 {
 #ifdef USE_NTP
-	if(ntpClient->update())
+	if (ntpClient->update())
 	{
 	}
 #endif
 };
 void FieryLedLamp::update_effect()
 {
-	if(config.power_state && config.effect)
+	if (config.power_state && config.effect)
 		config.effect->update();
 };
 void FieryLedLamp::power_button(bool state)
 {
-	DBG_PRINT("power state:%d\n",state);
-	config.power_state=state;
+	DBG_PRINT("power state:%d\n", state);
+	config.power_state = state;
 	digitalWrite(MOSFET_PIN, state);
 
-	//display_update_time=time(0);
+	// display_update_time=time(0);
 
-	if(state == true)
+	if (state == true)
 		display.set_state(ON_STATE);
 	else
 		display.set_state(OFF_STATE);
 
-	if(state)
+	if (state)
 		FastLED.setBrightness(config.brightness);
 	else
 		FastLED.setBrightness(0);
@@ -257,12 +257,12 @@ void FieryLedLamp::goto_setup_mode()
 
 	WiFiManager manager;
 #if defined(USE_MQTT)
-	WiFiManagerParameter server("mqtt_server","MQTT Server",config.mqtt.server.c_str(),40);
-	WiFiManagerParameter port("mqtt_port","MQTT Port",String(config.mqtt.port).c_str(),6);
-	WiFiManagerParameter login("mqtt_login","MQTT Login",config.mqtt.login.c_str(),40);
-	WiFiManagerParameter password("mqtt_password","MQTT Password",config.mqtt.password.c_str(),40);
-	WiFiManagerParameter clientid("mqtt_clientid","MQTT Client ID",config.mqtt.clientid.c_str(),40);
-	WiFiManagerParameter keepalive("mqtt_keepalive","MQTT Keep alive",String(config.mqtt.keep_alive).c_str(),6);
+	WiFiManagerParameter server("mqtt_server", "MQTT Server", config.mqtt.server.c_str(), 40);
+	WiFiManagerParameter port("mqtt_port", "MQTT Port", String(config.mqtt.port).c_str(), 6);
+	WiFiManagerParameter login("mqtt_login", "MQTT Login", config.mqtt.login.c_str(), 40);
+	WiFiManagerParameter password("mqtt_password", "MQTT Password", config.mqtt.password.c_str(), 40);
+	WiFiManagerParameter clientid("mqtt_clientid", "MQTT Client ID", config.mqtt.clientid.c_str(), 40);
+	WiFiManagerParameter keepalive("mqtt_keepalive", "MQTT Keep alive", String(config.mqtt.keep_alive).c_str(), 6);
 	manager.addParameter(&server);
 	manager.addParameter(&port);
 	manager.addParameter(&login);
@@ -270,39 +270,39 @@ void FieryLedLamp::goto_setup_mode()
 	manager.addParameter(&clientid);
 	manager.addParameter(&keepalive);
 #endif
-	if(manager.startConfigPortal(config.mqtt.clientid.c_str(), "12345678"))
+	if (manager.startConfigPortal(config.mqtt.clientid.c_str(), "12345678"))
 	{
-		JsonDocument doc=load_config();
+		JsonDocument doc = load_config();
 #if defined(USE_MQTT)
-		doc["mqtt_server"]=server.getValue();
-		doc["mqtt_port"]=atol(port.getValue());
-		doc["mqtt_login"]=login.getValue();
-		doc["mqtt_password"]=password.getValue();
-		doc["mqtt_clientid"]=clientid.getValue();
-		doc["mqtt_keepalive"]=atol(keepalive.getValue());
+		doc["mqtt_server"] = server.getValue();
+		doc["mqtt_port"] = atol(port.getValue());
+		doc["mqtt_login"] = login.getValue();
+		doc["mqtt_password"] = password.getValue();
+		doc["mqtt_clientid"] = clientid.getValue();
+		doc["mqtt_keepalive"] = atol(keepalive.getValue());
 #endif
 		save_config(&doc);
 	}
 };
 void FieryLedLamp::update_button()
 {
-	if(digitalRead(BUTTON_PIN)==BUTTON_IS_SENSORY)
+	if (digitalRead(BUTTON_PIN) == BUTTON_IS_SENSORY)
 	{
-		if(button.is_down)
+		if (button.is_down)
 		{
-			unsigned long delta=millis()-button.down_time;
-			if(config.power_state==false)
+			unsigned long delta = millis() - button.down_time;
+			if (config.power_state == false)
 			{
-				if(delta>=SETUP_BUTTON_TIME)
+				if (delta >= SETUP_BUTTON_TIME)
 				{
-					button.state=FieryButtonSetupState;
+					button.state = FieryButtonSetupState;
 				}
 			}
 			else
 			{
-				if(delta>=POWER_BUTTON_TIME)
+				if (delta >= POWER_BUTTON_TIME)
 				{
-					button.state=FieryButtonPowerState;
+					button.state = FieryButtonPowerState;
 				}
 			}
 		}
@@ -343,29 +343,29 @@ void FieryLedLamp::update_button()
 	}
 	else
 	{
-		if(button.is_down)
+		if (button.is_down)
 		{
 			button.is_down = false;
-			unsigned long delta=millis()-button.down_time;
-			if(delta<=DELTA_BUTTON_DOWN)
+			unsigned long delta = millis() - button.down_time;
+			if (delta <= DELTA_BUTTON_DOWN)
 			{
 				button.klick_count++;
 				DBG_PRINT("delta %d, %d\n", delta, button.klick_count);
 			}
 			else
-				button.klick_count=1;
+				button.klick_count = 1;
 		}
 		else
 		{
-			unsigned long delta=millis()-button.down_time;
-			if(delta >= DELTA_BUTTON_DOWN && button.klick_count)
+			unsigned long delta = millis() - button.down_time;
+			if (delta >= DELTA_BUTTON_DOWN && button.klick_count)
 			{
-				if(config.power_state)
+				if (config.power_state)
 				{
-					switch(button.state)
+					switch (button.state)
 					{
 					case FieryButtonUnknownState:
-						switch(button.klick_count)
+						switch (button.klick_count)
 						{
 						case NEXT_BUTTON_COUNT:
 							DBG_PRINT("next mode\n");
@@ -393,38 +393,38 @@ void FieryLedLamp::update_button()
 					power_button(true);
 					display.set_state(ON_STATE, true);
 				}
-				button.state=FieryButtonUnknownState;
-				button.klick_count=0;
+				button.state = FieryButtonUnknownState;
+				button.klick_count = 0;
 			}
 		}
 	}
 };
 void FieryLedLamp::update_save(unsigned long delta_ms)
 {
-	save_interval+=delta_ms;
-	if(save_interval < SAVE_TIME_INTERVAL || config.need_save==false)
+	save_interval += delta_ms;
+	if (save_interval < SAVE_TIME_INTERVAL || config.need_save == false)
 		return;
-	save_interval=0;
-	config.need_save=false;
-	JsonDocument doc=load_config();
+	save_interval = 0;
+	config.need_save = false;
+	JsonDocument doc = load_config();
 
-	doc["scale"]=config.scale;
-	doc["speed"]=config.speed;
-	doc["brightness"]=config.brightness;
-	doc["effect"]=config.currentEffect;
+	doc["scale"] = config.scale;
+	doc["speed"] = config.speed;
+	doc["brightness"] = config.brightness;
+	doc["effect"] = config.currentEffect;
 
 #if defined(USE_MQTT)
-	doc["mqtt_server"]=config.mqtt.server;
-	doc["mqtt_port"]=config.mqtt.port;
-	doc["mqtt_login"]=config.mqtt.login;
-	doc["mqtt_password"]=config.mqtt.password;
-	doc["mqtt_clientid"]=config.mqtt.clientid;
+	doc["mqtt_server"] = config.mqtt.server;
+	doc["mqtt_port"] = config.mqtt.port;
+	doc["mqtt_login"] = config.mqtt.login;
+	doc["mqtt_password"] = config.mqtt.password;
+	doc["mqtt_clientid"] = config.mqtt.clientid;
 #endif
 	save_config(&doc);
 };
 void FieryLedLamp::update()
 {
-	unsigned long t=millis();
+	unsigned long t = millis();
 
 	unsigned long delta = t - loop_time_ms;
 
@@ -435,35 +435,35 @@ void FieryLedLamp::update()
 
 	update_save(delta);
 
-	if(WiFi.isConnected()==false && t-remote_time_ms>2000)
-    {
-        //DBG_PRINT("Try connect to WIFI");
-		remote_time_ms=t;
-        return;
-    }
+	if (WiFi.isConnected() == false && t - remote_time_ms > 2000)
+	{
+		// DBG_PRINT("Try connect to WIFI");
+		remote_time_ms = t;
+		return;
+	}
 	else
 	{
-		if(mqtt.connected()==false && t-remote_time_ms>2000)
+		if (mqtt.connected() == false && t - remote_time_ms > 2000)
 		{
 			connect_mqtt();
-			remote_time_ms=t;
+			remote_time_ms = t;
 		}
 	}
-	if(delta)
+	if (delta)
 		loop_time_ms = t;
 };
 void FieryLedLamp::update_display(unsigned long delta_ms)
 {
-	if(delta_ms==0)
+	if (delta_ms == 0)
 		return;
-	static unsigned short sec=1000;
-	if(config.power_state==false)
+	static unsigned short sec = 1000;
+	if (config.power_state == false)
 	{
-		if(delta_ms>=sec)
+		if (delta_ms >= sec)
 		{
 
-			sec=1000;
-			time_t t=time(0);
+			sec = 1000;
+			time_t t = time(0);
 			tm timeSt;
 			gmtime_r(&t, &timeSt);
 
@@ -535,27 +535,27 @@ void FieryLedLamp::update_display(unsigned long delta_ms)
 };
 void FieryLedLamp::next_effect()
 {
-	unsigned short effect=config.currentEffect+1;
-	if(effect>=FieryLedLampEffectTypes::MaxEffect)
-		effect=0;
+	unsigned short effect = config.currentEffect + 1;
+	if (effect >= FieryLedLampEffectTypes::MaxEffect)
+		effect = 0;
 	change_effect(effect);
 };
 void FieryLedLamp::prev_effect()
 {
-	unsigned short effect=config.currentEffect;
-	if(effect==0)
-		effect=FieryLedLampEffectTypes::MaxEffect;
+	unsigned short effect = config.currentEffect;
+	if (effect == 0)
+		effect = FieryLedLampEffectTypes::MaxEffect;
 	effect--;
 	change_effect(effect);
 };
 void FieryLedLamp::set_speed(uint8_t speed)
 {
-	config.speed=speed;
+	config.speed = speed;
 	config.effect->set_speed(speed);
 };
 void FieryLedLamp::set_brightness(uint8_t bright)
 {
-	config.brightness=bright;
+	config.brightness = bright;
 	config.effect->set_bright(bright);
 };
 void FieryLedLamp::update_effect_display()
@@ -567,215 +567,219 @@ void FieryLedLamp::update_effect_display()
 bool FieryLedLamp::change_effect(unsigned short index)
 {
 	DBG_PRINT("change_effect:%d\n", index);
-	if(config.effect && config.currentEffect==index)
+	if (config.effect && config.currentEffect == index)
 		return true;
-	FieryLedLampEffect *current=config.effect;
-	switch(index)
+	FieryLedLampEffect *current = config.effect;
+	switch (index)
 	{
 	case FieryLedLampEffectTypes::WhiteColor:
-		config.effect=new FieryLedLampEffectWhiteColorStripeRoutine();
+		config.effect = new FieryLedLampEffectWhiteColorStripeRoutine();
 		break;
 	case FieryLedLampEffectTypes::Aurora:
 	case FieryLedLampEffectTypes::WaterColor:
-		config.effect=new FieryLedLampEffectWaterColor();
+		config.effect = new FieryLedLampEffectWaterColor();
 		break;
 	case FieryLedLampEffectTypes::FlowerRuta:
-		config.effect=new FieryLedLampEffectFlowerRuta();
+		config.effect = new FieryLedLampEffectFlowerRuta();
 		break;
 	case FieryLedLampEffectTypes::Pool:
-		config.effect=new FieryLedLampEffectPool();
+		config.effect = new FieryLedLampEffectPool();
 		break;
 	case FieryLedLampEffectTypes::Bamboo:
-		config.effect=new FieryLedLampEffectBamboo();
+		config.effect = new FieryLedLampEffectBamboo();
 		break;
 	case FieryLedLampEffectTypes::Madness:
-		config.effect=new FieryLedLampEffectMadnessNoise();
+		config.effect = new FieryLedLampEffectMadnessNoise();
 		break;
 	case FieryLedLampEffectTypes::Ball:
-		config.effect=new FieryLedLampEffectBall();
+		config.effect = new FieryLedLampEffectBall();
 		break;
 	case FieryLedLampEffectTypes::Waterfall:
-		config.effect=new FieryLedLampEffectWaterfall();
+		config.effect = new FieryLedLampEffectWaterfall();
 		break;
 	case FieryLedLampEffectTypes::Waterfall4_1:
 	case FieryLedLampEffectTypes::Waves:
-		config.effect=new FieryLedLampEffectWave();
+		config.effect = new FieryLedLampEffectWave();
 		break;
 	case FieryLedLampEffectTypes::MagicLantern:
-		config.effect=new FieryLedLampEffectMagicLantern();
+		config.effect = new FieryLedLampEffectMagicLantern();
 		break;
 	case FieryLedLampEffectTypes::Wine:
-		config.effect=new FieryLedLampEffectWine();
+		config.effect = new FieryLedLampEffectWine();
 		break;
 	case FieryLedLampEffectTypes::Whirl:
-		config.effect=new FieryLedLampEffectWhirl(true);
+		config.effect = new FieryLedLampEffectWhirl(true);
 		break;
 	case FieryLedLampEffectTypes::WhirlMulti:
-		config.effect=new FieryLedLampEffectWhirl(false);
+		config.effect = new FieryLedLampEffectWhirl(false);
 		break;
 	case FieryLedLampEffectTypes::StarFall:
-		config.effect=new FieryLedLampEffectStarFall();
+		config.effect = new FieryLedLampEffectStarFall();
 		break;
 	case FieryLedLampEffectTypes::StormyRain:
-		//config.effect=new FieryLedLampEffectStarFall();
-		//break;
+		// config.effect=new FieryLedLampEffectStarFall();
+		// break;
 	case FieryLedLampEffectTypes::DNA:
-		config.effect=new FieryLedLampEffectDNA();
+		config.effect = new FieryLedLampEffectDNA();
 		break;
 	case FieryLedLampEffectTypes::Smoke:
-		config.effect=new FieryLedLampEffectSmoke(false);
+		config.effect = new FieryLedLampEffectSmoke(false);
 		break;
 	case FieryLedLampEffectTypes::SmokeColor:
-		config.effect=new FieryLedLampEffectSmoke(true);
+		config.effect = new FieryLedLampEffectSmoke(true);
 		break;
 	case FieryLedLampEffectTypes::SmokeBalls:
-		//config.effect=new FieryLedLampEffectSmokeBalls();
-		//break;
+		// config.effect=new FieryLedLampEffectSmokeBalls();
+		// break;
 	case FieryLedLampEffectTypes::LiqudLamp:
-		config.effect=new FieryLedLampEffectLiquidLamp(true);
+		config.effect = new FieryLedLampEffectLiquidLamp(true);
 		break;
 	case FieryLedLampEffectTypes::LiqudLampAuto:
-		config.effect=new FieryLedLampEffectLiquidLamp(false);
+		config.effect = new FieryLedLampEffectLiquidLamp(false);
 		break;
 	case FieryLedLampEffectTypes::Swirl:
-		config.effect=new FieryLedLampEffectSwirl();
+		config.effect = new FieryLedLampEffectSwirl();
 		break;
 	case FieryLedLampEffectTypes::Stars:
-		config.effect=new FieryLedLampEffectStars();
+		config.effect = new FieryLedLampEffectStars();
 		break;
 	case FieryLedLampEffectTypes::Zebra:
-		//config.effect=new FieryLedLampEffectZebra();
-		//break;
+		// config.effect=new FieryLedLampEffectZebra();
+		// break;
 	case FieryLedLampEffectTypes::TixyLand:
-		config.effect=new FieryLedLampEffectTixyLand();
+		config.effect = new FieryLedLampEffectTixyLand();
 		break;
 	case FieryLedLampEffectTypes::Snakes:
-		config.effect=new FieryLedLampEffectSnakes();
+		config.effect = new FieryLedLampEffectSnakes();
 		break;
 	case FieryLedLampEffectTypes::Fountain:
-		config.effect=new FieryLedLampEffectFontain();
+		config.effect = new FieryLedLampEffectFontain();
 		break;
 	case FieryLedLampEffectTypes::DropInWater:
-		config.effect=new FieryLedLampEffectDropInWater();
+		config.effect = new FieryLedLampEffectDropInWater();
 		break;
 	case FieryLedLampEffectTypes::Drops:
-		config.effect=new FieryLedLampEffectDrops();
+		config.effect = new FieryLedLampEffectDrops();
 		break;
 	case FieryLedLampEffectTypes::LLand:
-		config.effect=new FieryLedLampEffectLLand();
+		config.effect = new FieryLedLampEffectLLand();
 		break;
 	case FieryLedLampEffectTypes::Rings:
-		config.effect=new FieryLedLampEffectRings();
+		config.effect = new FieryLedLampEffectRings();
 		break;
 	case FieryLedLampEffectTypes::Comet:
-		//config.effect=new FieryLedLampEffectComet();
-		//break;
+		// config.effect=new FieryLedLampEffectComet();
+		// break;
 	case FieryLedLampEffectTypes::CometColor:
-		config.effect=new FieryLedLampEffectCometColor();
+		config.effect = new FieryLedLampEffectCometColor();
 		break;
 	case FieryLedLampEffectTypes::Comet2:
-		config.effect=new FieryLedLampEffectCometCount(2);
+		config.effect = new FieryLedLampEffectCometCount(2);
 		break;
 	case FieryLedLampEffectTypes::Comet3:
-		config.effect=new FieryLedLampEffectCometCount(3);
+		config.effect = new FieryLedLampEffectCometCount(3);
 		break;
 	case FieryLedLampEffectTypes::Contacts:
-		config.effect=new FieryLedLampEffectContacts();
+		config.effect = new FieryLedLampEffectContacts();
 		break;
 	case FieryLedLampEffectTypes::Sparkles:
-		config.effect=new FieryLedLampEffectSparkles();
+		config.effect = new FieryLedLampEffectSparkles();
 		break;
 	case FieryLedLampEffectTypes::Cube2D:
-		config.effect=new FieryLedLampEffectCube2D();
+		config.effect = new FieryLedLampEffectCube2D();
 		break;
 	case FieryLedLampEffectTypes::Lava:
-		config.effect=new FieryLedLampEffectLava();
+		config.effect = new FieryLedLampEffectLava();
 		break;
 	case FieryLedLampEffectTypes::LavaLamp:
-		config.effect=new FieryLedLampEffectLavaLamp();
+		config.effect = new FieryLedLampEffectLavaLamp();
 		break;
 	case FieryLedLampEffectTypes::ButterflyLamp:
-		config.effect=new FieryLedLampEffectButterflyLamp(false);
+		config.effect = new FieryLedLampEffectButterflyLamp(false);
 		break;
 	case FieryLedLampEffectTypes::Forest:
-		config.effect=new FieryLedLampEffectForest();
+		config.effect = new FieryLedLampEffectForest();
 		break;
 	case FieryLedLampEffectTypes::Lumenjer:
-		config.effect=new FieryLedLampEffectLumenjer();
+		config.effect = new FieryLedLampEffectLumenjer();
 		break;
 	case FieryLedLampEffectTypes::Magma:
-		config.effect=new FieryLedLampEffectMagma();
+		config.effect = new FieryLedLampEffectMagma();
 		break;
 	case FieryLedLampEffectTypes::Paints:
-		config.effect=new FieryLedLampEffectOilPaints();
+		config.effect = new FieryLedLampEffectOilPaints();
 		break;
 	case FieryLedLampEffectTypes::Matrix:
-		config.effect=new FieryLedLampEffectMatrix();
+		config.effect = new FieryLedLampEffectMatrix();
 		break;
 	case FieryLedLampEffectTypes::Twinkles:
-		config.effect=new FieryLedLampEffectTwinkles();
+		config.effect = new FieryLedLampEffectTwinkles();
 		break;
 	case FieryLedLampEffectTypes::Metaballs:
-		config.effect=new FieryLedLampEffectMetaballs();
+		config.effect = new FieryLedLampEffectMetaballs();
 		break;
 	case FieryLedLampEffectTypes::WebTools:
-		config.effect=new FieryLedLampEffectWebTool();
+		config.effect = new FieryLedLampEffectWebTool();
 		break;
 	case FieryLedLampEffectTypes::Mosaic:
-		config.effect=new FieryLedLampEffectMosaic();
+		config.effect = new FieryLedLampEffectMosaic();
 		break;
 	case FieryLedLampEffectTypes::Butterflys:
-		config.effect=new FieryLedLampEffectButterflyLamp(true);
+		config.effect = new FieryLedLampEffectButterflyLamp(true);
 		break;
 	case FieryLedLampEffectTypes::BBalls:
-		config.effect=new FieryLedLampEffectBballs();
+		config.effect = new FieryLedLampEffectBballs();
 		break;
 	case FieryLedLampEffectTypes::BallsBounce:
-		config.effect=new FieryLedLampEffectBallsBounce();
+		config.effect = new FieryLedLampEffectBallsBounce();
 		break;
 	case FieryLedLampEffectTypes::ChristmasTree:
-		config.effect=new FieryLedLampEffectChristmasTree();
+		config.effect = new FieryLedLampEffectChristmasTree();
 		break;
 	case FieryLedLampEffectTypes::NightCity:
 	case FieryLedLampEffectTypes::Fire:
-		config.effect=new FieryLedLampEffectFire();
+		config.effect = new FieryLedLampEffectFire();
 		break;
 	case FieryLedLampEffectTypes::Fire2012:
-		config.effect=new FieryLedLampEffectFire2012();
+		config.effect = new FieryLedLampEffectFire2012();
 		break;
 	case FieryLedLampEffectTypes::Fire2018:
-		config.effect=new FieryLedLampEffectFire2018();
+		config.effect = new FieryLedLampEffectFire2018();
 		break;
 	case FieryLedLampEffectTypes::Fire2020:
-		config.effect=new FieryLedLampEffectFire2020();
+		config.effect = new FieryLedLampEffectFire2020();
 		break;
 	case FieryLedLampEffectTypes::Fire2021:
-		config.effect=new FieryLedLampEffectFire2021();
+		config.effect = new FieryLedLampEffectFire2021();
 		break;
 	case FieryLedLampEffectTypes::FireFlyTop:
-		config.effect=new FieryLedLampEffectFireFlyTop();
+		config.effect = new FieryLedLampEffectFireFlyTop();
 		break;
 	case FieryLedLampEffectTypes::FireFly:
-		config.effect=new FieryLedLampEffectFireFly();
+		config.effect = new FieryLedLampEffectFireFly();
 		break;
 	case FieryLedLampEffectTypes::FireSparks:
-		config.effect=new FieryLedLampEffectFireSparks();
+		config.effect = new FieryLedLampEffectFireSparks();
+		break;
+	case FieryLedLampEffectTypes::ColorRain:
+		config.effect = new FieryLedLampEffectColorRain();
 		break;
 	default:
 		DBG_PRINT("unknown effect:%d\n", index);
 		return false;
 	}
-	config.currentEffect=index;
+	config.currentEffect = index;
 
 	config.effect->set_speed(config.speed);
 	config.effect->set_scale(config.scale);
 	config.effect->set_bright(config.brightness);
-	
+
+	config.effect->clear();
 	config.effect->setup();
-	if(current)
+	if (current)
 		delete current;
 
 	update_effect_display();
-	config.need_save=true;
+	config.need_save = true;
 	return true;
 };

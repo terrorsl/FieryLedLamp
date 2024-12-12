@@ -94,6 +94,10 @@ void dimAll(uint8_t value, CRGB *LEDarray)
   	nscale8(LEDarray, NUM_LEDS, value);
 }
 
+void FieryLedLampEffect::clear()
+{
+	FastLED.clear();
+};
 void FieryLedLampEffect::DrawLine(int x1, int y1, int x2, int y2, CRGB color)
 {
 	int deltaX = abs(x2 - x1);
@@ -408,7 +412,8 @@ void FieryLedLampEffectBamboo::setup()
   	direct = false;
 	
     index = STP;
-    uint8_t idx = map(scale, 5, 95, 0U, 6U);;
+    //uint8_t idx = map(scale, 5, 95, 0U, 6U);
+	uint8_t idx = map(scale, 0, 255, 0U, 6U);
     colLine = gamma[idx];
     step = 0U;
 }

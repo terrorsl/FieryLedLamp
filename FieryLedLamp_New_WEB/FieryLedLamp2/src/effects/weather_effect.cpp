@@ -153,7 +153,7 @@ void FieryLedLampEffectColorRain::setup()
 };
 void FieryLedLampEffectColorRain::updateInner()
 {
-    CRGB solidRainColor = CRGB(60, 80, 90);
+   /* CRGB solidRainColor = CRGB(60, 80, 90);
     // я хз, как прикрутить а 1 регулятор и длину хвостов и цвет капель
     // ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds, ligthening )
     //rain(60, 200, map8(intensity,5,100), 195, CRGB::Green, false, false, false); // было CRGB::Green
@@ -161,4 +161,5 @@ void FieryLedLampEffectColorRain::updateInner()
         rain((uint32_t**)cell, line, 60, 200, map8(42, 5, 100), myScale8(scale), solidRainColor, false, false, false);
     else
         rain((uint32_t**)cell, line, 60, 200, map8(42, 5, 100), myScale8(scale), CHSV(scale, 255U, 255U), false, false, false);
+        */
 };
