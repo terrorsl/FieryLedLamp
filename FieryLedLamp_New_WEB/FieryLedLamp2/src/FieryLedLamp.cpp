@@ -101,7 +101,6 @@ void FieryLedLamp::setup_config()
 		config.scale = doc["scale"].as<uint8_t>();
 		config.speed = doc["speed"].as<uint8_t>();
 		config.brightness = doc["brightness"].as<uint8_t>();
-		// config.brightness=BRIGHTNESS;
 	}
 
 	config.language.setLanguage(RUSSIAN);
@@ -116,6 +115,7 @@ void FieryLedLamp::setup_config()
 	DBG_PRINT("scale:%d\n", config.scale);
 	DBG_PRINT("speed:%d\n", config.speed);
 
+	FastLED.setBrightness(config.brightness);
 	change_effect(config.currentEffect);
 	DBG_PRINT("setup_config done\n");
 };
@@ -195,10 +195,11 @@ void FieryLedLamp::setup_pin()
 #endif
 #endif
 
+	//memset(leds, 255, sizeof(leds));
+
 	FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
 	FastLED.setMaxPowerInVoltsAndMilliamps(5, 3000);
 	FastLED.clear();
-	FastLED.show();
 };
 void FieryLedLamp::setup_display()
 {
@@ -242,10 +243,21 @@ void FieryLedLamp::power_button(bool state)
 	else
 		display.set_state(OFF_STATE);
 
-	if (state)
+	/*if (state)
 		FastLED.setBrightness(config.brightness);
 	else
-		FastLED.setBrightness(0);
+		FastLED.setBrightness(0);*/
+	if(state==false)
+	{
+		//FastLED.clear(true);
+		if(config.effect)
+			config.effect->clear();
+	}
+	else
+	{
+		if(config.effect)
+			config.effect->setup();
+	}
 	FastLED.show();
 
 	update_effect_display();
@@ -311,35 +323,6 @@ void FieryLedLamp::update_button()
 			button.is_down = true;
 			button.down_time = millis();
 		}
-
-		/*if(button_down)
-		{
-			unsigned long delta=millis()-button_down_time;
-			// power off -> setup mode enable
-			if(config.power_state==false)
-			{
-				if(delta>=SETUP_BUTTON_TIME)
-				{
-					goto_setup_mode();
-					digitalWrite(BUILDIN_LED_PIN, HIGH);
-					button_down=false;
-				}
-			}
-			else
-			{
-				if(delta>=POWER_BUTTON_TIME)
-				{
-					// power turn off
-					power_button(false);
-					button_down=false;
-				}
-			}
-		}
-		else
-		{
-			button_down=true;
-			button_down_time=millis();
-		}*/
 	}
 	else
 	{
@@ -350,7 +333,7 @@ void FieryLedLamp::update_button()
 			if (delta <= DELTA_BUTTON_DOWN)
 			{
 				button.klick_count++;
-				DBG_PRINT("delta %d, %d\n", delta, button.klick_count);
+				DBG_PRINT("delta %ld, %d\n", delta, button.klick_count);
 			}
 			else
 				button.klick_count = 1;
@@ -576,6 +559,8 @@ bool FieryLedLamp::change_effect(unsigned short index)
 		config.effect = new FieryLedLampEffectWhiteColorStripeRoutine();
 		break;
 	case FieryLedLampEffectTypes::Aurora:
+		config.effect = new FieryLedLampEffectAurora();
+		break;
 	case FieryLedLampEffectTypes::WaterColor:
 		config.effect = new FieryLedLampEffectWaterColor();
 		break;
@@ -617,8 +602,8 @@ bool FieryLedLamp::change_effect(unsigned short index)
 		config.effect = new FieryLedLampEffectStarFall();
 		break;
 	case FieryLedLampEffectTypes::StormyRain:
-		// config.effect=new FieryLedLampEffectStarFall();
-		// break;
+		config.effect=new FieryLedLampEffectStormyRain();
+		break;
 	case FieryLedLampEffectTypes::DNA:
 		config.effect = new FieryLedLampEffectDNA();
 		break;
@@ -629,8 +614,8 @@ bool FieryLedLamp::change_effect(unsigned short index)
 		config.effect = new FieryLedLampEffectSmoke(true);
 		break;
 	case FieryLedLampEffectTypes::SmokeBalls:
-		// config.effect=new FieryLedLampEffectSmokeBalls();
-		// break;
+		config.effect=new FieryLedLampEffectSmokeBalls();
+		break;
 	case FieryLedLampEffectTypes::LiqudLamp:
 		config.effect = new FieryLedLampEffectLiquidLamp(true);
 		break;
@@ -644,8 +629,8 @@ bool FieryLedLamp::change_effect(unsigned short index)
 		config.effect = new FieryLedLampEffectStars();
 		break;
 	case FieryLedLampEffectTypes::Zebra:
-		// config.effect=new FieryLedLampEffectZebra();
-		// break;
+		config.effect = new FieryLedLampEffectZebra();
+		break;
 	case FieryLedLampEffectTypes::TixyLand:
 		config.effect = new FieryLedLampEffectTixyLand();
 		break;
@@ -668,8 +653,8 @@ bool FieryLedLamp::change_effect(unsigned short index)
 		config.effect = new FieryLedLampEffectRings();
 		break;
 	case FieryLedLampEffectTypes::Comet:
-		// config.effect=new FieryLedLampEffectComet();
-		// break;
+		config.effect=new FieryLedLampEffectComet();
+		break;
 	case FieryLedLampEffectTypes::CometColor:
 		config.effect = new FieryLedLampEffectCometColor();
 		break;
@@ -737,6 +722,8 @@ bool FieryLedLamp::change_effect(unsigned short index)
 		config.effect = new FieryLedLampEffectChristmasTree();
 		break;
 	case FieryLedLampEffectTypes::NightCity:
+		config.effect = new FieryLedLampEffectNightCity();
+		break;
 	case FieryLedLampEffectTypes::Fire:
 		config.effect = new FieryLedLampEffectFire();
 		break;
@@ -763,6 +750,131 @@ bool FieryLedLamp::change_effect(unsigned short index)
 		break;
 	case FieryLedLampEffectTypes::ColorRain:
 		config.effect = new FieryLedLampEffectColorRain();
+		break;
+	case FieryLedLampEffectTypes::Oscillating:
+		config.effect = new FieryLedLampEffectOscillating();
+		break;
+	case FieryLedLampEffectTypes::Clouds:
+		config.effect = new FieryLedLampEffectClouds();
+		break;
+	case FieryLedLampEffectTypes::Ocean:
+		config.effect = new FieryLedLampEffectOcean();
+		break;
+	case FieryLedLampEffectTypes::Octopus:
+		config.effect = new FieryLedLampEffectOctopus();
+		break;
+	case FieryLedLampEffectTypes::RainbowStripe:
+		config.effect = new FieryLedLampEffectRainbowStripe();
+		break;
+	case FieryLedLampEffectTypes::HourGlass:
+		config.effect = new FieryLedLampEffectHourglass();
+		break;
+	case FieryLedLampEffectTypes::Paintball:
+		config.effect = new FieryLedLampEffectPaintball();
+		break;
+	case FieryLedLampEffectTypes::Picasso:
+		// FIXME: доделать эффект, чтобы не вылетал за граници матрици. Разобраться с переменными
+		config.effect = new FieryLedLampEffectPicasso();
+		break;
+	case FieryLedLampEffectTypes::Plasma:
+		config.effect = new FieryLedLampEffectPlasma();
+		break;
+	case FieryLedLampEffectTypes::Spider:
+		// FIXME: доделать эффект, чтобы не вылетал за граници матрици. Разобраться с переменными
+		config.effect = new FieryLedLampEffectSpider();
+		break;
+	case FieryLedLampEffectTypes::PlasmaWaves:
+		config.effect = new FieryLedLampEffectPlasmaWaves();
+		break;
+	case FieryLedLampEffectTypes::Flame:
+		config.effect = new FieryLedLampEffectFlame();
+		break;
+	case FieryLedLampEffectTypes::PlanetEarth:
+		config.effect = new FieryLedLampEffectPlanetEarth();
+		break;
+	case FieryLedLampEffectTypes::ByEffect:
+		//config.effect = new FieryLedLampEffectByEffect();
+		//break;
+	case FieryLedLampEffectTypes::Popcorn:
+		//config.effect = new FieryLedLampEffectPopcorn();
+		//break;
+	case FieryLedLampEffectTypes::Prismata:
+	case FieryLedLampEffectTypes::Attract:
+	case FieryLedLampEffectTypes::Leapers:
+	case FieryLedLampEffectTypes::Pulse:
+	case FieryLedLampEffectTypes::PulseWhite:
+	case FieryLedLampEffectTypes::PulseRainbow:
+	case FieryLedLampEffectTypes::RadialWave:
+		config.effect = new FieryLedLampEffectRadialWave();
+		break;
+	case FieryLedLampEffectTypes::Rainbow:
+		config.effect = new FieryLedLampEffectRainbow();
+		break;
+	case FieryLedLampEffectTypes::Rainbow3D:
+		config.effect = new FieryLedLampEffectRainbow3D();
+		break;
+	case FieryLedLampEffectTypes::RainbowSpot:
+	case FieryLedLampEffectTypes::Snake:
+	case FieryLedLampEffectTypes::Dandelions:
+	case FieryLedLampEffectTypes::Rain:
+		config.effect = new FieryLedLampEffectRain();
+		break;
+	case FieryLedLampEffectTypes::Rivers:
+		config.effect = new FieryLedLampEffectBotswanaRivers();
+		break;
+	case FieryLedLampEffectTypes::Lighters:
+		config.effect = new FieryLedLampEffectLighters();
+		break;
+	case FieryLedLampEffectTypes::LighterTraces:
+		config.effect = new FieryLedLampEffectLighterTraces();
+		break;
+	case FieryLedLampEffectTypes::FeatherCandle:	// Свеча
+		config.effect = new FieryLedLampEffectFeatherCandle();
+		break;
+	case FieryLedLampEffectTypes::NorthernLights: // Северное сияние
+	case FieryLedLampEffectTypes::Serpentine:		// Серпантин
+	case FieryLedLampEffectTypes::Scanner:		// Сканер
+	case FieryLedLampEffectTypes::Sinusoid3:		// Синусоид
+	case FieryLedLampEffectTypes::Colors:			// Смена цвета
+	case FieryLedLampEffectTypes::Snow:			// Снегопад
+	case FieryLedLampEffectTypes::Specrum:		// Спектрум
+	case FieryLedLampEffectTypes::Spiro:			// Спирали
+	case FieryLedLampEffectTypes::Flock:			// Стая
+	case FieryLedLampEffectTypes::FLOCK_N_PR:		// Стая и хищник
+	case FieryLedLampEffectTypes::Arrows:			// Стрелки
+	case FieryLedLampEffectTypes::Strobe:			// Строб.Хаос.Дифузия
+	case FieryLedLampEffectTypes::Shadows:		// Тени
+	case FieryLedLampEffectTypes::Pacific:		// Тихий океан
+		config.effect = new FieryLedLampEffectPacific();
+		break;
+	case FieryLedLampEffectTypes::Tornado:		// Торнадо
+		config.effect = new FieryLedLampEffectTornado();
+		break;
+	case FieryLedLampEffectTypes::SimpleRain:		// Tyчкa в банке
+		config.effect = new FieryLedLampEffectSimpleRain();
+		break;
+	case FieryLedLampEffectTypes::Firework:		// Фейерверк
+	case FieryLedLampEffectTypes::Firework2:		// Фейерверк 2
+	case FieryLedLampEffectTypes::Fairy:			// Фея
+	case FieryLedLampEffectTypes::Fontan:			// Фонтан
+	case FieryLedLampEffectTypes::Color:			// Цвет
+		config.effect = new FieryLedLampEffectColor();
+		break;
+	case FieryLedLampEffectTypes::ColoredPython:	// Цветной Питон
+	case FieryLedLampEffectTypes::Sand:			// Цветные драже
+		config.effect = new FieryLedLampEffectSand();
+		break;
+	case FieryLedLampEffectTypes::ColorFrizzles:	// Цветные кудри
+	case FieryLedLampEffectTypes::Lotus:			// Цветок лотоса
+		config.effect = new FieryLedLampEffectLotus();
+		break;
+	case FieryLedLampEffectTypes::Turbulence:		// Цифровая турбулентность
+		config.effect = new FieryLedLampEffectTurbulence();
+		break;
+	case FieryLedLampEffectTypes::Spheres:		// Шapы
+	case FieryLedLampEffectTypes::Nexus:
+	case FieryLedLampEffectTypes::Clock:
+		config.effect = new FieryLedLampEffectClock();
 		break;
 	default:
 		DBG_PRINT("unknown effect:%d\n", index);

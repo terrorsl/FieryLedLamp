@@ -11,6 +11,7 @@
 #include"effects/weather_effect.h"
 #include"effects/nature_effect.h"
 #include"effects/color_effect.h"
+#include"effects/geometry_effect.h"
 
 #include"display.h"
 

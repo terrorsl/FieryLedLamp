@@ -104,4 +104,57 @@ private:
     uint32_t t;
     Spark sparks[LED_WIDTH/4];
 };
+
+class FieryLedLampEffectPlasma: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectPlasma():FieryLedLampEffect(HIGH_DELAY){};
+	void setup();
+	void updateInner();
+private:
+};
+
+class FieryLedLampEffectSpider: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectSpider():FieryLedLampEffect(LOW_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	float speedfactor;
+	uint8_t pcnt;
+};
+
+class FieryLedLampEffectPlasmaWaves: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectPlasmaWaves():FieryLedLampEffect(SOFT_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint64_t frameCount;
+};
+
+class FieryLedLampEffectFlame: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectFlame():FieryLedLampEffect(LOW_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	void wu_pixel_maxV(uint8_t item);
+	
+	uint64_t frameCount;
+	uint8_t enlargedObjectNUM;
+	uint8_t noise3d[2][LED_WIDTH][LED_HEIGHT], shiftValue[LED_HEIGHT];
+};
+
+class FieryLedLampEffectFeatherCandle: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectFeatherCandle():FieryLedLampEffect(LOW_DELAY){};
+	void setup();
+	void updateInner();
+private:
+};
 #endif

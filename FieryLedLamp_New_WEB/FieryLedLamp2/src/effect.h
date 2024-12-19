@@ -3,6 +3,8 @@
 
 #include"platform.h"
 #include"Constants.h"
+
+#define FASTLED_INTERRUPT_RETRY_COUNT 1
 #include<FastLED.h>
 
 //константы размера матрицы вычисляется только здесь и не меняется в эффектах
@@ -13,135 +15,135 @@ const uint8_t CENTER_Y_MAJOR = LED_HEIGHT / 2  + (LED_HEIGHT % 2); // центр
 
 typedef enum
 {
-	WhiteColor, // Бeлый cвeт
-	Aurora, // Аврора
-	WaterColor, // Акварель
-	FlowerRuta, // Аленький цветочек
-	Pool, // Бассейн
-	Bamboo, // Бамбук
-	Madness, // Безумие
-	Ball, // Блуждающий кубик
-	Waterfall, // Водопад
-	Waterfall4_1, // Водопад 4в1
-	Waves, // Волны
-	MagicLantern, // Волшебный Фонарик
-	Wine, // Вино
-	Whirl, // Вихри пламени
-	WhirlMulti, // Вихри разноцветные
-	StarFall, // Вьюга
-	StormyRain, // Гроза в банке
-	DNA, // ДНК
-	Smoke, // Дым
-	SmokeColor, // Дым разноцветный
-	SmokeBalls, // Дымовые шашки
-	LiqudLamp, // Жидкая лампа
-	LiqudLampAuto, // Жидкая лампа авто
-	Swirl, // Завиток
-	Stars, // Звезды
-	Zebra, // Зебра
-	TixyLand, // Земля Тикси
-	Snakes, // Змейки
-	Fountain, // Источник
-	DropInWater, // Капли на воде
-	Drops, // Капли на стекле
-	LLand, // Кипение
-	Rings, // Кодовый замок
-	Comet, // Комета
-	CometColor, // Комета одноцветная
-	Comet2, // Комета двойная
-	Comet3, // Комета тройная
-	Contacts, // Контакты
-	Sparkles, // Конфетти
-	Cube2D, // Кубик Рубика
-	Lava, // Лава
-	LavaLamp, // Лавовая лампа
-	ButterflyLamp, // Лампа с мотыльками
-	Forest,  // Лес
-	Lumenjer, // Люмeньep
-	Magma, // Магма
-	Paints, // Масляные краски
-	Matrix, // Матрица
-	Twinkles, // Мерцание
-  	Metaballs, // Метоболз
-	WebTools, // Мечта дизайнера
-	Mosaic, // Мозайка
-	Butterflys, // Moтыльки
-	BBalls, // Мячики
-	BallsBounce, // Мячики без границ
-	ChristmasTree, // Новогодняя Елка
-	NightCity, // Ночной Город
-	Fire, // Огонь
-	Fire2012, // Огонь 2012
-	Fire2018, // Огонь 2018
-	Fire2020, // Огонь 2020
-	Fire2021, // Огонь 2021
-	FireFlyTop, // Огoнь верховой
-	FireFly, // Огoнь парящий
-	FireSparks, // Огонь с искрами
-	ColorRain, // Осадки
-/*	Oscillating, // Осциллятор
-	Clouds, // Облака
-	Ocean, // Океан
-	Octopus, // Осьминог
-#define EFF_RAINBOW_STRIPE      ( 70U)    // Павлин
-#define EFF_HOURGLASS           ( 71U)    // Песочные часы
-#define EFF_PAINTBALL           ( 72U)    // Пейнтбол
-#define EFF_PICASSO             ( 73U)    // Пикассо
-#define EFF_PLASMA              ( 74U)    // Плазма
-#define EFF_SPIDER              ( 75U)    // Плазменная лампа
-#define EFF_PLASMA_WAVES        ( 76U)    // Плазменные волны
-#define EFF_FLAME               ( 77U)    // Пламя
-#define EFF_PLANETEARTH         ( 78U)    // Планета Земля
-#define EFF_BY_EFFECT           ( 79U)    // Побочный эффект
-#define EFF_POPCORN             ( 80U)    // Попкорн
-#define EFF_PRISMATA            ( 81U)    // Призмата
-#define EFF_ATTRACT             ( 82U)    // Притяжение
-#define EFF_LEAPERS             ( 83U)    // Пpыгyны
-#define EFF_PULSE               ( 84U)    // Пульс
-#define EFF_PULSE_WHITE         ( 85U)    // Пульс белый
-#define EFF_PULSE_RAINBOW       ( 86U)    // Пульс радужный
-#define EFF_RADIAL_WAWE         ( 87U)    // Радиальная волна
-#define EFF_RAINBOW_VER         ( 88U)    // Радуга
-#define EFF_RAINBOW             ( 89U)    // Радуга 3D
-#define EFF_RAINBOW_SPOT        ( 90U)    // Радужное Пятно
-#define EFF_SNAKE               ( 91U)    // Радужный змей
-#define EFF_DANDELIONS          ( 92U)    // Разноцветные одуванчики
-#define EFF_RAIN                ( 93U)    // Разноцветный дождь
-#define EFF_RIVERS              ( 94U)    // Реки Ботсваны
-#define EFF_LIGHTERS            ( 95U)    // Светлячки
-#define EFF_LIGHTER_TRACES      ( 96U)    // Светлячки со шлейфом
-#define EFF_FEATHER_CANDLE      ( 97U)    // Свеча
-#define EFF_AURORA              ( 98U)    // Северное сияние
-#define EFF_SERPENTINE          ( 99U)    // Серпантин
-#define EFF_SCANNER             (100U)    // Сканер
-#define EFF_SINUSOID3           (101U)    // Синусоид
-#define EFF_COLORS              (102U)    // Смена цвета
-#define EFF_SNOW                (103U)    // Снегопад
-#define EFF_SPECTRUM            (104U)    // Спектрум
-#define EFF_SPIRO               (105U)    // Спирали
-#define EFF_FLOCK               (106U)    // Стая
-#define EFF_FLOCK_N_PR          (107U)    // Стая и хищник
-#define EFF_ARROWS              (108U)    // Стрелки
-#define EFF_STROBE              (109U)    // Строб.Хаос.Дифузия
-#define EFF_SHADOWS             (110U)    // Тени
-#define EFF_PACIFIC             (111U)    // Тихий океан
-#define EFF_TORNADO             (112U)    // Торнадо
-#define EFF_SIMPLE_RAIN         (113U)    // Tyчкa в банке
-#define EFF_FIREWORK            (114U)    // Фейерверк
-#define EFF_FIREWORK_2          (115U)    // Фейерверк 2
-#define EFF_FAIRY               (116U)    // Фея
-#define EFF_FONTAN              (117U)    // Фонтан
-#define EFF_COLOR               (118U)    // Цвет
-#define EFF_EFF_COLORED_PYTHON  (119U)    // Цветной Питон
-#define EFF_EFF_SAND            (120U)    // Цветные драже
-#define EFF_COLOR_FRIZZLES      (121U)    // Цветные кудри
-#define EFF_EFF_LOTUS           (122U)    // Цветок лотоса
-#define EFF_TURBULENCE          (123U)    // Цифровая турбулентность
-#define EFF_SPHERES             (124U)    // Шapы
-#define EFF_NEXUS               (125U)    // Nexus
-#define EFF_CLOCK               (126U)    // Часы*/
+	WhiteColor,		// Бeлый cвeт
+	Aurora,			// Аврора
+	WaterColor,		// Акварель
+	FlowerRuta,		// Аленький цветочек
+	Pool,			// Бассейн
+	Bamboo,			// Бамбук
+	Madness,		// Безумие
+	Ball,			// Блуждающий кубик
+	Waterfall,		// Водопад
+	Waterfall4_1,	// Водопад 4в1
+	Waves,			// Волны
+	MagicLantern,	// Волшебный Фонарик
+	Wine,			// Вино
+	Whirl,			// Вихри пламени
+	WhirlMulti,		// Вихри разноцветные
+	StarFall,		// Вьюга
+	StormyRain,		// Гроза в банке
+	DNA,			// ДНК
+	Smoke,			// Дым
+	SmokeColor,		// Дым разноцветный
+	SmokeBalls,		// Дымовые шашки
+	LiqudLamp,		// Жидкая лампа
+	LiqudLampAuto,	// Жидкая лампа авто
+	Swirl,			// Завиток
+	Stars,			// Звезды
+	Zebra,			// Зебра
+	TixyLand,		// Земля Тикси
+	Snakes,			// Змейки
+	Fountain,		// Источник
+	DropInWater,	// Капли на воде
+	Drops,			// Капли на стекле
+	LLand,			// Кипение
+	Rings,			// Кодовый замок
+	Comet,			// Комета
+	CometColor,		// Комета одноцветная
+	Comet2,			// Комета двойная
+	Comet3,			// Комета тройная
+	Contacts,		// Контакты
+	Sparkles,		// Конфетти
+	Cube2D,			// Кубик Рубика
+	Lava,			// Лава
+	LavaLamp,		// Лавовая лампа
+	ButterflyLamp,	// Лампа с мотыльками
+	Forest,			// Лес
+	Lumenjer,		// Люмeньep
+	Magma,			// Магма
+	Paints,			// Масляные краски
+	Matrix,			// Матрица
+	Twinkles,		// Мерцание
+	Metaballs,		// Метоболз
+	WebTools,		// Мечта дизайнера
+	Mosaic,			// Мозайка
+	Butterflys,		// Moтыльки
+	BBalls,			// Мячики
+	BallsBounce,	// Мячики без границ
+	ChristmasTree,	// Новогодняя Елка
+	NightCity,		// Ночной Город
+	Fire,			// Огонь
+	Fire2012,		// Огонь 2012
+	Fire2018,		// Огонь 2018
+	Fire2020,		// Огонь 2020
+	Fire2021,		// Огонь 2021
+	FireFlyTop,		// Огoнь верховой
+	FireFly,		// Огoнь парящий
+	FireSparks,		// Огонь с искрами
+	ColorRain,		// Осадки
+	Oscillating,	// Осциллятор
+	Clouds,			// Облака
+	Ocean,			// Океан
+	Octopus,		// Осьминог
+	RainbowStripe,	// Павлин
+	HourGlass,		// Песочные часы
+	Paintball,		// Пейнтбол
+	Picasso,		// Пикассо
+	Plasma,			// Плазма
+	Spider,			// Плазменная лампа
+	PlasmaWaves,	// Плазменные волны
+	Flame,			// Пламя
+	PlanetEarth,	// Планета Земля
+	ByEffect,		// Побочный эффект
+	Popcorn,		// Попкорн
+	Prismata,		// Призмата
+	Attract,		// Притяжение
+	Leapers,		// Пpыгyны
+	Pulse,			// Пульс
+	PulseWhite,		// Пульс белый
+	PulseRainbow,	// Пульс радужный
+	RadialWave,		// Радиальная волна
+	Rainbow,		// Радуга
+	Rainbow3D,		// Радуга 3D
+	RainbowSpot,	// Радужное Пятно
+	Snake,			// Радужный змей
+	Dandelions,		// Разноцветные одуванчики
+	Rain,			// Разноцветный дождь
+	Rivers,			// Реки Ботсваны
+	Lighters,		// Светлячки
+	LighterTraces,	// Светлячки со шлейфом
+	FeatherCandle,	// Свеча
+	NorthernLights, // Северное сияние
+	Serpentine,		// Серпантин
+	Scanner,		// Сканер
+	Sinusoid3,		// Синусоид
+	Colors,			// Смена цвета
+	Snow,			// Снегопад
+	Specrum,		// Спектрум
+	Spiro,			// Спирали
+	Flock,			// Стая
+	FLOCK_N_PR,		// Стая и хищник
+	Arrows,			// Стрелки
+	Strobe,			// Строб.Хаос.Дифузия
+	Shadows,		// Тени
+	Pacific,		// Тихий океан
+	Tornado,		// Торнадо
+	SimpleRain,		// Tyчкa в банке
+	Firework,		// Фейерверк
+	Firework2,		// Фейерверк 2
+	Fairy,			// Фея
+	Fontan,			// Фонтан
+	Color,			// Цвет
+	ColoredPython,	// Цветной Питон
+	Sand,			// Цветные драже
+	ColorFrizzles,	// Цветные кудри
+	Lotus,			// Цветок лотоса
+	Turbulence,		// Цифровая турбулентность
+	Spheres,		// Шapы
+	Nexus,			// Nexus
+	Clock,			// Часы
 	MaxEffect
-}FieryLedLampEffectTypes;
+} FieryLedLampEffectTypes;
 
 typedef enum
 {
@@ -208,7 +210,7 @@ uint16_t XY(uint8_t x, uint8_t y);
 class FieryLedLampEffect
 {
 public:
-	FieryLedLampEffect(uint8_t delayType):delat_type(delayType){};
+	FieryLedLampEffect(uint8_t delayType):delay_type(delayType){effectTimer=0;};
 	virtual ~FieryLedLampEffect(){}
 
 	void set_bright(unsigned char val){brightness=val;}
@@ -216,7 +218,7 @@ public:
 	void set_scale(unsigned char val){scale=val;}
 
   void clear();
-  
+
 	virtual void setup() = 0;
 	virtual void updateInner() = 0;
 
@@ -228,6 +230,7 @@ public:
 	//https://gist.github.com/sutaburosu/32a203c2efa2bb584f4b846a91066583
 	void drawPixelXYF(float x, float y, CRGB color);
 protected:
+	void gradientVertical(uint8_t startX, uint8_t startY, uint8_t endX, uint8_t endY, uint8_t start_color, uint8_t end_color, uint8_t start_br, uint8_t end_br, uint8_t saturate);
 	void setCurrentPalette() {
 		if (scale > 100U)
 			scale = 100U; // чтобы не было проблем при прошивке без очистки памяти
@@ -250,7 +253,37 @@ protected:
 	void FillNoise(uint8_t **noise3d, uint32_t noise32_x, uint32_t noise32_y, uint32_t noise32_z, uint32_t scale32_x, uint32_t scale32_y, uint8_t noisesmooth);
 	void drawRecCHSV(uint8_t startX, uint8_t startY, uint8_t endX, uint8_t endY, CHSV color);
 
+	void DrawLineF(float x1, float y1, float x2, float y2, CRGB color) {
+		float deltaX = std::fabs(x2 - x1);
+		float deltaY = std::fabs(y2 - y1);
+		float error = deltaX - deltaY;
+
+		float signX = x1 < x2 ? 0.5 : -0.5;
+		float signY = y1 < y2 ? 0.5 : -0.5;
+
+		while (x1 != x2 || y1 != y2)
+		{ // (true) - а я то думаю - "почему функция часто вызывает вылет по вачдогу?" А оно вон оно чё, Михалычь!
+			if ((signX > 0 && x1 > x2 + signX) || (signX < 0 && x1 < x2 + signX))
+				break;
+			if ((signY > 0 && y1 > y2 + signY) || (signY < 0 && y1 < y2 + signY))
+				break;
+			drawPixelXYF(x1, y1, color); // интересно, почему тут было обычное drawPixelXY() ???
+			float error2 = error;
+			if (error2 > -deltaY)
+			{
+				error -= deltaY;
+				x1 += signX;
+			}
+			if (error2 < deltaX)
+			{
+				error += deltaX;
+				y1 += signY;
+			}
+		}
+	}
+
 	uint8_t speed, scale, brightness;
+  uint8_t delay_type;
 
 	//массивы состояния объектов, которые могут использоваться в любом эффекте
 	#define trackingOBJECT_MAX_COUNT                         (100U)  // максимальное количество отслеживаемых объектов (очень влияет на расход памяти)
@@ -271,7 +304,6 @@ protected:
 	uint8_t colorLoop;
 	uint8_t ihue = 0;
 
-	uint8_t delat_type;
 	uint8_t hue,hue2;
 
 	uint16_t x,y,z;
@@ -280,89 +312,6 @@ protected:
 
 	unsigned long effectTimer, FPSdelay;
 };
-
-class FieryLedLampEffectFlowerRuta:public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectFlowerRuta():FieryLedLampEffect(DYNAMIC_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	uint8_t PETALS;
-	uint32_t t;
-
-	#define NUM_LAYERSMAX 2
-	uint8_t noise3d[NUM_LAYERSMAX][LED_WIDTH][LED_HEIGHT];     // двухслойная маска или хранилище свойств в размер всей матрицы
-};
-
-class FieryLedLampEffectBamboo: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectBamboo():FieryLedLampEffect(DYNAMIC_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	uint8_t step;
-	float index;
-	uint8_t posY;
-	float deltaX;
-	bool direct;
-	uint8_t colLine;
-};
-
-class FieryLedLampEffectMagicLantern: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectMagicLantern():FieryLedLampEffect(DYNAMIC_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	void gradientVertical(uint8_t startX, uint8_t startY, uint8_t endX, uint8_t endY, uint8_t start_color, uint8_t end_color, uint8_t start_br, uint8_t end_br, uint8_t saturate);
-	uint8_t saturation;
-  	uint8_t brightness;
-  	uint8_t low_br;
-	uint8_t deltaValue,step;
-};
-
-class FieryLedLampEffectBall: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectBall():FieryLedLampEffect(DYNAMIC_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	int16_t coordB[2U];
-	int8_t vectorB[2U], deltaValue;
-	CHSV _pulse_color;
-	CRGB ballColor;
-};
-
-class FieryLedLampEffectWine: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectWine():FieryLedLampEffect(DYNAMIC_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	uint8_t deltaHue, deltaHue2, step, pcnt;
-};
-
-class FieryLedLampEffectMadnessNoise: public FieryLedLampEffect
-{
-public:
-	FieryLedLampEffectMadnessNoise():FieryLedLampEffect(HIGH_DELAY){};
-	void setup();
-	void updateInner();
-private:
-	void fillnoise8();
-
-	uint8_t noise[LED_WIDTH][LED_WIDTH];
-	uint16_t x,y,z;
-};
-
-// ============= ЭФФЕКТ СТАЯ ===============
-// https://github.com/pixelmatix/aurora/blob/master/PatternFlock.h
-// Адаптация от (c) SottNick и @kDn
 
 template <class T>
 class Vector2 {
@@ -514,9 +463,9 @@ typedef Vector2<float> PVector;
 // Boid class
 // Methods for Separation, Cohesion, Alignment added
 
-class Boid {
-  public:
-
+class Boid
+{
+public:
     PVector location;
     PVector velocity;
     PVector acceleration;
@@ -532,65 +481,73 @@ class Boid {
 
     Boid() {}
 
-    Boid(float x, float y) {
-      acceleration = PVector(0, 0);
-      velocity = PVector(randomf(), randomf());
-      location = PVector(x, y);
-      maxspeed = 1.5;
-      maxforce = 0.05;
+    Boid(float x, float y)
+    {
+        acceleration = PVector(0, 0);
+        velocity = PVector(randomf(), randomf());
+        location = PVector(x, y);
+        maxspeed = 1.5;
+        maxforce = 0.05;
     }
 
-    static float randomf() {
-      return mapfloat(random(0, 255), 0, 255, -.5, .5);
+    static float randomf()
+    {
+        return mapfloat(random(0, 255), 0, 255, -.5, .5);
     }
 
-    static float mapfloat(float x, float in_min, float in_max, float out_min, float out_max) {
-      return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    static float mapfloat(float x, float in_min, float in_max, float out_min, float out_max)
+    {
+        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
     }
 
-    void run(Boid boids [], uint8_t boidCount) {
-      flock(boids, boidCount);
-      update();
-      // wrapAroundBorders();
-      // render();
+    void run(Boid boids[], uint8_t boidCount)
+    {
+        flock(boids, boidCount);
+        update();
     }
 
     // Method to update location
-    void update() {
-      // Update velocity
-      velocity += acceleration;
-      // Limit speed
-      velocity.limit(maxspeed);
-      location += velocity;
-      // Reset acceleration to 0 each cycle
-      acceleration *= 0;
+    void update()
+    {
+        // Update velocity
+        velocity += acceleration;
+        // Limit speed
+        velocity.limit(maxspeed);
+        location += velocity;
+        // Reset acceleration to 0 each cycle
+        acceleration *= 0;
     }
 
-    void applyForce(PVector force) {
-      // We could add mass here if we want A = F / M
-      acceleration += force;
+    void applyForce(PVector force)
+    {
+        // We could add mass here if we want A = F / M
+        acceleration += force;
     }
 
-    void repelForce(PVector obstacle, float radius) {
-      //Force that drives boid away from obstacle.
+    void repelForce(PVector obstacle, float radius)
+    {
+        // Force that drives boid away from obstacle.
 
-      PVector futPos = location + velocity; //Calculate future position for more effective behavior.
-      PVector dist = obstacle - futPos;
-      float d = dist.mag();
+        PVector futPos = location + velocity; // Calculate future position for more effective behavior.
+        PVector dist = obstacle - futPos;
+        float d = dist.mag();
 
-      if (d <= radius) {
-        PVector repelVec = location - obstacle;
-        repelVec.normalize();
-        if (d != 0) { //Don't divide by zero.
-          // float scale = 1.0 / d; //The closer to the obstacle, the stronger the force.
-          repelVec.normalize();
-          repelVec *= (maxforce * 7);
-          if (repelVec.mag() < 0) { //Don't let the boids turn around to avoid the obstacle.
-            repelVec.y = 0;
-          }
+        if (d <= radius)
+        {
+            PVector repelVec = location - obstacle;
+            repelVec.normalize();
+            if (d != 0)
+            { // Don't divide by zero.
+                // float scale = 1.0 / d; //The closer to the obstacle, the stronger the force.
+                repelVec.normalize();
+                repelVec *= (maxforce * 7);
+                if (repelVec.mag() < 0)
+                { // Don't let the boids turn around to avoid the obstacle.
+                    repelVec.y = 0;
+                }
+            }
+            applyForce(repelVec);
         }
-        applyForce(repelVec);
-      }
     }
 
     // We accumulate a new acceleration each time based on three rules
@@ -805,22 +762,75 @@ class Boid {
     }
 };
 
-class FieryLedLampEffectWhirl: public FieryLedLampEffect
+class FieryLedLampEffectFlowerRuta:public FieryLedLampEffect
 {
 public:
-	FieryLedLampEffectWhirl(bool _oneColor):FieryLedLampEffect(HIGH_DELAY),oneColor(_oneColor){};
+	FieryLedLampEffectFlowerRuta():FieryLedLampEffect(DYNAMIC_DELAY){};
 	void setup();
 	void updateInner();
 private:
-	bool oneColor;
-	uint16_t ff_x;
-	uint16_t ff_y;
-	uint16_t ff_z;
+	uint8_t PETALS;
+	uint32_t t;
 
-	static const uint8_t AVAILABLE_BOID_COUNT = 20U;
-	Boid boids[AVAILABLE_BOID_COUNT];
+	#define NUM_LAYERSMAX 2
+	uint8_t noise3d[NUM_LAYERSMAX][LED_WIDTH][LED_HEIGHT];     // двухслойная маска или хранилище свойств в размер всей матрицы
 };
 
+class FieryLedLampEffectBamboo: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectBamboo():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t step;
+	float index;
+	uint8_t posY;
+	float deltaX;
+	bool direct;
+	uint8_t colLine;
+};
+
+class FieryLedLampEffectMagicLantern: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectMagicLantern():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	void gradientVertical(uint8_t startX, uint8_t startY, uint8_t endX, uint8_t endY, uint8_t start_color, uint8_t end_color, uint8_t start_br, uint8_t end_br, uint8_t saturate);
+	uint8_t saturation;
+  	uint8_t brightness;
+  	uint8_t low_br;
+	uint8_t deltaValue,step;
+};
+
+class FieryLedLampEffectWine: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectWine():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t deltaHue, deltaHue2, pcnt;
+};
+
+class FieryLedLampEffectMadnessNoise: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectMadnessNoise():FieryLedLampEffect(HIGH_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	void fillnoise8();
+
+	uint8_t noise[LED_WIDTH][LED_HEIGHT];
+	uint16_t x,y,z;
+};
+
+// ============= ЭФФЕКТ СТАЯ ===============
+// https://github.com/pixelmatix/aurora/blob/master/PatternFlock.h
+// Адаптация от (c) SottNick и @kDn
 class FieryLedLampEffectStarFall: public FieryLedLampEffect
 {
 public:
@@ -1244,6 +1254,62 @@ public:
 private:
 	uint8_t **noise3d;
 	uint16_t noise32_x,noise32_y,noise32_z, scale32_x,scale32_y;
+};
+
+class FieryLedLampEffectOscillating: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectOscillating():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+  void drawPixelXYFseamless(float x, float y, CRGB color);
+  uint8_t calcNeighbours(uint8_t x, uint8_t y, uint8_t n);
+
+  uint8_t noise3d[2][LED_WIDTH][LED_HEIGHT];
+  uint8_t step;
+  uint16_t colorCountBefore[3];
+};
+
+class FieryLedLampEffectClock: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectClock():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+};
+
+class FieryLedLampEffectHourglass: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectHourglass():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t step;
+	uint8_t h, deltaHue2;
+};
+
+class FieryLedLampEffectOctopus: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectOctopus():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t step, _scale;
+	uint8_t noise3d[2][LED_WIDTH][LED_HEIGHT];
+};
+
+class FieryLedLampEffectAurora: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectAurora():FieryLedLampEffect(HIGH_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t step, deltaValue;
 };
 
 class FieryLedLampEffectList

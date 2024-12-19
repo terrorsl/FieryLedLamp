@@ -4,12 +4,12 @@
 #define CAUSTICS_BR (100U) // яркость бликов в процентах (от чистого белого света)
 void FieryLedLampEffectPool::setup()
 {
-	//hue = scale * 2.55;
-	hue = scale;
-	fillAll(CHSV(hue, 255U, 255U));
-    deltaHue = 0U;
-    deltaHue2 = 0U;
-	step=0;
+  // hue = scale * 2.55;
+  hue = scale;
+  fillAll(CHSV(hue, 255U, 255U));
+  deltaHue = 0U;
+  deltaHue2 = 0U;
+  step = 0;
 }
 
 // ------------- цвет + вода в бассейне ------------------
@@ -879,16 +879,16 @@ static const uint8_t aquariumGIF[25][32][32] PROGMEM =
 
 void FieryLedLampEffectPool::updateInner()
 {
-	if (speed != 255U) // если регулятор скорости на максимуме, то будет работать старый эффект "цвет" (без анимации бликов воды)
-  	{
-    	if (step > 24U) // количество кадров в анимации -1 (отсчёт с нуля)
-      		step = 0U;
-    	if (step > 0U && step < 3U) // пару раз за цикл анимации двигаем текстуру по радиусу лампы. а может и не двигаем. как повезёт
-    	{
-      		if (random(2U) == 0U)
-      		{
-        		deltaHue++;
-        		if (deltaHue > 31U)
+  if (speed != 255U) // если регулятор скорости на максимуме, то будет работать старый эффект "цвет" (без анимации бликов воды)
+  {
+    if (step > 24U) // количество кадров в анимации -1 (отсчёт с нуля)
+      step = 0U;
+    if (step > 0U && step < 3U) // пару раз за цикл анимации двигаем текстуру по радиусу лампы. а может и не двигаем. как повезёт
+    {
+      if (random(2U) == 0U)
+      {
+        deltaHue++;
+        if (deltaHue > 31U)
 					deltaHue = 0U;
       		}
     	}
@@ -936,43 +936,51 @@ void FieryLedLampEffectPool::updateInner()
 
 void FieryLedLampEffectWaterfall::setup()
 {
+  for (uint8_t x = 0; x < LED_WIDTH; x++)
+    for (uint8_t i = 0; i < LED_HEIGHT; i++)
+      noise3d[x][i]=0;
 }
 void FieryLedLampEffectWaterfall::updateInner()
 {
-	//    bool fire_water = modes[currentMode].Scale <= 50;
+  //    bool fire_water = modes[currentMode].Scale <= 50;
   	//    uint8_t COOLINGNEW = fire_water ? modes[currentMode].Scale * 2  + 20 : (100 - modes[currentMode].Scale ) *  2 + 20 ;
   	//    uint8_t COOLINGNEW = modes[currentMode].Scale * 2  + 20 ;
   	// Array of temperature readings at each simulation cell
   	//static byte heat[WIDTH][HEIGHT]; будет noise3d[0][WIDTH][HEIGHT]
 
-  	for (uint8_t x = 0; x < LED_WIDTH; x++) {
-    	// Step 1.  Cool down every cell a little
-    	for (uint8_t i = 0; i < LED_HEIGHT; i++) {
-      		noise3d[x][i] = qsub8(noise3d[x][i], random8(0, ((COOLINGNEW * 10) / LED_HEIGHT) + 2));
-    	}
+  	for (uint8_t x = 0; x < LED_WIDTH; x++)
+    {
+      // Step 1.  Cool down every cell a little
+      for (uint8_t i = 0; i < LED_HEIGHT; i++)
+      {
+        noise3d[x][i] = qsub8(noise3d[x][i], random8(0, ((COOLINGNEW * 10) / LED_HEIGHT) + 2));
+      }
 
-    	// Step 2.  Heat from each cell drifts 'up' and diffuses a little
-		for (uint8_t k = LED_HEIGHT - 1; k >= 2; k--) {
-			noise3d[x][k] = (noise3d[x][k - 1] + noise3d[x][k - 2] + noise3d[x][k - 2]) / 3;
-		}
+      // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+      for (uint8_t k = LED_HEIGHT - 1; k >= 2; k--)
+      {
+        noise3d[x][k] = (noise3d[x][k - 1] + noise3d[x][k - 2] + noise3d[x][k - 2]) / 3;
+      }
 
-		// Step 3.  Randomly ignite new 'sparks' of heat near the bottom
-		if (random8() < SPARKINGNEW) {
-			uint8_t y = random8(2);
-			noise3d[x][y] = qadd8(noise3d[x][y], random8(160, 255));
-		}
+    // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
+      if (random8() < SPARKINGNEW)
+      {
+        uint8_t y = random8(2);
+        noise3d[x][y] = qadd8(noise3d[x][y], random8(160, 255));
+      }
 
-		// Step 4.  Map from heat cells to LED colors
-		for (uint8_t j = 0; j < LED_HEIGHT; j++) {
-			// Scale the heat value from 0-255 down to 0-240
-			// for best results with color palettes.
-			byte colorindex = scale8(noise3d[x][j], 240);
-			//if (scale == 100)
-			//	leds[XY(x, (HEIGHT - 1) - j)] = ColorFromPalette(WaterfallColors_p, colorindex);
-			//else
+    // Step 4.  Map from heat cells to LED colors
+      for (uint8_t j = 0; j < LED_HEIGHT; j++)
+      {
+        // Scale the heat value from 0-255 down to 0-240
+        // for best results with color palettes.
+        byte colorindex = scale8(noise3d[x][j], 240);
+        // if (scale == 100)
+        //	leds[XY(x, (HEIGHT - 1) - j)] = ColorFromPalette(WaterfallColors_p, colorindex);
+        // else
 				leds[XY(x, (LED_HEIGHT - 1) - j)] = ColorFromPalette(CRGBPalette16( CRGB::Black, CHSV(scale * 2.57, 255U, 255U) , CHSV(scale * 2.57, 128U, 255U) , CRGB::White), colorindex);// 2.57 вместо 2.55, потому что 100 для белого цвета
-		}
-	}
+      }
+    }
 }
 
 // =====================================
@@ -1020,7 +1028,8 @@ void FieryLedLampEffectDropInWater::updateInner()
   	if (scale == 100) {
     	hue++;
   	}
-  	blur2d(leds, LED_WIDTH, LED_HEIGHT, 64);
+    XYMap map(LED_WIDTH, LED_HEIGHT);
+  	blur2d(leds, LED_WIDTH, LED_HEIGHT, 64, map);
 }
 
 // ============= ЭФФЕКТ ВОЛНЫ ===============
@@ -1031,7 +1040,7 @@ void FieryLedLampEffectDropInWater::updateInner()
 
 void FieryLedLampEffectWave::setup()
 {
-	setCurrentPalette();//а вот тут явно накосячено. палитры наложены на угол поворота несинхронно, но исправлять особого смысла нет
+  setCurrentPalette();//а вот тут явно накосячено. палитры наложены на угол поворота несинхронно, но исправлять особого смысла нет
 
     //waveRotation = (scale % 11U) % 4U;
     waveRotation = scale % 4;

@@ -474,11 +474,12 @@ void FieryLedLampEffectFireFly::updateInner()
     blurScreen(20); // без размытия как-то пиксельно, по-моему...
     //dimAll(160); // < -- затухание эффекта для последующего кадров
     dimAll(255U - scale * 2);
+
     for (uint8_t i = 1; i < LED_WIDTH; i += 3) {
         leds[XY( i, CENTER_Y_MINOR)] += CHSV(i * 2 , 255, 255);
     }
+	#if 0
     // Noise
-#if 0
     noise32_x[0] += 3000;
     noise32_y[0] += 3000;
     noise32_z[0] += 3000;
@@ -558,3 +559,434 @@ void FieryLedLampEffectFireSparks::updateInner()
         }
     }
 };
+
+void FieryLedLampEffectPlasma::setup()
+{
+};
+void FieryLedLampEffectPlasma::updateInner()
+{
+	fillNoiseLED(&PartyColors_p);
+};
+
+// ============= Эффект Плазменная лампа ===============
+// эффект Паук (c) stepko
+// плюс выбор палитры и багфикс (c) SottNick
+
+float fmap(const float x, const float in_min, const float in_max, const float out_min, const float out_max);
+
+void FieryLedLampEffectSpider::setup()
+{
+	setCurrentPalette();
+	pcnt = (scale - 1U) % 11U + 1U; // количество линий от 1 до 11 для каждой из 9 палитр
+	speedfactor = fmap(speed, 1, 255, 20., 2.); 
+};
+void FieryLedLampEffectSpider::updateInner()
+{
+	//if (hue2++ & 0x01 && deltaHue++ & 0x01 && deltaHue2++ & 0x01)
+	//	hue++; // хз. как с 60ю кадрами в секунду скорость замедлять...
+	dimAll(205);
+	float time_shift = millis() & 0x7FFFFF; // overflow protection proper by SottNick
+	time_shift /= speedfactor;
+	for (uint8_t c = 0; c < pcnt; c++)
+	{
+		float xx = 2. + sin8(time_shift + 6000 * c) / 12.;
+		float yy = 2. + cos8(time_shift + 9000 * c) / 12.;
+		if(xx < 0.f)
+			DBG_PRINT("%f %f\n", xx, time_shift);
+		DrawLineF(xx, yy, (float)LED_WIDTH - xx - 1, (float)LED_HEIGHT - yy - 1, ColorFromPalette(*curPalette, hue + c * (255 / pcnt)));
+	}
+}
+
+// ============ Plasma Waves ============
+//              © Stepko
+//        Adaptation © alvikskor
+//             Плазменные Волны
+// --------------------------------------
+
+void FieryLedLampEffectPlasmaWaves::setup()
+{
+    hue = scale / 10;
+	frameCount = 0;
+};
+
+extern uint8_t exp_gamma[];
+void FieryLedLampEffectPlasmaWaves::updateInner()
+{
+	#if 1
+	FPSdelay = 1; // 64 - modes[currentMode].Speed / 4;
+
+	frameCount++;
+	uint8_t t1 = cos8((42 * frameCount) / (132 - speed / 2));
+	uint8_t t2 = cos8((35 * frameCount) / (132 - speed / 2));
+	uint8_t t3 = cos8((38 * frameCount) / (132 - speed / 2));
+
+	for (uint16_t y = 0; y < LED_HEIGHT; y++)
+	{
+		for (uint16_t x = 0; x < LED_WIDTH; x++)
+		{
+			// Calculate 3 seperate plasma waves, one for each color channel
+			uint8_t r = cos8((x << 3) + (t1 >> 1) + cos8(t2 + (y << 3) + scale));
+			uint8_t g = cos8((y << 3) + t1 + cos8((t3 >> 2) + (x << 3)) + scale);
+			uint8_t b = cos8((y << 3) + t2 + cos8(t1 + x + (g >> 2) + scale));
+
+			// uncomment the following to enable gamma correction
+			// r = pgm_read_byte_near(exp_gamma + r);
+			switch (hue)
+			{
+			case 0:
+				r = pgm_read_byte(&exp_gamma[r]);
+				g = pgm_read_byte(&exp_gamma[g]);
+				b = pgm_read_byte(&exp_gamma[b]);
+				break;
+			case 1:
+				r = pgm_read_byte(&exp_gamma[r]);
+				b = pgm_read_byte(&exp_gamma[g]);
+				g = pgm_read_byte(&exp_gamma[b]);
+				break;
+			case 2:
+				g = pgm_read_byte(&exp_gamma[r]);
+				r = pgm_read_byte(&exp_gamma[g]);
+				b = pgm_read_byte(&exp_gamma[b]);
+				break;
+			case 3:
+				r = pgm_read_byte(&exp_gamma[r]) / 2;
+				g = pgm_read_byte(&exp_gamma[g]);
+				b = pgm_read_byte(&exp_gamma[b]);
+				break;
+			case 4:
+				r = pgm_read_byte(&exp_gamma[r]);
+				g = pgm_read_byte(&exp_gamma[g]) / 2;
+				b = pgm_read_byte(&exp_gamma[b]);
+				break;
+			case 5:
+				r = pgm_read_byte(&exp_gamma[r]);
+				g = pgm_read_byte(&exp_gamma[g]);
+				b = pgm_read_byte(&exp_gamma[b]) / 2;
+				break;
+			case 6:
+				r = pgm_read_byte(&exp_gamma[r]) * 3;
+				g = pgm_read_byte(&exp_gamma[g]);
+				b = pgm_read_byte(&exp_gamma[b]);
+				break;
+			case 7:
+				r = pgm_read_byte(&exp_gamma[r]);
+				g = pgm_read_byte(&exp_gamma[g]) * 3;
+				b = pgm_read_byte(&exp_gamma[b]);
+				break;
+			case 8:
+				r = pgm_read_byte(&exp_gamma[r]);
+				g = pgm_read_byte(&exp_gamma[g]);
+				b = pgm_read_byte(&exp_gamma[b]) * 3;
+				break;
+			}
+			// g = pgm_read_byte_near(exp_gamma + g);
+			// b = pgm_read_byte_near(exp_gamma + b);
+
+			leds[XY(x, y)] = CRGB(r, g, b);
+		}
+		// hue++;
+  }
+  // blurScreen(beatsin8(3, 64, 80));
+  #endif
+}
+
+// ============= Эффект Пламя ===============
+// (c) SottNick
+// По мотивам https://goldenandy.blogspot.com/2021/05/ws2812.html
+// by Андрей Локтев
+
+// характеристики языков пламени
+//  x, dx; => trackingObjectPosX, trackingObjectSpeedX;
+//  y, dy; => trackingObjectPosY, trackingObjectSpeedY;
+//  ttl; => trackingObjectState;
+//  uint8_t hue; => float   trackingObjectShift
+//  uint8_t saturation; => 255U
+//  uint8_t value; => trackingObjectHue;
+
+// характеристики изображения CHSV picture[WIDTH][HEIGHT]
+//  uint8_t .hue; => noise3d[0][WIDTH][HEIGHT]
+//  uint8_t .sat; => shiftValue[HEIGHT] (не хватило двухмерного массива на насыщенность)
+//  uint8_t .val; => noise3d[1][WIDTH][HEIGHT]
+
+#define FLAME_MAX_DY        256 // максимальная вертикальная скорость перемещения языков пламени за кадр.  имеется в виду 256/256 =   1 пиксель за кадр
+#define FLAME_MIN_DY        128 // минимальная вертикальная скорость перемещения языков пламени за кадр.   имеется в виду 128/256 = 0.5 пикселя за кадр
+#define FLAME_MAX_DX         32 // максимальная горизонтальная скорость перемещения языков пламени за кадр. имеется в виду 32/256 = 0.125 пикселя за кадр
+#define FLAME_MIN_DX       (-FLAME_MAX_DX)
+#define FLAME_MAX_VALUE     255 // максимальная начальная яркость языка пламени
+#define FLAME_MIN_VALUE     176 // минимальная начальная яркость языка пламени
+
+//пришлось изобрести очередную функцию субпиксельной графики. на этот раз бесшовная по ИКСу, работающая в цветовом пространстве HSV и без смешивания цветов
+void FieryLedLampEffectFlame::wu_pixel_maxV(uint8_t item)
+{
+	// uint8_t xx = trackingObjectPosX[item] & 0xff, yy = trackingObjectPosY[item] & 0xff, ix = 255 - xx, iy = 255 - yy;
+	uint8_t xx = (trackingObjectPosX[item] - (int)trackingObjectPosX[item]) * 255, yy = (trackingObjectPosY[item] - (int)trackingObjectPosY[item]) * 255, ix = 255 - xx, iy = 255 - yy;
+	// calculate the intensities for each affected pixel
+#define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
+	uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
+					 WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
+	// multiply the intensities by the colour, and saturating-add them to the pixels
+	for (uint8_t i = 0; i < 4; i++)
+	{
+		uint8_t x1 = (int8_t)(trackingObjectPosX[item] + (i & 1)) % LED_WIDTH; // делаем бесшовный по ИКСу
+		uint8_t y1 = (int8_t)(trackingObjectPosY[item] + ((i >> 1) & 1));
+		if (y1 < LED_HEIGHT && trackingObjectHue[item] * wu[i] >> 8 >= noise3d[1][x1][y1])
+		{
+			noise3d[0][x1][y1] = trackingObjectShift[item];
+			shiftValue[y1] = 255U; // saturation;
+			noise3d[1][x1][y1] = trackingObjectHue[item] * wu[i] >> 8;
+		}
+  }
+}
+
+uint8_t myScale8(uint8_t x);
+
+void FieryLedLampEffectFlame::setup()
+{
+    enlargedObjectNUM = (speed - 1U) / 254.0 * (trackingOBJECT_MAX_COUNT - 1U) + 1U;
+    if (enlargedObjectNUM > enlargedOBJECT_MAX_COUNT)
+		enlargedObjectNUM = enlargedOBJECT_MAX_COUNT;
+	uint8_t ff_x = LED_WIDTH * 2.4;
+	enlargedObjectNUM = (ff_x > enlargedOBJECT_MAX_COUNT) ? enlargedOBJECT_MAX_COUNT : ff_x;
+    
+
+    hue = map8(myScale8(scale + 3U), 3, 10); // минимальная живучесть/высота языка пламени ...ttl
+    hue2 = map8(myScale8(scale + 3U), 6, 31); // максимальная живучесть/высота языка пламени ...ttl
+	for (uint8_t i = 0; i < trackingOBJECT_MAX_COUNT; i++) // чистим массив объектов от того, что не похоже на языки пламени
+		if (trackingObjectState[i] > 30U || trackingObjectPosY[i] >= LED_HEIGHT || trackingObjectPosX[i] >= LED_WIDTH || trackingObjectPosY[i] <= 0)
+		{
+			trackingObjectHue[i] = 0U;
+			trackingObjectState[i] = random8(20);
+		}
+	for (uint8_t i = 0; i < LED_WIDTH; i++) // заполняем массив изображения из массива leds обратным преобразованием, которое нихрена не работает
+		for (uint8_t j = 0; j < LED_HEIGHT; j++)
+		{
+			CHSV tHSV = rgb2hsv_approximate(leds[XY(i, j)]);
+			noise3d[0][i][j] = tHSV.hue;
+			if (tHSV.val > 100U)
+			{ // такая защита от пересвета более-менее достаточна
+				shiftValue[j] = tHSV.sat;
+				if (tHSV.sat < 100U) // для перехода с очень тусклых эффектов, использующих заливку белым или почти белым светом
+					noise3d[1][i][j] = tHSV.val / 3U;
+				else
+					noise3d[1][i][j] = tHSV.val - 32U;
+			}
+			else
+				noise3d[1][i][j] = 0U;
+
+			// CRGB tRGB = leds[XY(i,j)];
+			// if (tRGB.r + tRGB.g + tRGB.b < 100U) // не пригодилось
+			//   noise3d[1][i][j] = 0U;
+		}
+};
+void FieryLedLampEffectFlame::updateInner()
+{
+	int16_t i, j;
+
+	// угасание предыдущего кадра
+	for (i = 0; i < LED_WIDTH; i++)
+		for (j = 0; j < LED_HEIGHT; j++)
+			noise3d[1][i][j] = (uint16_t)noise3d[1][i][j] * 237U >> 8;
+
+	// цикл перебора языков пламени
+	for (i = 0; i < enlargedObjectNUM; i++)
+	{
+		if (trackingObjectState[i])
+		{ // если ещё не закончилась его жизнь
+			wu_pixel_maxV(i);
+
+			j = trackingObjectState[i];
+			trackingObjectState[i]--;
+
+			trackingObjectPosX[i] += trackingObjectSpeedX[i];
+			trackingObjectPosY[i] += trackingObjectSpeedY[i];
+
+			trackingObjectHue[i] = (trackingObjectState[i] * trackingObjectHue[i] + j / 2) / j;
+
+			// если вышел за верхнюю границу или потух, то и жизнь закончилась
+			if (trackingObjectPosY[i] >= LED_HEIGHT || trackingObjectHue[i] < 2U)
+				trackingObjectState[i] = 0;
+
+			// если вылез за край матрицы по горизонтали, перекинем на другую сторону
+			if (trackingObjectPosX[i] < 0)
+				trackingObjectPosX[i] += LED_WIDTH;
+			else if (trackingObjectPosX[i] >= LED_WIDTH)
+				trackingObjectPosX[i] -= LED_WIDTH;
+		}
+		else
+		{ // если жизнь закончилась, перезапускаем
+			trackingObjectState[i] = random8(hue, hue2);
+			trackingObjectShift[i] = (uint8_t)(254U + scale + random8(20U)); // 254 - это шаг в обратную сторону от выбранного пользователем оттенка (стартовый оттенок диапазона)
+			// 20 - это диапазон из градиента цвета от выбранного пользователем оттенка (диапазон от 254 до 254+20)
+			trackingObjectPosX[i] = (float)random(LED_WIDTH * 255U) / 255.;
+			trackingObjectPosY[i] = -.9;
+			trackingObjectSpeedX[i] = (float)(FLAME_MIN_DX + random8(FLAME_MAX_DX - FLAME_MIN_DX)) / 256.;
+			trackingObjectSpeedY[i] = (float)(FLAME_MIN_DY + random8(FLAME_MAX_DY - FLAME_MIN_DY)) / 256.;
+			trackingObjectHue[i] = FLAME_MIN_VALUE + random8(FLAME_MAX_VALUE - FLAME_MIN_VALUE + 1U);
+			// saturation = 255U;
+		}
+	}
+
+	// выводим кадр на матрицу
+	for (i = 0; i < LED_WIDTH; i++)
+		for (j = 0; j < LED_HEIGHT; j++)
+			// hsv2rgb_spectrum(CHSV(noise3d[0][i][j], shiftValue[j], noise3d[1][i][j] * 1.033), leds[XY(i,j)]); // 1.033 - это коэффициент нормализации яркости (чтобы чутка увеличить яркость эффекта в целом)
+			hsv2rgb_spectrum(CHSV(noise3d[0][i][j], shiftValue[j], noise3d[1][i][j]), leds[XY(i, j)]);
+}
+
+// =========== FeatherCandle ============
+//         адаптация © SottNick
+//    github.com/mnemocron/FeatherCandle
+//      modify & design © SlingMaster
+//           EFF_FEATHER_CANDLE
+//                Свеча
+//---------------------------------------
+#include "data7x15flip.h"                       // FeatherCandle animation data
+const uint8_t  w    = 7;                        // image width
+const uint8_t  h    = 15;                       // image height
+uint8_t        img[w * h];                      // Buffer for rendering image
+uint8_t        deltaX = CENTER_X_MAJOR - 3;     // position img
+uint8_t last_brightness;
+
+void FieryLedLampEffectFeatherCandle::setup()
+{
+    hue = 0;
+    trackingObjectState[0] = 110;
+    trackingObjectState[1] = 110;
+    trackingObjectState[2] = 110;
+    trackingObjectState[4] = CENTER_X_MAJOR;
+};
+void FieryLedLampEffectFeatherCandle::updateInner()
+{
+	const uint8_t  level = 160;
+	const uint8_t  low_level = 110;
+	const uint8_t *ptr  = anim;                     // Current pointer into animation data
+
+	uint8_t a = pgm_read_byte(ptr++); // New frame X1/Y1
+	if (a >= 0x90)
+	{							  // EOD marker? (valid X1 never exceeds 8)
+		ptr = anim;				  // Reset animation data pointer to start
+		a = pgm_read_byte(ptr++); // and take first value
+	}
+	uint8_t x1 = a >> 4;	  // X1 = high 4 bits
+	uint8_t y1 = a & 0x0F;	  // Y1 = low 4 bits
+	a = pgm_read_byte(ptr++); // New frame X2/Y2
+	uint8_t x2 = a >> 4;	  // X2 = high 4 bits
+	uint8_t y2 = a & 0x0F;	  // Y2 = low 4 bits
+
+	// Read rectangle of data from anim[] into portion of img[] buffer
+	for (uint8_t y = y1; y <= y2; y++)
+	{
+		for (uint8_t x = x1; x <= x2; x++)
+		{
+			img[y * w + x] = pgm_read_byte(ptr++);
+		}
+	}
+	int i = 0;
+	uint8_t color = scale;
+
+	// draw flame -------------------
+	for (uint8_t y = 1; y < h; y++)
+	{
+		if ((LED_HEIGHT < 15) || (LED_WIDTH < 9))
+		{
+			// for small matrix -----
+			if (y % 2 == 0)
+			{
+				leds[XY(CENTER_X_MAJOR - 1, 7)] = CHSV(color, 255U, 55 + random8(200));
+				leds[XY(CENTER_X_MAJOR, 6)] = CHSV(color, 255U, 160 + random8(90));
+				leds[XY(CENTER_X_MAJOR + 1, 6)] = CHSV(color, 255U, 205 + random8(50));
+				leds[XY(CENTER_X_MAJOR - 1, 5)] = CHSV(color, 255U, 155 + random8(100));
+				leds[XY(CENTER_X_MAJOR, 5)] = CHSV(color - 10U, 255U, 120 + random8(130));
+				leds[XY(CENTER_X_MAJOR, 4)] = CHSV(color - 10U, 255U, 100 + random8(120));
+				DrawLine(0, 2U, LED_WIDTH - 1, 2U, 0x000000);
+			}
+		}
+		else
+		{
+			for (uint8_t x = 0; x < w; x++)
+			{
+				uint8_t brightness = img[i];
+				leds[XY(deltaX + x, y)] = CHSV(brightness > 240 ? color : color - 10U, 255U, brightness);
+				i++;
+			}
+		}
+
+		// draw body FeatherCandle ------
+		if (y <= 3)
+		{
+			if (y % 2 == 0)
+			{
+				gradientVertical(0, 0, LED_WIDTH, 2, color, color, 48, 128, 20U);
+			}
+		}
+
+		// drops of wax move -------------
+		switch (hue)
+		{
+		case 0:
+			if (trackingObjectState[0] < level)
+			{
+				trackingObjectState[0]++;
+			}
+			break;
+		case 1:
+			if (trackingObjectState[0] > low_level)
+			{
+				trackingObjectState[0]--;
+			}
+			if (trackingObjectState[1] < level)
+			{
+				trackingObjectState[1]++;
+			}
+			break;
+		case 2:
+			if (trackingObjectState[1] > low_level)
+			{
+				trackingObjectState[1]--;
+			}
+			if (trackingObjectState[2] < level)
+			{
+				trackingObjectState[2]++;
+			}
+			break;
+		case 3:
+			if (trackingObjectState[2] > low_level)
+			{
+				trackingObjectState[2]--;
+			}
+			else
+			{
+				hue++;
+				// set random position drop of wax
+				trackingObjectState[4] = CENTER_X_MAJOR - 3 + random8(6);
+			}
+			break;
+		}
+
+		if (hue > 3)
+		{
+			hue++;
+		}
+		else
+		{
+			if (hue < 2)
+			{
+				leds[XY(trackingObjectState[4], 2)] = CHSV(50U, 20U, trackingObjectState[0]);
+			}
+			if ((hue == 1) || (hue == 2))
+			{
+				leds[XY(trackingObjectState[4], 1)] = CHSV(50U, 15U, trackingObjectState[1]); // - 10;
+			}
+			if (hue > 1)
+			{
+				leds[XY(trackingObjectState[4], 0)] = CHSV(50U, 5U, trackingObjectState[2]); // - 20;
+			}
+		}
+	}
+
+	// next -----------------
+	if ((trackingObjectState[0] == level) || (trackingObjectState[1] == level) || (trackingObjectState[2] == level))
+	{
+		hue++;
+	}
+}

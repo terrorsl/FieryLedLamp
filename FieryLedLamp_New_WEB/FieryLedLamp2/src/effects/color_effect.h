@@ -25,4 +25,48 @@ private:
 
 	uint8_t step, deltaValue, deltaHue;
 };
+
+class FieryLedLampEffectPaintball: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectPaintball():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+};
+
+class FieryLedLampEffectNightCity: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectNightCity():FieryLedLampEffect(HIGH_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t step;
+};
+
+class FieryLedLampEffectPicasso: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectPicasso():FieryLedLampEffect(DYNAMIC_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	void PicassoPosition();
+	void PicassoGenerate(bool reset);
+	void PicassoRoutine();
+	void PicassoRoutine2();
+	void PicassoRoutine3();
+
+	uint8_t enlargedObjectNUM;
+};
+
+class FieryLedLampEffectColor: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectColor():FieryLedLampEffect(LOW_DELAY){};
+	void setup();
+	void updateInner();
+private:
+};
 #endif

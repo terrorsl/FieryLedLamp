@@ -86,7 +86,9 @@ uint16_t XY(uint8_t x, uint8_t y)
 // стандартные функции библиотеки LEDraw от @Palpalych (для адаптаций его эффектов)
 void blurScreen(fract8 blur_amount, CRGB *LEDarray)
 {
-	blur2d(LEDarray, LED_WIDTH, LED_HEIGHT, blur_amount);
+	//XYMap map(LED_WIDTH, LED_HEIGHT);
+	//blur2d(LEDarray, LED_WIDTH, LED_HEIGHT, blur_amount, map);
+	blur1d(LEDarray, LED_WIDTH * LED_HEIGHT, blur_amount);
 }
 void dimAll(uint8_t value, CRGB *LEDarray)
 {
@@ -96,7 +98,8 @@ void dimAll(uint8_t value, CRGB *LEDarray)
 
 void FieryLedLampEffect::clear()
 {
-	FastLED.clear();
+	FastLED.clear(true);
+	//FastLED.clear();
 };
 void FieryLedLampEffect::DrawLine(int x1, int y1, int x2, int y2, CRGB color)
 {
@@ -182,7 +185,10 @@ CRGB FieryLedLampEffect::getPixelColorXY(uint8_t x, uint8_t y)
 void FieryLedLampEffect::drawPixelXY(int8_t x, int8_t y, CRGB color)
 {
 	if (x < 0 || x > (LED_WIDTH - 1) || y < 0 || y > (LED_HEIGHT - 1))
+	{
+		DBG_PRINT("error x: %d y: %d\n", x, y);
 		return;
+	}
 	uint32_t thisPixel = XY((uint8_t)x, (uint8_t)y) * SEGMENTS;
 	for (uint8_t i = 0; i < SEGMENTS; i++)
 	{
@@ -209,40 +215,42 @@ void FieryLedLampEffect::drawPixelXYF(float x, float y, CRGB color)
 }
 void FieryLedLampEffect::FillNoise(uint8_t **noise3d, uint32_t noise32_x, uint32_t noise32_y, uint32_t noise32_z, uint32_t scale32_x, uint32_t scale32_y, uint8_t noisesmooth)
 {
-	for (uint8_t i = 0; i < LED_WIDTH; i++) {
-    	int32_t ioffset = scale32_x * (i - CENTER_X_MINOR);
-		for (uint8_t j = 0; j < LED_HEIGHT; j++) {
+	for (uint8_t i = 0; i < LED_WIDTH; i++)
+	{
+		int32_t ioffset = scale32_x * (i - CENTER_X_MINOR);
+		for (uint8_t j = 0; j < LED_HEIGHT; j++)
+		{
 			int32_t joffset = scale32_y * (j - CENTER_Y_MINOR);
 			int8_t data = inoise16(noise32_x + ioffset, noise32_y + joffset, noise32_z) >> 8;
 			int8_t olddata = noise3d[i][j];
-			int8_t newdata = scale8( olddata, noisesmooth ) + scale8( data, 255 - noisesmooth );
+			int8_t newdata = scale8(olddata, noisesmooth) + scale8(data, 255 - noisesmooth);
 			data = newdata;
 			noise3d[i][j] = data;
 		}
-  	}
+	}
 }
 
 void FieryLedLampEffect::update()
 {
 //#define MICRO_DELAY_TICK      if (millis() - effTimer >= 2)
 //#define SOFT_DELAY_TICK       if (millis() - effTimer >= FPSdelay)
-
-	switch(delat_type)
+	unsigned long delta = millis() - effectTimer;
+	switch(delay_type)
 	{
 	case HIGH_DELAY:
-		if(millis() - effectTimer < 50)
+		if(delta < 50)
 			return;
 		break;
 	case LOW_DELAY:
-		if(millis() - effectTimer < 15)
+		if(delta < 15)
 			return;
 		break;
 	case DYNAMIC_DELAY:
-		if(millis() - effectTimer < (unsigned long)(256-speed))
+		if(delta < (unsigned long)(256-speed))
 			return;
 		break;
 	case SOFT_DELAY:
-		if(millis()-effectTimer<FPSdelay)
+		if(delta<FPSdelay)
 			return;
 	}
 	//DBG_PRINT("update");
@@ -361,14 +369,14 @@ void FieryLedLampEffectFlowerRuta::setup()
 	if(scale>100)
 		scale=100;
     PETALS = map(scale, 1, 100, 2U, 5U);
-    FastLED.clear();
     for (int8_t x = -CENTER_X_MAJOR; x < CENTER_X_MAJOR; x++)
 	{
-		for (int8_t y = -CENTER_Y_MAJOR; y < CENTER_Y_MAJOR; y++) {
-        	noise3d[0][x + CENTER_X_MAJOR][y + CENTER_Y_MAJOR] = (atan2(x, y) / PI) * 128 + 127; // thanks ldirko
+		for (int8_t y = -CENTER_Y_MAJOR; y < CENTER_Y_MAJOR; y++)
+		{
+			noise3d[0][x + CENTER_X_MAJOR][y + CENTER_Y_MAJOR] = (atan2(x, y) / PI) * 128 + 127; // thanks ldirko
         	noise3d[1][x + CENTER_X_MAJOR][y + CENTER_Y_MAJOR] = hypot(x, y);                    // thanks Sutaburosu
-      	}
-    }
+		}
+	}
 	t=0;
 };
 void FieryLedLampEffectFlowerRuta::updateInner()
@@ -413,16 +421,16 @@ void FieryLedLampEffectBamboo::setup()
 	
     index = STP;
     //uint8_t idx = map(scale, 5, 95, 0U, 6U);
-	uint8_t idx = map(scale, 0, 255, 0U, 6U);
+	uint8_t idx = map(scale, 0, 255, 0, 6);
     colLine = gamma[idx];
-    step = 0U;
+    step = 0;
 }
 void FieryLedLampEffectBamboo::updateInner()
 {
 	const byte posLine = (LED_HEIGHT > 16) ? 4 : 3;
 	for (int y = 0; y < LED_HEIGHT + SY; y++) {
-    	if (scale < 50U) {
-      		if (step % 128 == 0U) {
+    	if (scale < 50) {
+      		if (step % 128 == 0) {
         		deltaX += STP * ((direct) ? -1 : 1);
         		if ((deltaX > 1) | (deltaX < -1)) direct = !direct;
       		}
@@ -432,24 +440,24 @@ void FieryLedLampEffectBamboo::updateInner()
     	posY = y;
     	for (int x = 0; x < LED_WIDTH + SX; x++) {
       		if (y == posLine) {
-        		drawPixelXYF(x , y - 1, CHSV(colLine, 255U, 128U));
-        		drawPixelXYF(x, y, CHSV(colLine, 255U, 96U));
+        		drawPixelXYF(x , y - 1, CHSV(colLine, 255, 128));
+        		drawPixelXYF(x, y, CHSV(colLine, 255, 96));
         		if (LED_HEIGHT > 16) {
-          			drawPixelXYF(x, y - 2, CHSV(colLine, 10U, 64U));
+          			drawPixelXYF(x, y - 2, CHSV(colLine, 10, 64));
         		}
       		}
-      		if ((x % SX == 0U) & (y % SY == 0U)) {
+      		if ((x % SX == 0) & (y % SY == 0)) {
         		for (int i = 1; i < (SY - 3); i++) {
           			if (i < 3) {
             			posY = y - i + 1 - DELTA + index;
-            			drawPixelXYF(x - 3 + deltaX, posY, CHSV(nextColor(posY, 96, colLine), 255U, 255 - V_STEP * i));
+            			drawPixelXYF(x - 3 + deltaX, posY, CHSV(nextColor(posY, 96, colLine), 255, 255 - V_STEP * i));
             			posY = y - i + index;
-            			drawPixelXYF(x + deltaX, posY, CHSV(nextColor(posY, 96, colLine), 255U, 255 - VG_STEP * i));
+            			drawPixelXYF(x + deltaX, posY, CHSV(nextColor(posY, 96, colLine), 255, 255 - VG_STEP * i));
           			}
           			posY = y - i - DELTA + index;
-          			drawPixelXYF(x - 4 + deltaX, posY , CHSV(nextColor(posY, 96, colLine), 180U, 255 - V_STEP * i));
+          			drawPixelXYF(x - 4 + deltaX, posY , CHSV(nextColor(posY, 96, colLine), 180, 255 - V_STEP * i));
           			posY = y - i + 1 + index;
-          			drawPixelXYF(x - 1 + deltaX, posY , CHSV(nextColor(posY, ((i == 1) ? 96 : 80), colLine), 255U, 255 - V_STEP * i));
+          			drawPixelXYF(x - 1 + deltaX, posY , CHSV(nextColor(posY, ((i == 1) ? 96 : 80), colLine), 255, 255 - V_STEP * i));
         		}
       		}
     	}
@@ -460,66 +468,6 @@ void FieryLedLampEffectBamboo::updateInner()
   	}
   	fadeToBlackBy(leds, NUM_LEDS, 60);
   	index += STP;
-}
-
-// =====================================
-//          Блуждающий кубик
-// =====================================
-void FieryLedLampEffectBall::setup()
-{
-	for (uint8_t i = 0U; i < 2U; i++)
-	{
-    	coordB[i] = LED_WIDTH / 2 * 10;
-      	vectorB[i] = random(8, 20);
-    }
-    // ballSize;
-    deltaValue = map(scale * 2.55, 0U, 255U, 2U, max((uint8_t)min(LED_WIDTH, LED_HEIGHT) / 3, 4));
-    ballColor = CHSV(random(0, 9) * 28, 255U, 255U);
-    _pulse_color = CHSV(random(0, 9) * 28, 255U, 255U);
-}
-
-void FieryLedLampEffectBall::updateInner()
-{
-#define RANDOM_COLOR          (1U)                          // случайный цвет при отскоке
-	if (scale & 0x01) {
-    	for (uint8_t i = 0U; i < deltaValue; i++)
-		{
-      		for (uint8_t j = 0U; j < deltaValue; j++)
-			{
-				unsigned char led_index = XY(coordB[0U] / 10 + i, coordB[1U] / 10 + j);
-        		leds[led_index] = _pulse_color;
-      		}
-    	}
-  	}
-  	
-	for (uint8_t i = 0U; i < 2U; i++) {
-    	coordB[i] += vectorB[i];
-    	if (coordB[i] < 0) {
-      		coordB[i] = 0;
-      		vectorB[i] = -vectorB[i];
-      		if (RANDOM_COLOR) ballColor = CHSV(random(0, 9) * 28, 255U, 255U); // if (RANDOM_COLOR && (modes[currentMode].Scale & 0x01))
-      		//vectorB[i] += random(0, 6) - 3;
-    	}
-  	}
-  	if (coordB[0U] > (int16_t)((LED_WIDTH - deltaValue) * 10)) {
-    	coordB[0U] = (LED_WIDTH - deltaValue) * 10;
-    	vectorB[0U] = -vectorB[0U];
-    	if (RANDOM_COLOR) ballColor = CHSV(random(0, 9) * 28, 255U, 255U);
-    	//vectorB[0] += random(0, 6) - 3;
-  	}
-  	if (coordB[1U] > (int16_t)((LED_HEIGHT - deltaValue) * 10)) {
-    	coordB[1U] = (LED_HEIGHT - deltaValue) * 10;
-    	vectorB[1U] = -vectorB[1U];
-    	if (RANDOM_COLOR) ballColor = CHSV(random(0, 9) * 28, 255U, 255U);
-    	//vectorB[1] += random(0, 6) - 3;
-  	}
-	FastLED.clear();
-
-  	for (uint8_t i = 0U; i < deltaValue; i++) {
-    	for (uint8_t j = 0U; j < deltaValue; j++) {
-      		leds[XY(coordB[0U] / 10 + i, coordB[1U] / 10 + j)] = ballColor;
-    	}
-  	}
 }
 
 // ============ Magic Lantern ===========
@@ -533,17 +481,19 @@ void FieryLedLampEffectMagicLantern::setup()
 {
 	deltaValue = 0;
     step = deltaValue;
-    if (speed > 52) {
-    	// brightness = 50 + modes[currentMode].Speed;
-      	brightness = map(speed, 1, 255, 50U, 250U);
-      	low_br = 50U;
-    } else {
-      	brightness = 0U;
-    	low_br = 0U;
-    }
-    saturation = (scale > 50U) ? 64U : 0U;
-    if (abs (70 - scale) <= 5) saturation = 170U;
-    FastLED.clear();
+    if (speed > 52)
+	{
+		brightness = map(speed, 0, 255, 50, 250);
+      	low_br = 50;
+	}
+	else
+	{
+		brightness = 0;
+    	low_br = 0;
+	}
+	saturation = (scale > 50) ? 64 : 0;
+    if (abs (70 - scale) <= 5)
+		saturation = 170;
 }
 
 uint8_t validMinMax(float val, uint8_t minV, uint32_t maxV)
@@ -641,7 +591,7 @@ void FieryLedLampEffectMagicLantern::updateInner()
 //--------------------------------------
 void FieryLedLampEffectWine::setup()
 {
-    fillAll(CHSV(55U, 255U, 65U));
+    fillAll(CHSV(55, 255, 65));
     // minspeed 230 maxspeed 250 ============
     // minscale  40 maxscale  75 ============
     // красное вино hue > 0 & <=10
@@ -649,8 +599,7 @@ void FieryLedLampEffectWine::setup()
     // белое вино   hue > 20U & <= 40
     // шампанское   hue > 40U & <= 60
 
-    deltaHue2 = 0U;                         // count для замедления смены цвета
-    step = 255U - speed + 1U;                      // чтообы при старте эффекта сразу покрасить лампу
+    deltaHue2 = 0;                         // count для замедления смены цвета
     deltaHue = 1U;                          // direction | 0 hue-- | 1 hue++ |
     hue = 55U;                              // Start Color
     hue2 = 65U;                             // Brightness
@@ -712,22 +661,18 @@ void FieryLedLampEffectWine::updateInner()
   	if (hue == 60U) {
     	deltaHue = 0U;
   	}
-  	step++;
 }
 
 void FieryLedLampEffectMadnessNoise::setup()
 {
-	//scale = modes[currentMode].Scale;
-	//speed = modes[currentMode].Speed;
 }
 
-#define MAX_DIMENSION (max(LED_WIDTH, LED_HEIGHT))
 void FieryLedLampEffectMadnessNoise::fillnoise8()
 {
-	for (uint8_t i = 0; i < MAX_DIMENSION; i++)
+	for (uint8_t i = 0; i < LED_WIDTH; i++)
   	{
     	int32_t ioffset = scale * i;
-    	for (uint8_t j = 0; j < MAX_DIMENSION; j++)
+    	for (uint8_t j = 0; j < LED_HEIGHT; j++)
     	{
       		int32_t joffset = scale * j;
       		noise[i][j] = inoise8(x + ioffset, y + joffset, z);
@@ -743,67 +688,10 @@ void FieryLedLampEffectMadnessNoise::updateInner()
   	{
     	for (uint8_t j = 0; j < LED_HEIGHT; j++)
     	{
-      		CRGB thisColor = CHSV(noise[j][i], 255, noise[i][j]);
-      		drawPixelXY(i, j, thisColor);                         //leds[XY(i, j)] = CHSV(noise[j][i], 255, noise[i][j]);
+			CRGB thisColor = CHSV(noise[j][i], 255, noise[i][j]);
+      		drawPixelXY(i, j, thisColor);
     	}
   	}
-  	//ihue += 1;
-}
-
-// ============= ЭФФЕКТ ВИХРИ ===============
-// https://github.com/pixelmatix/aurora/blob/master/PatternFlowField.h
-// Адаптация (c) SottNick
-// используются переменные эффекта Стая. Без него работать не будет.
-
-static const uint8_t ff_speed = 1; // чем выше этот параметр, тем короче переходы (градиенты) между цветами. 1 - это самое красивое
-static const uint8_t ff_scale = 26; // чем больше этот параметр, тем больше "языков пламени" или как-то так. 26 - это норм
-
-void FieryLedLampEffectWhirl::setup()
-{
-	setCurrentPalette();
-
-    ff_x = random16();
-    ff_y = random16();
-    ff_z = random16();
-
-    for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++) {
-    	boids[i] = Boid(random8(LED_WIDTH), 0);
-    }
-}
-void FieryLedLampEffectWhirl::updateInner()
-{
-	dimAll(240);
-
-  	for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++) {
-    	Boid * boid = &boids[i];
-
-    	int ioffset = ff_scale * boid->location.x;
-    	int joffset = ff_scale * boid->location.y;
-
-    	byte angle = inoise8(ff_x + ioffset, ff_y + joffset, ff_z);
-
-    	boid->velocity.x = (float) sin8(angle) * 0.0078125 - 1.0;
-    	boid->velocity.y = -((float)cos8(angle) * 0.0078125 - 1.0);
-    	boid->update();
-
-    	if (oneColor)	
-      		drawPixelXYF(boid->location.x, boid->location.y, CHSV(scale * 2.55, (scale == 100) ? 0U : 255U, 255U)); // цвет белый для .Scale=100
-    	else
-      		drawPixelXYF(boid->location.x, boid->location.y, ColorFromPalette(*curPalette, angle + hue)); // + hue постепенно сдвигает палитру по кругу
-
-    	if (boid->location.x < 0 || boid->location.x >= LED_WIDTH || boid->location.y < 0 || boid->location.y >= LED_HEIGHT) {
-      		boid->location.x = random(LED_WIDTH);
-      		boid->location.y = 0;
-    	}
-  	}
-
-  	EVERY_N_MILLIS(200) {
-    	hue++;
-  	}
-
-  	ff_x += ff_speed;
-  	ff_y += ff_speed;
-  	ff_z += ff_speed;
 }
 
 uint8_t wrapX(int8_t x) {
@@ -921,12 +809,12 @@ void wu_pixel(uint32_t x, uint32_t y, CRGB * col) {      //awesome wu_pixel proc
 
 void FieryLedLampEffectDNA::setup()
 {
-    step = map8(speed, 10U, 60U);
+    step = map8(speed, 10, 60);
     hue = scale;
-    deltaHue = hue > 50U;
+    deltaHue = hue > 50;
     if (deltaHue)
-	    hue = 101U - hue;
-    hue = 255U - map( 51U - hue, 1U, 50U, 0, 255U);
+	    hue = 101 - hue;
+    hue = 255 - map( 51 - hue, 1, 50, 0, 255);
 }
 
 void FieryLedLampEffectDNA::updateInner()
@@ -938,6 +826,7 @@ void FieryLedLampEffectDNA::updateInner()
   	uint16_t ms = millis();
 
   	if (deltaHue)
+	{
     	for (uint8_t i = 0; i < LED_WIDTH; i++)
     	{
       		uint32_t x = beatsin16(step, 0, (LED_HEIGHT - 1) * 256, 0, i * freq);
@@ -949,7 +838,9 @@ void FieryLedLampEffectDNA::updateInner()
       		wu_pixel (y , x, &col);
       		wu_pixel (y , x1, &col1);
     	}
+	}
   	else
+	{
     	for (uint8_t i = 0; i < LED_HEIGHT; i++)
     	{
       		uint32_t x = beatsin16(step, 0, (LED_WIDTH - 1) * 256, 0, i * freq);
@@ -961,7 +852,7 @@ void FieryLedLampEffectDNA::updateInner()
       		wu_pixel (x , y, &col);
       		wu_pixel (x1 , y, &col1);
 	    }
-
+	}
   	blurScreen(16);
 }
 
@@ -1023,7 +914,7 @@ FieryLedLampEffectSmoke::~FieryLedLampEffectSmoke()
 }
 void FieryLedLampEffectSmoke::setup()
 {
-	hue2 = 0U;
+	hue2 = 0;
 	deltaHue = 0;
 	deltaHue2 = 0;
 	noise32_x=noise32_y=noise32_z=0;
@@ -1042,26 +933,29 @@ void FieryLedLampEffectSmoke::updateInner()
   	{
     	if (hue2 == scale)
     	{
-      		hue2 = 0U;
+      		hue2 = 0;
       		hue = random8();
     	}
-		if(deltaHue & 0x01){ // какой-то умножитель охота подключить к задержке смены цвета, но хз какой...
-      		hue2++;
+		if (deltaHue & 0x01)
+		{ // какой-то умножитель охота подключить к задержке смены цвета, но хз какой...
+			hue2++;
 		}
 		hsv2rgb_spectrum(CHSV(hue, 255U, 127U), color);
   	}
-  	else {
-    	hsv2rgb_spectrum(CHSV((scale - 1U) * 2.6, (scale > 98U) ? 0U : 255U, 127U), color);
-  	}
+	else
+	{
+		hsv2rgb_spectrum(CHSV((scale - 1U) * 2.6, (scale > 98U) ? 0U : 255U, 127U), color);
+	}
 
-	if (random8(LED_WIDTH) != 0U) // встречная спираль движется не всегда синхронно основной
+	if (random8(LED_WIDTH) != 0) // встречная спираль движется не всегда синхронно основной
     	deltaHue2--;
-	for (uint8_t y = 0; y < LED_HEIGHT; y++) {
-    	leds[XY((deltaHue  + y + 1U) % LED_WIDTH, LED_HEIGHT - 1U - y)] += color;
+	for (uint8_t y = 0; y < LED_HEIGHT; y++)
+	{
+		leds[XY((deltaHue  + y + 1U) % LED_WIDTH, LED_HEIGHT - 1U - y)] += color;
     	leds[XY((deltaHue  + y     ) % LED_WIDTH, LED_HEIGHT - 1U - y)] += color; //color2
     	leds[XY((deltaHue2 + y     ) % LED_WIDTH,               y)] += color;
     	leds[XY((deltaHue2 + y + 1U) % LED_WIDTH,               y)] += color; //color2
-  	}
+	}
 	// скорость движения по массиву noise
   	noise32_x += 1500;//1000;
   	noise32_y += 1500;//1000;
@@ -1091,6 +985,7 @@ void FieryLedLampEffectSmokeBalls::setup()
 
     enlargedObjectNUM = (scale - 1U) % 11U + 1U;
     //speedfactor = fmap(speed, 1., 255., .02, .1); // попробовал разные способы управления скоростью. Этот максимально приемлемый, хотя и сильно тупой.
+	speedfactor = map(speed, 0, 255, 1, LED_HEIGHT);
     for (byte j = 0; j < enlargedObjectNUM; j++) {
     	trackingObjectShift[j] =  random((LED_WIDTH * 10) - ((LED_WIDTH / 3) * 20)); // сумма trackingObjectState + trackingObjectShift не должна выскакивать за макс.Х
       	trackingObjectSpeedX[j] = (float)random(25, 80 * LED_WIDTH) / 5.;
@@ -1102,28 +997,30 @@ void FieryLedLampEffectSmokeBalls::setup()
 
 void FieryLedLampEffectSmokeBalls::updateInner()
 {
-  	for (byte x = 0; x < LED_WIDTH; x++) {
-    	for (float y = (float)LED_HEIGHT; y > 0.; y -= speedfactor) {
-      		drawPixelXY(x, y, getPixelColorXY(x, y - 1));
-    	}
-  	}
+	for (byte x = 0; x < LED_WIDTH; x++)
+	{
+		for (float y = (float)LED_HEIGHT; y > 0.; y -= speedfactor)
+		{
+			drawPixelXY(x, y, getPixelColorXY(x, y - 1));
+		}
+	}
 
 	fadeToBlackBy(leds, NUM_LEDS, 128U / LED_HEIGHT);
-  	if (speed & 0x01)
-    	blurScreen(20);
-  	for (byte j = 0; j < enlargedObjectNUM; j++) {
-    	trackingObjectPosX[j] = beatsin16((uint8_t)(trackingObjectSpeedX[j] * (speedfactor * 5.)), trackingObjectShift[j], trackingObjectState[j] + trackingObjectShift[j], trackingObjectHue[j] * 256, trackingObjectHue[j] * 8);
+	if (speed & 0x01)
+		blurScreen(20);
+	for (byte j = 0; j < enlargedObjectNUM; j++)
+	{
+		trackingObjectPosX[j] = beatsin16((uint8_t)(trackingObjectSpeedX[j] * (speedfactor * 5.)), trackingObjectShift[j], trackingObjectState[j] + trackingObjectShift[j], trackingObjectHue[j] * 256, trackingObjectHue[j] * 8);
     	drawPixelXYF(trackingObjectPosX[j] / 10., 0.05, ColorFromPalette(*curPalette, trackingObjectHue[j]));
-  	}
-
-  	EVERY_N_SECONDS(20) {
-    	for (byte j = 0; j < enlargedObjectNUM; j++) {
-      		trackingObjectShift[j] += random(-20, 20);
-      		trackingObjectHue[j] += 28;
-    	}
-  	}
-
-  	//loadingFlag = random8() > 253U;
+	}
+	EVERY_N_SECONDS(20)
+	{
+		for (byte j = 0; j < enlargedObjectNUM; j++)
+		{
+			trackingObjectShift[j] += random(-20, 20);
+			trackingObjectHue[j] += 28;
+		}
+	}
 }
 
 // генератор палитр для Жидкой лампы (c) SottNick
@@ -1176,28 +1073,37 @@ void FieryLedLampEffectLiquidLamp::fillPalette(uint8_t hue, bool isInvert)
 
 void FieryLedLampEffectLiquidLamp::position()
 {
-	for (uint8_t i = 0; i < enlargedObjectNUM; i++) {
-    	liquidLampHot[i] += mapcurve(trackingObjectPosY[i], 0, LED_HEIGHT - 1, 5, -5, InOutQuad) * speedfactor;
+	for (uint8_t i = 0; i < enlargedObjectNUM; i++)
+	{
+		liquidLampHot[i] += mapcurve(trackingObjectPosY[i], 0, LED_HEIGHT - 1, 5, -5, InOutQuad) * speedfactor;
 
 		float heat = (liquidLampHot[i] / trackingObjectState[i]) - 1;
-		if (heat > 0 && trackingObjectPosY[i] < LED_HEIGHT - 1) {
+		if (heat > 0 && trackingObjectPosY[i] < LED_HEIGHT - 1)
+		{
 			trackingObjectSpeedY[i] += heat * liquidLampSpf[i];
 		}
-		if (trackingObjectPosY[i] > 0) {
+		if (trackingObjectPosY[i] > 0)
+		{
 			trackingObjectSpeedY[i] -= 0.07;
 		}
 
-		if (trackingObjectSpeedY[i]) trackingObjectSpeedY[i] *= 0.85;
+		if (trackingObjectSpeedY[i])
+			trackingObjectSpeedY[i] *= 0.85;
 		trackingObjectPosY[i] += trackingObjectSpeedY[i] * speedfactor;
 
-		if (trackingObjectSpeedX[i]) trackingObjectSpeedX[i] *= 0.7;
+		if (trackingObjectSpeedX[i])
+			trackingObjectSpeedX[i] *= 0.7;
 		trackingObjectPosX[i] += trackingObjectSpeedX[i] * speedfactor;
 
-		if (trackingObjectPosX[i] > LED_WIDTH - 1) trackingObjectPosX[i] -= LED_WIDTH - 1;
-		if (trackingObjectPosX[i] < 0) trackingObjectPosX[i] += LED_WIDTH - 1;
-		if (trackingObjectPosY[i] > LED_HEIGHT - 1) trackingObjectPosY[i] = LED_HEIGHT - 1;
-		if (trackingObjectPosY[i] < 0) trackingObjectPosY[i] = 0;
-  	}
+		if (trackingObjectPosX[i] > LED_WIDTH - 1)
+			trackingObjectPosX[i] -= LED_WIDTH - 1;
+		if (trackingObjectPosX[i] < 0)
+			trackingObjectPosX[i] += LED_WIDTH - 1;
+		if (trackingObjectPosY[i] > LED_HEIGHT - 1)
+			trackingObjectPosY[i] = LED_HEIGHT - 1;
+		if (trackingObjectPosY[i] < 0)
+			trackingObjectPosY[i] = 0;
+	}
 }
 
 void FieryLedLampEffectLiquidLamp::physic()
@@ -1239,34 +1145,37 @@ void FieryLedLampEffectLiquidLamp::setup()
 {
 	speedfactor = speed / 64.0 + 0.1; // 127 БЫЛО
 
-    if (isColored) {
-		fillPalette((scale - 1U) * 2.55, !(scale & 0x01));
-      	enlargedObjectNUM = enlargedOBJECT_MAX_COUNT / 2U - 2U; //14U;
-    }
-    else {
-    	enlargedObjectNUM = (scale - 1U) / 99.0 * (enlargedOBJECT_MAX_COUNT - 1U) + 1U;
+	if (isColored)
+	{
+		fillPalette(scale, !(scale & 0x01));
+      	enlargedObjectNUM = enlargedOBJECT_MAX_COUNT / 2 - 2; //14U;
+	}
+	else
+	{
+		enlargedObjectNUM = (scale - 1) / 99.0 * (enlargedOBJECT_MAX_COUNT - 1) + 1;
       	hue = random8();
-      	deltaHue = random8(2U);
+      	deltaHue = random8(2);
       	fillPalette(hue, deltaHue);
-    }
-    if (enlargedObjectNUM > enlargedOBJECT_MAX_COUNT)
+	}
+	if (enlargedObjectNUM > enlargedOBJECT_MAX_COUNT)
 		enlargedObjectNUM = enlargedOBJECT_MAX_COUNT;
     else
-		if (enlargedObjectNUM < 2U)
-			enlargedObjectNUM = 2U;
+		if (enlargedObjectNUM < 2)
+			enlargedObjectNUM = 2;
 
     //double minSpeed = 0.2, maxSpeed = 0.8;
 
-    for (uint8_t i = 0 ; i < enlargedObjectNUM ; i++) {
-    	trackingObjectPosX[i] = random8(LED_WIDTH);
+	for (uint8_t i = 0; i < enlargedObjectNUM; i++)
+	{
+		trackingObjectPosX[i] = random8(LED_WIDTH);
     	trackingObjectPosY[i] = 0; //random8(HEIGHT);
     	trackingObjectState[i] = random(MASS_MIN, MASS_MAX);
     	liquidLampSpf[i] = fmap(trackingObjectState[i], MASS_MIN, MASS_MAX, 0.0015, 0.0005);
     	trackingObjectShift[i] = fmap(trackingObjectState[i], MASS_MIN, MASS_MAX, 2, 3);
     	liquidLampMX[i] = map(trackingObjectState[i], MASS_MIN, MASS_MAX, 60, 80); // сила возмущения
     	liquidLampSC[i] = map(trackingObjectState[i], MASS_MIN, MASS_MAX, 6, 10); // радиус возмущения
-    	liquidLampTR[i] = liquidLampSC[i]  * 2 / 3; // отсечка расчетов (оптимизация скорости)
-    }
+    	liquidLampTR[i] = liquidLampSC[i] * 2 / 3; // отсечка расчетов (оптимизация скорости)
+	}
 }
 
 void FieryLedLampEffectLiquidLamp::updateInner()
@@ -1409,15 +1318,16 @@ void FieryLedLampEffectStars::setup()
 
     cangle = (float)(sin8(random8(25, 220)) - 128.0f) / 128.0f; //angle of movement for the center of animation gives a float value between -1 and 1
     sangle = (float)(sin8(random8(25, 220)) - 128.0f) / 128.0f; //angle of movement for the center of animation in the y direction gives a float value between -1 and 1
-    stars_count = LED_WIDTH / 2U;
+    stars_count = LED_WIDTH / 2;
 
     if (stars_count > STARS_NUM)
 		stars_count = STARS_NUM;
-    for (uint8_t num = 0; num < stars_count; num++) {
-    	points[num] = map(scale, 1, 255, 3U, 7U); //5; // random8(3, 6);                              // количество углов в звезде
-    	delay_arr[num] = speed / 5 + (num << 2) + 2U;               // задержка следующего пуска звезды
+	for (uint8_t num = 0; num < stars_count; num++)
+	{
+		points[num] = map(scale, 0, 255, 3, 7); //5; // random8(3, 6);                              // количество углов в звезде
+    	delay_arr[num] = speed / 5 + (num << 2) + 2;               // задержка следующего пуска звезды
     	color[num] = random8();
-    }
+	}
 }
 
 void FieryLedLampEffectStars::updateInner()
@@ -1434,17 +1344,20 @@ void FieryLedLampEffectStars::updateInner()
 
   	if ((uint16_t)counter % CENTER_DRIFT_SPEED == 0) drifty = drifty + (sangle * speedFactor); //move the y center every so often
 
-  	for (uint8_t num = 0; num < stars_count; num++) {
-    	if (counter >= delay_arr[num]) {              //(counter >= ringdelay)
-      		if (counter - delay_arr[num] <= LED_WIDTH + 5) {
+	for (uint8_t num = 0; num < stars_count; num++)
+	{
+		if (counter >= delay_arr[num])
+		{ //(counter >= ringdelay)
+			if (counter - delay_arr[num] <= LED_WIDTH + 5) {
         		drawStar(driftx, drifty, 2 * (counter - delay_arr[num]), (counter - delay_arr[num]), points[num], STAR_BLENDER + color[num], color[num]);
         		color[num] += speedFactor;                // в зависимости от знака - направление вращения
       		} else {
         		delay_arr[num] = counter + (stars_count << 1) + 1U; // задержка следующего пуска звезды
       		}
-    	}
-  	}
-  	blur2d(leds, LED_WIDTH, LED_HEIGHT, scale / 2);
+		}
+	}
+	XYMap map(LED_WIDTH, LED_HEIGHT);
+	blur2d(leds, LED_WIDTH, LED_HEIGHT, scale / 2, map);
 }
 
 void FieryLedLampEffectZebra::setup()
@@ -1468,8 +1381,7 @@ void FieryLedLampEffectZebra::updateInner()
 // --------------------------------------
 void FieryLedLampEffectTixyLand::setup()
 {
-    //deltaHue = 0;
-    pcnt = map(speed, 5, 250, 1, 25);
+    pcnt = map(speed, 0, 255, 1, 25);
     //FPSdelay = 1;
     deltaHue2 = scale * 2.55;
     hue = 255U;
@@ -1488,7 +1400,7 @@ void FieryLedLampEffectTixyLand::setup()
 // ======================================
 
 #define M_PI_2  1.57079632679489661923
-static const PROGMEM float LUT[102] = {
+static const PROGMEM float _LUT[102] = {
   0,           0.0099996664, 0.019997334, 0.029991005, 0.039978687,
   0.049958397, 0.059928156,  0.069885999, 0.079829983, 0.089758173,
   0.099668652, 0.10955953,   0.11942893,  0.12927501,  0.13909595,
@@ -1552,21 +1464,21 @@ float atan_fast(float x) {
   if (x > 0) {
     if (x <= 1) {
       int index = round(x * 100);
-      return LUT[index];
+      return _LUT[index];
     } else {
       float re_x = 1 / x;
       int index = round(re_x * 100);
-      return (M_PI_2 - LUT[index]);
+      return (M_PI_2 - _LUT[index]);
     }
   } else {
     if (x >= -1) {
       float abs_x = -x;
       int index = round(abs_x * 100);
-      return -(LUT[index]);
+      return -(_LUT[index]);
     } else {
       float re_x = 1 / (-x);
       int index = round(re_x * 100);
-      return (LUT[index] - M_PI_2);
+      return (_LUT[index] - M_PI_2);
     }
   }
 }
@@ -1758,7 +1670,9 @@ void FieryLedLampEffectSnakes::setup()
 {
 	speedfactor = (float)speed / 555.0f + 0.001f;
 
-    enlargedObjectNUM = (scale - 1U) / 99.0 * (enlargedOBJECT_MAX_COUNT - 1U) + 1U;
+    //enlargedObjectNUM = (scale - 1U) / 99.0 * (enlargedOBJECT_MAX_COUNT - 1U) + 1U;
+	enlargedObjectNUM = map(scale, 0, 255, 1, 32);
+
     if (enlargedObjectNUM > enlargedOBJECT_MAX_COUNT)
 		enlargedObjectNUM = enlargedOBJECT_MAX_COUNT;
     for (uint8_t i = 0; i < enlargedObjectNUM; i++) {
@@ -1997,19 +1911,22 @@ void FieryLedLampEffectFontain::updateInner()
   	dimAll(127);
 
   	//go over particles and update matrix cells on the way
-  	for (int i = 0; i < enlargedObjectNUM; i++) {
-    	if (!trackingObjectIsShift[i] && step) {
+	for (int i = 0; i < enlargedObjectNUM; i++)
+	{
+		if (!trackingObjectIsShift[i] && step)
+		{
 			starfield2Emit(i);
       		step--;
-    	}
-    	if (trackingObjectIsShift[i]) { // particle->isAlive
-      		particlesUpdate2(i);
+		}
+		if (trackingObjectIsShift[i])
+		{ // particle->isAlive
+			particlesUpdate2(i);
 	      	//generate RGB values for particle
       		CRGB baseRGB = CHSV(trackingObjectHue[i], 255, 255); // particles[i].hue
       		baseRGB.nscale8(trackingObjectState[i]);//эквивалент
       		drawPixelXYF(trackingObjectPosX[i], trackingObjectPosY[i], baseRGB);
-    	}
-  	}
+		}
+	}
 }
 
 void FieryLedLampEffect::drawCircleF(float x0, float y0, float radius, CRGB color)
@@ -2017,27 +1934,30 @@ void FieryLedLampEffect::drawCircleF(float x0, float y0, float radius, CRGB colo
   	float x = 0, y = radius, error = 0;
   	float delta = 1. - 2. * radius;
 
-  	while (y >= 0) {
-    	drawPixelXYF(fmod(x0 + x + LED_WIDTH, LED_WIDTH), y0 + y, color); // сделал, чтобы круги были бесшовными по оси х
+	while (y >= 0)
+	{
+		drawPixelXYF(fmod(x0 + x + LED_WIDTH, LED_WIDTH), y0 + y, color); // сделал, чтобы круги были бесшовными по оси х
     	drawPixelXYF(fmod(x0 + x + LED_WIDTH, LED_WIDTH), y0 - y, color);
     	drawPixelXYF(fmod(x0 - x + LED_WIDTH, LED_WIDTH), y0 + y, color);
     	drawPixelXYF(fmod(x0 - x + LED_WIDTH, LED_WIDTH), y0 - y, color);
     	error = 2. * (delta + y) - 1.;
-    	if (delta < 0 && error <= 0) {
-      		++x;
+		if (delta < 0 && error <= 0)
+		{
+			++x;
       		delta += 2. * x + 1.;
       		continue;
-    	}
-    	error = 2. * (delta - x) - 1.;
-    	if (delta > 0 && error > 0) {
-      		--y;
+		}
+		error = 2. * (delta - x) - 1.;
+		if (delta > 0 && error > 0)
+		{
+			--y;
       		delta += 1. - 2. * y;
       		continue;
-    	}
-    	++x;
+		}
+		++x;
     	delta += 2. * (x - y);
     	--y;
-  	}
+	}
 }
 
 // ============= ЭФФЕКТ Капли на стекле ===============
@@ -2351,7 +2271,7 @@ void FieryLedLampEffectContacts::setup()
     FastLED.clear();
 }
 
-static const uint8_t exp_gamma[256] PROGMEM = {
+uint8_t exp_gamma[] PROGMEM = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   1,   1,
     1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
     1,   2,   2,   2,   2,   2,   2,   2,   2,   2,   3,   3,   3,   3,   3,
@@ -2723,10 +2643,10 @@ void FieryLedLampEffect::fillNoiseLED(const TProgmemRGBPalette16 *currentPalette
   	{
     	dataSmoothing = 200 - (speed * 4);
   	}
-  	for (uint8_t i = 0; i < MAX_DIMENSION; i++)
+  	for (uint8_t i = 0; i < LED_WIDTH; i++)
   	{
     	int32_t ioffset = scale * i;
-    	for (uint8_t j = 0; j < MAX_DIMENSION; j++)
+    	for (uint8_t j = 0; j < LED_WIDTH; j++)
     	{
       		int32_t joffset = scale * j;
       		uint8_t data = inoise8(x + ioffset, y + joffset, z);
@@ -3845,4 +3765,470 @@ void FieryLedLampEffectFireFlyTop::updateInner()
   	FillNoise(noise3d,noise32_x,noise32_y,noise32_z, scale32_x, scale32_y, 0);
   	MoveFractionalNoiseY(noise3d, 2, 1);
   	MoveFractionalNoiseX(noise3d, 2);
+}
+
+// ============= Эффект Реакция Белоусова-Жаботинского (Осциллятор) ===============
+// по наводке https://www.wikiwand.com/ru/%D0%9A%D0%BB%D0%B5%D1%82%D0%BE%D1%87%D0%BD%D1%8B%D0%B9_%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82
+// (c) SottNick
+
+void FieryLedLampEffectOscillating::drawPixelXYFseamless(float x, float y, CRGB color)
+{
+	uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
+	// calculate the intensities for each affected pixel
+#define WU_WEIGHT(a, b) ((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
+	uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
+					 WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
+	// multiply the intensities by the colour, and saturating-add them to the pixels
+	for (uint8_t i = 0; i < 4; i++)
+	{
+		uint8_t xn = (int8_t)(x + (i & 1)) % LED_WIDTH;
+		uint8_t yn = (int8_t)(y + ((i >> 1) & 1)) % LED_HEIGHT;
+		CRGB clr = getPixelColorXY(xn, yn);
+		clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+		clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+		clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+		drawPixelXY(xn, yn, clr);
+	}
+}
+/*
+  class oscillatingCell {
+  public:
+  byte red; // значения 0 или 1
+  byte blue; // значения 0 или 1
+  byte green; // значения 0 или 1
+  byte color; // значения от 0 до 2
+  };
+  oscillatingCell oscillatingWorld[WIDTH][HEIGHT];
+
+  будем использовать вместо них всех имеющийся в прошивке массив
+  uint8_t noise3d[2][WIDTH][HEIGHT];
+*/
+
+uint8_t FieryLedLampEffectOscillating::calcNeighbours(uint8_t x, uint8_t y, uint8_t n)
+{
+	return (noise3d[0][(x + 1) % LED_WIDTH][y] == n) +
+		   (noise3d[0][x][(y + 1) % LED_HEIGHT] == n) +
+		   (noise3d[0][(x + LED_WIDTH - 1) % LED_WIDTH][y] == n) +
+		   (noise3d[0][x][(y + LED_HEIGHT - 1) % LED_HEIGHT] == n) +
+		   (noise3d[0][(x + 1) % LED_WIDTH][(y + 1) % LED_HEIGHT] == n) +
+		   (noise3d[0][(x + LED_WIDTH - 1) % LED_WIDTH][(y + 1) % LED_HEIGHT] == n) +
+		   (noise3d[0][(x + LED_WIDTH - 1) % LED_WIDTH][(y + LED_HEIGHT - 1) % LED_HEIGHT] == n) +
+		   (noise3d[0][(x + 1) % LED_WIDTH][(y + LED_HEIGHT - 1) % LED_HEIGHT] == n);
+}
+
+void FieryLedLampEffectOscillating::setup()
+{
+	step = 0;
+#if 0
+	if (modes[currentMode].Scale > 100U)
+		modes[currentMode].Scale = 100U; // чтобы не было проблем при прошивке без очистки памяти
+	if (modes[currentMode].Scale <= 50U)
+		curPalette = palette_arr[(uint8_t)(modes[currentMode].Scale / 50.0F * ((sizeof(palette_arr) / sizeof(TProgmemRGBPalette16 *)) - 0.01F))];
+	// else
+	// curPalette = firePalettes[(uint8_t)((modes[currentMode].Scale - 50)/50.0F * ((sizeof(firePalettes)/sizeof(TProgmemRGBPalette16 *))-0.01F))];
+#else
+	scale = map(scale, 0, 255, 0, 100);
+	uint8_t index = map(scale, 0, 100, 0, (sizeof(palette_arr) / sizeof(TProgmemRGBPalette16 *)));
+	curPalette = palette_arr[index];
+#endif
+
+	// случайное заполнение
+	for (uint8_t i = 0; i < LED_WIDTH; i++)
+	{
+		for (uint8_t j = 0; j < LED_HEIGHT; j++)
+		{
+			noise3d[1][i][j] = random8(3);
+			noise3d[0][i][j] = noise3d[1][i][j];
+		}
+	}
+	colorCountBefore[0]=colorCountBefore[1]=colorCountBefore[2]=0;
+};
+void FieryLedLampEffectOscillating::updateInner()
+{
+	hue++;
+	CRGB currColors[3];
+	if (scale == 100)
+	{
+		currColors[0] = CHSV(hue, 255, 255);
+		currColors[1] = CHSV(hue, 128, 255);
+		currColors[2] = CHSV(hue, 255, 128);
+	}
+	else
+	{
+		if (scale > 50U)
+		{
+			currColors[0U] = CHSV((scale - 50U) * 5.1, 255, 255);
+			currColors[1U] = CHSV((scale - 50U) * 5.1, 128, 255);
+			currColors[2U] = CHSV((scale - 50U) * 5.1, 255, 128);
+		}
+		else
+			for (uint8_t c = 0; c < 3; c++)
+				currColors[c] = ColorFromPalette(*curPalette, c * 85U + hue);
+	}
+	FastLED.clear();
+
+	// расчёт химической реакции и отрисовка мира
+	uint16_t colorCount[3] = {0U, 0U, 0U};
+	for (uint8_t x = 0; x < LED_WIDTH; x++)
+	{
+		for (uint8_t y = 0; y < LED_HEIGHT; y++)
+		{
+			switch (noise3d[0][x][y])
+			{
+			case 0:
+				{
+					colorCount[0U]++;
+					if (calcNeighbours(x, y, 1U) > 2U)
+						noise3d[1][x][y] = 1U;
+				}
+				break;
+			case 1U:
+				{
+					colorCount[1U]++;
+					if (calcNeighbours(x, y, 2U) > 2U)
+						noise3d[1][x][y] = 2U;
+				}
+				break;
+			default:
+				{
+					colorCount[2U]++;
+					if (calcNeighbours(x, y, 0U) > 2U)
+						noise3d[1][x][y] = 0U;
+				}
+			}
+			drawPixelXYFseamless((float)x + 0.5, (float)y + 0.5, currColors[noise3d[1][x][y]]);
+		}
+	}
+
+	// проверка зацикливания
+	if (colorCount[0] == colorCountBefore[0] && colorCount[1] == colorCountBefore[1] && colorCount[2] == colorCountBefore[2])
+	{
+		step++;
+		if (step > 10U)
+		{
+			if (colorCount[0] < colorCount[1])
+				step = 0;
+			else
+				step = 1;
+			if (colorCount[2] < colorCount[step])
+				step = 2;
+			colorCount[step] = 0U;
+			step = 0U;
+		}
+	}
+	else
+		step = 0U;
+
+	// вброс хаоса
+	if (hue == hue2)
+	{ // чтобы не каждый ход
+		hue2 += random8(220U) + 36U;
+		uint8_t tx = random8(LED_WIDTH);
+		colorCountBefore[0] = noise3d[1][tx][0U] + 1U;
+		if (colorCountBefore[0] > 2U)
+			colorCountBefore[0] = 0U;
+		noise3d[1][tx][0U] = colorCountBefore[0];
+		noise3d[1][(tx + 1U) % LED_WIDTH][0U] = colorCountBefore[0];
+		noise3d[1][(tx + 2U) % LED_WIDTH][0U] = colorCountBefore[0];
+	}
+
+	colorCountBefore[0] = colorCount[0];
+	colorCountBefore[1] = colorCount[1];
+	colorCountBefore[2] = colorCount[2];
+
+	// вброс исчезнувшего цвета
+	for (uint8_t c = 0; c < 3; c++)
+	{
+		if (colorCount[c] < 6U)
+		{
+			uint8_t tx = random8(LED_WIDTH);
+			uint8_t ty = random8(LED_HEIGHT);
+			if (random8(2U))
+			{
+				noise3d[1][tx][ty] = c;
+				noise3d[1][(tx + 1U) % LED_WIDTH][ty] = c;
+				noise3d[1][(tx + 2U) % LED_WIDTH][ty] = c;
+			}
+			else
+			{
+				noise3d[1][tx][ty] = c;
+				noise3d[1][tx][(ty + 1U) % LED_HEIGHT] = c;
+				noise3d[1][tx][(ty + 2U) % LED_HEIGHT] = c;
+			}
+		}
+	}
+
+	// перенос на следующий цикл
+	for (uint8_t x = 0; x < LED_WIDTH; x++)
+	{
+		for (uint8_t y = 0; y < LED_HEIGHT; y++)
+		{
+			noise3d[0][x][y] = noise3d[1][x][y];
+		}
+	}
+};
+
+void FieryLedLampEffectClock::setup()
+{
+    /*poleX = (speed - 1U) % LED_WIDTH; //смещение цифр по горизонтали
+#if LED_HEIGHT > 12
+    poleY = (speed - 1U) / LED_WIDTH % (LED_HEIGHT - 12U);  //смещение цифр по вертикали (для режима CLOCK_SAVE_MODE будет меняться само)
+#else // и для 12 и для 11 смещаться некуда. всё впритык
+    poleY = 0U;
+#endif
+
+    hue2 = 255U; // количество минут в данный момент (первоначально запредельое значение)
+    deltaHue2 = 0; // яркость точки в данный момент
+    deltaValue = modes[currentMode].Scale * 2.55; // выбранный оттенок цифр*/
+};
+void FieryLedLampEffectClock::updateInner()
+{
+	/*time_t currentLocalTime = getCurrentLocalTime();
+
+	if (minute(currentLocalTime) != hue2)
+	{
+		step = 1U; // = CLOCK_REFRESH_DELAY; раньше делал постепенное затухание. получалось хуже
+		hue = hour(currentLocalTime);
+		hue2 = minute(currentLocalTime);
+	}
+  if (step > 0) // тут меняются цифры на часах
+  {
+    step--;
+    //uint8_t bri = (CLOCK_REFRESH_DELAY - step) * 255.0 / CLOCK_REFRESH_DELAY;
+    uint8_t sat = (modes[currentMode].Scale == 100) ? 0U : 255U;
+
+    FastLED.clear();
+    // рисуем цифры
+#ifdef CLOCK_BLINKING
+    drawDig3x5(   poleX,               (poleY + 8U), hue  / 10U % 10U, CHSV(deltaValue, sat, 255U));
+    drawDig3x5(  (poleX + 4U) % WIDTH, (poleY + 8U), hue        % 10U, CHSV(deltaValue, sat, 255U));
+#else
+#if HEIGHT > 11
+    drawDig3x5( poleX,               (poleY + 7U), hue  / 10U % 10U, CHSV(deltaValue, sat, 255U));
+    drawDig3x5((poleX + 4U) % WIDTH, (poleY + 7U), hue        % 10U, CHSV(deltaValue, sat, 255U));
+#else // если матрица всего 11 пикселей в высоту, можно сэкономить 1 и впихнуть часы в неё. но если меньше, нужно брать код эффекта с высотой цифр 4 пикселя, а не 5
+    drawDig3x5( poleX,               (poleY + 6U), hue  / 10U % 10U, CHSV(deltaValue, sat, 255U));
+    drawDig3x5((poleX + 4U) % WIDTH, (poleY + 6U), hue        % 10U, CHSV(deltaValue, sat, 255U));
+#endif
+#endif
+    drawDig3x5(     poleX, poleY,                      hue2 / 10U % 10U, CHSV(deltaValue, sat, 255U));
+    drawDig3x5(    (poleX + 4U) % WIDTH, poleY,        hue2       % 10U, CHSV(deltaValue, sat, 255U));
+  }*/
+};
+
+// ============= Hourglass ==============
+//             © SlingMaster
+//             EFF_HOURGLASS
+//             Песочные Часы
+//---------------------------------------
+void FieryLedLampEffectHourglass::setup()
+{
+	float SIZE = 0.43;
+    step = scale;
+    deltaHue2 = 0;
+    h = uint8_t(NUM_LEDS * SIZE);
+    hue2 = 0;
+};
+void FieryLedLampEffectHourglass::updateInner()
+{
+	float SIZE = 0.43;
+	const uint8_t topPos = LED_HEIGHT - floor(LED_HEIGHT * SIZE);
+	const uint8_t route = LED_HEIGHT - floor(LED_HEIGHT * SIZE) + 1;
+
+	if (hue2 == 0)
+	{
+		if (scale < 10)
+		{
+			hue = step;
+		}
+		else
+		{
+			hue = scale * 2.55;
+		}
+
+		if (STRIP_DIRECTION < 2)
+		{
+			// STRIP_DIRECTION to UP ========
+			fill_gradient(leds, NUM_LEDS - h, CHSV(hue, 255, 254), NUM_LEDS - deltaHue2, CHSV(hue, 255, 30), SHORTEST_HUES);
+			fill_gradient(leds, 0, CHSV(hue, 255, 254), deltaHue2, CHSV(hue, 255, 30), SHORTEST_HUES);
+		}
+		else
+		{
+			// STRIP_DIRECTION to DOWN ======
+			fill_gradient(leds, deltaHue2, CHSV(hue, 255, 30), h, CHSV(hue, 255, 254), SHORTEST_HUES);
+			fill_gradient(leds, NUM_LEDS - deltaHue2, CHSV(hue, 255, 30), NUM_LEDS, CHSV(hue, 255, 254), SHORTEST_HUES);
+		}
+
+		/*if (custom_eff == 1)
+		{
+			if (deltaHue2 < LED_WIDTH)
+			{
+				blurScreen(8U);
+			}
+		}*/
+		deltaHue2++;
+		if (deltaHue2 > h)
+		{
+			deltaHue2 = 0;
+			hue2 = 1;
+			// борьба с артифактом -----
+			DrawLine(0, topPos, LED_WIDTH - 1, topPos, 0x000000);
+		}
+		step++;
+	}
+
+	// сдвигаем всё вверх -----------
+	// имитация переворота песочных часов
+	if (hue2 > 0)
+	{
+		for (uint8_t x = 0U; x < LED_WIDTH; x++)
+		{
+			for (uint8_t y = LED_HEIGHT; y > 0U; y--)
+			{
+				drawPixelXY(x, y, getPixelColorXY(x, y - 1U));
+				drawPixelXY(x, y - 1, 0x000000);
+			}
+		}
+		hue2++;
+		if (hue2 > route)
+		{
+			hue2 = 0;
+		}
+	}
+}
+
+// ============ Octopus ===========
+//        © Stepko and Sutaburosu
+//    Adapted and modifed © alvikskor
+//             Осьминог
+// --------------------------------------
+//Idea from https://www.youtube.com/watch?v=HsA-6KIbgto&ab_channel=GreatScott%21
+void FieryLedLampEffectOctopus::setup()
+{
+	_scale=0;
+	for (int8_t x = -CENTER_X_MAJOR; x < CENTER_X_MAJOR + (LED_WIDTH % 2); x++)
+	{
+		for (int8_t y = -CENTER_Y_MAJOR; y < CENTER_Y_MAJOR + (LED_HEIGHT % 2); y++)
+		{
+			noise3d[0][x + CENTER_X_MAJOR][y + CENTER_Y_MAJOR] = (atan2(x, y) / PI) * 128 + 127; // thanks ldirko
+			noise3d[1][x + CENTER_X_MAJOR][y + CENTER_Y_MAJOR] = hypot(x, y);					 // thanks Sutaburosu
+		}
+	}
+};
+void FieryLedLampEffectOctopus::updateInner()
+{
+	uint8_t legs = scale / 10;
+	uint16_t color_speed;
+	step = _scale % 10;
+	if (step < 5)
+		color_speed = _scale / (3 - step / 2);
+	else
+		color_speed = _scale * (step / 2 - 1);
+	_scale++;
+	for (uint8_t x = 0; x < LED_WIDTH; x++)
+	{
+		for (uint8_t y = 0; y < LED_HEIGHT; y++)
+		{
+			byte angle = noise3d[0][x][y];
+			byte radius = noise3d[1][x][y];
+			leds[XY(x, y)] = CHSV(color_speed - radius * (255 / LED_WIDTH), 255, sin8(sin8((angle * 4 - (radius * (255 / LED_WIDTH))) / 4 + _scale) + radius * (255 / LED_WIDTH) - _scale * 2 + angle * legs));
+		}
+	}
+}
+
+// ============== Avrora ===============
+//             © SlingMaster
+//                Аврора
+// =====================================
+
+void FieryLedLampEffectAurora::setup()
+{
+    deltaValue = 0;
+    hue = 0;
+	step=0;
+};
+void FieryLedLampEffectAurora::updateInner()
+{
+	const byte _PADDING = LED_HEIGHT * 0.25;
+	const float BR_INTERWAL = LED_WIDTH / LED_HEIGHT;
+
+	byte step1 = map8(speed, 10U, 60U);
+	uint16_t ms = millis();
+	double freq = 3000;
+	float mn = 255.0 / 13.8;
+	const byte fade = 30; // 60 - abs(128 - step) / 3;
+	fadeToBlackBy(leds, NUM_LEDS, fade);
+
+	// -----------------
+	for (uint16_t y = 0; y < LED_HEIGHT; y++)
+	{
+		uint32_t yy = y * 256;
+		uint32_t x1 = beatsin16(step1, LED_WIDTH, (LED_HEIGHT - 1) * 256, LED_WIDTH, y * freq + 32768) / 1.5;
+
+		/* change color -------- */
+		byte cur_color = ms / 29 + y * 256 / LED_HEIGHT;
+		CRGB color = CHSV(cur_color, 255, 255 - y * LED_HEIGHT / 8);
+		byte br = constrain(255 - y * LED_HEIGHT / 5, 0, 200);
+		CRGB color2 = CHSV(cur_color - 32, 255 - y * LED_HEIGHT / 4, br);
+
+		wu_pixel(x1 + hue + _PADDING * hue / 2, yy, &color);
+		int32_t x=(LED_WIDTH - 1) * 256 - (x1 + hue);
+		wu_pixel(abs(x), yy - _PADDING * hue, &color2);
+	}
+
+	step++;
+	if (step % 64)
+	{
+		if (deltaValue == 1)
+		{
+			hue++;
+			if (hue >= 255)
+			{
+				deltaValue = 0;
+			}
+		}
+		else
+		{
+			hue--;
+			if (hue < 1)
+			{
+				deltaValue = 1;
+			}
+		}
+	}
+}
+void FieryLedLampEffect::gradientVertical(uint8_t startX, uint8_t startY, uint8_t endX, uint8_t endY, uint8_t start_color, uint8_t end_color, uint8_t start_br, uint8_t end_br, uint8_t saturate)
+{
+	float step_color = 0;
+	float step_br = 0;
+	if (startX == endX)
+	{
+		endX++;
+	}
+	if (startY == endY)
+	{
+		endY++;
+	}
+	step_color = (end_color - start_color) / abs(startY - endY);
+
+	if (start_color > end_color)
+	{
+		step_color -= 1.2;
+	} else {
+    step_color += 1.2;
+  }
+
+  step_br = (end_br - start_br) / abs(startY - endY);
+  if (start_br >  end_color) {
+    step_br -= 1.2;
+  } else {
+    step_br += 1.2;
+  }
+  for (uint8_t y = startY; y < endY; y++) {
+    CHSV thisColor = CHSV( (uint8_t) validMinMax((start_color + (y - startY) * step_color), 0, 255), saturate,
+                           (uint8_t) validMinMax((start_br + (y - startY) * step_br), 0, 255) );
+    for (uint8_t x = startX; x < endX; x++) {
+      drawPixelXY(x, y, thisColor);
+    }
+  }
 }
