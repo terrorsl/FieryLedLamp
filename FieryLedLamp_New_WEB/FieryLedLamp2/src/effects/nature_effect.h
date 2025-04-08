@@ -143,4 +143,5 @@ private:
 	int8_t vector[BALLS_AMOUNT][2U];
 	CRGB ballColors[BALLS_AMOUNT];
 };
+
 #endif

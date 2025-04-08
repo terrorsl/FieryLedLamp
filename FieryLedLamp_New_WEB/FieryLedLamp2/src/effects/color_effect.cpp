@@ -482,3 +482,64 @@ void FieryLedLampEffectColor::updateInner()
     else*/
         fillAll(CHSV(scale, speed, 255U));
 }
+
+// ------------- цвета - 2 -----------------
+#define DELAY_MULTIPLIER (20U) //при задержке между кадрами примерно в 50 мс с этим множителем получится 1 с на единицу бегунка Скорость
+
+void FieryLedLampEffectColors::setup()
+{
+    step = 0;
+    change = 1;
+    hue2 = 0;
+};
+void FieryLedLampEffectColors::updateInner()
+{
+	if (scale < 10U || scale > 245U) // если Масштаб небольшой, меняем цвет на это значение регулярно (каждый цикл кратный значению Скорость)
+	{
+		if (step >= scale)
+		{
+			hue += scale;
+			step = 0U;
+			fillAll(CHSV(hue, 255U, 255U));
+		}
+		else
+			step++;
+	}
+	else
+	{
+		// если Масштаб большой, тогда смену цвета делаем как бы пульсацией (поменяли, пауза, поменяли, пауза)
+		if (change != 0)
+		{
+			if (change > 127U)
+			{
+				hue--;
+				change++;
+			}
+			else
+			{
+				hue++;
+				change--;
+			}
+			fillAll(CHSV(hue, 255U, 255U));
+		}
+		else
+		{
+			if (step >= scale)
+			{
+				change = scale;
+
+				step = 0U;
+			}
+			else
+			{
+				if (hue2 >= DELAY_MULTIPLIER)
+				{
+					step++;
+					hue2 = 0U;
+				}
+				else
+					hue2++;
+			}
+		}
+	}
+}

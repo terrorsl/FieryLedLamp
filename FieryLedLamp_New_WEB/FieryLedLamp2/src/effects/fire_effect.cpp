@@ -990,3 +990,254 @@ void FieryLedLampEffectFeatherCandle::updateInner()
 		hue++;
 	}
 }
+
+// =====================================
+//               Фейерверк
+//                Firework
+//             © SlingMaster
+// =====================================
+void FieryLedLampEffectFirework::VirtualExplosion(uint8_t f_type, int8_t timeline)
+{
+	const uint8_t DELAY_SECOND_EXPLOSION = LED_HEIGHT * 0.25;
+	uint8_t horizont = 1U; // HEIGHT * 0.2;
+	const int8_t STEP = 255 / LED_HEIGHT;
+	uint8_t firstColor = random8(255);
+	uint8_t secondColor = 0;
+	uint8_t saturation = 255U;
+	switch (f_type)
+	{
+    case 0:
+		secondColor = random(50U, 255U);
+		saturation = random(245U, 255U);
+		break;
+	case 1: /* сакура */
+		firstColor = random(210U, 230U);
+		secondColor = random(65U, 85U);
+		saturation = 255U;
+		break;
+	case 2: /* день Независимости */
+		firstColor = random(160U, 170U);
+		secondColor = random(25U, 50U);
+		saturation = 255U;
+		break;
+	default: /* фризантемы */
+		firstColor = random(30U, 40U);
+		secondColor = random(25U, 50U);
+		saturation = random(128U, 255U);
+		break;
+	}
+	if ((timeline > LED_HEIGHT - 1) & (timeline < LED_HEIGHT * 1.75))
+	{
+		for (uint8_t x = 0U; x < LED_WIDTH; x++)
+		{
+			for (uint8_t y = horizont; y < LED_HEIGHT - 1; y++)
+			{
+				noise[x][y] = noise[x][y + 1];
+				uint8_t bri = y * STEP;
+				if (noise[x][y] > 0)
+				{
+					if (timeline > (LED_HEIGHT + DELAY_SECOND_EXPLOSION))
+					{
+						/* second explosion */
+						drawPixelXY((x - 2 + random8(4)), y - 1, CHSV(secondColor + random8(16), saturation, bri));
+					}
+					if (timeline < ((LED_HEIGHT - DELAY_SECOND_EXPLOSION) * 1.75))
+					{
+						/* first explosion */
+						drawPixelXY(x, y, CHSV(firstColor, 255U, bri));
+					}
+				}
+				else
+				{
+					// drawPixelXY(x, y, CHSV(175, 255U, floor((255 - bri) / 4)));
+				}
+			}
+		}
+		uint8_t posX = random8(LED_WIDTH);
+		for (uint8_t x = 0U; x < LED_WIDTH; x++)
+		{
+			// заполняем случайно верхнюю строку
+			if (posX == x)
+			{
+				if (step % 2 == 0)
+				{
+					noise[x][LED_HEIGHT - 1U] = 1;
+				}
+				else
+				{
+					noise[x][LED_HEIGHT - 1U] = 0;
+				}
+			}
+			else
+			{
+				noise[x][LED_HEIGHT - 1U] = 0;
+			}
+		}
+	}
+}
+
+void FieryLedLampEffectFirework::setup()
+{
+	MAX_BRIGHTNESS = 40U; /* sky brightness */
+	DOT_EXPLOSION = LED_HEIGHT * 0.95;
+	HORIZONT = LED_HEIGHT * 0.25;
+	DELTA = 1U; /* центровка по вертикали */
+	stepH = LED_HEIGHT / 128.0;
+	FPS_DELAY = 20U;
+	STEP = 3U;
+	skyColor = 156U;
+	sizeH = LED_HEIGHT;
+
+    deltaHue2 = 0;
+    FPSdelay = 255U;
+    //clearNoiseArr();
+    step = 0U;
+    deltaHue2 = floor(scale / 26.f);
+    hue = 48;            // skyBright
+	if (speed > 85U)
+	{
+		sizeH = HORIZONT;
+		FPSdelay = FPS_DELAY;
+	}
+	if (speed <= 85U)
+	{
+		gradientVertical(0, 0, LED_WIDTH, LED_HEIGHT, skyColor, skyColor, 96U, 0U, 255U);
+	}
+};
+void FieryLedLampEffectFirework::updateInner()
+{
+	if (FPSdelay == 240U)
+	{
+		FPSdelay = FPS_DELAY;
+	}
+	if (FPSdelay > 230U)
+	{
+		//  if (FPSdelay > 128U) {
+		/* вечерело */
+		FPSdelay--;
+		sizeH = (FPSdelay - 128U) * stepH;
+
+		if (speed <= 85U)
+		{
+			dimAll(225U);
+			return;
+		}
+		if (sizeH > HORIZONT)
+		{
+			dimAll(200);
+			return;
+		}
+		if (sizeH == HORIZONT)
+			FPSdelay = FPS_DELAY;
+	}
+
+	if (step > DOT_EXPLOSION)
+	{
+		blurScreen(beatsin8(3, 64, 80));
+	}
+	if (step == DOT_EXPLOSION - 1)
+	{
+		/* включаем фазу затухания */
+		FPSdelay = 70;
+	}
+	if (step > CENTER_Y_MAJOR)
+	{
+		dimAll(140);
+	}
+	else
+	{
+		dimAll(100);
+	}
+
+	/* ============ draw sky =========== */
+	if ((speed > 85U) & (speed < 180U))
+	{
+		gradientVertical(0, 0, LED_WIDTH, HORIZONT, skyColor, skyColor, 48U, 0U, 255U);
+	}
+
+	/* deltaHue2 - Firework type */
+	VirtualExplosion(deltaHue2, step);
+
+	if ((step > DOT_EXPLOSION) & (step < LED_HEIGHT * 1.5))
+	{
+		/* фаза взрыва */
+		FPSdelay += 5U;
+	}
+	const uint8_t rows = (LED_HEIGHT + 1) / 3U;
+	//deltaHue = floor(speed / 64.f) * 64;
+	if (step > CENTER_Y_MAJOR)
+	{
+		bool dir = false;
+		for (uint8_t y = 0; y < rows; y++)
+		{
+			/* сдвигаем слои / эмитация разлета */
+			for (uint8_t x = 0U; x < LED_WIDTH; x++)
+			{
+				if (dir)
+				{ // <==
+					drawPixelXY(x - 1, y * 3 + DELTA, getPixelColorXY(x, y * 3 + DELTA));
+				}
+				else
+				{ // ==>
+					drawPixelXY(LED_WIDTH - x, y * 3 + DELTA, getPixelColorXY(LED_WIDTH - x - 1, y * 3 + DELTA));
+				}
+			}
+			dir = !dir;
+			/* --------------------------------- */
+		}
+	}
+
+	/* ========== фаза полета ========== */
+	if (step < DOT_EXPLOSION)
+	{
+		FPSdelay++;
+		if (LED_HEIGHT < 20)
+		{
+			FPSdelay++;
+		}
+		/* закоментируйте следующие две строки если плоская лампа
+		  подсветка заднего фона */
+		/*if (custom_eff == 1)
+		{
+			DrawLine(0U, 0U, 0U, HEIGHT - step, CHSV(skyColor, 255U, 32U));
+			DrawLine(WIDTH - 1, 0U, WIDTH - 1U, HEIGHT - step, CHSV(skyColor, 255U, 32U));
+		}*/
+		/* ------------------------------------------------------ */
+
+		uint8_t saturation = (step > (DOT_EXPLOSION - 2U)) ? 192U : 20U;
+		uint8_t rndPos = 3U * deltaHue2 * 0.5;
+		drawPixelXY(CENTER_X_MINOR + rndPos, step, CHSV(50U, saturation, 80U));				   // first
+		drawPixelXY(CENTER_X_MAJOR + 1 - rndPos, step - HORIZONT, CHSV(50U, saturation, 80U)); // second
+		if (rndPos > 1)
+		{
+			drawPixelXY(CENTER_X_MAJOR + 4 - rndPos, step - HORIZONT + 2, CHSV(50U, saturation, 80U)); // three
+		}
+		/* sky brightness */
+		if (hue > 2U)
+		{
+			hue -= 1U;
+		}
+	}
+	if (step > LED_HEIGHT * 1.25)
+	{
+		/* sky brightness */
+		if (hue < MAX_BRIGHTNESS)
+		{
+			hue += 2U;
+		}
+	}
+
+	if (step >= (LED_HEIGHT * 2.0))
+	{
+		step = 0U;
+		// LOG.printf_P(PSTR("• Bright • [%03d]\n"), FastLED.getBrightness());
+		FPSdelay = FPS_DELAY;
+		if (scale < 5)
+		{
+			deltaHue2++;
+		}
+		if (deltaHue2 >= 4U)
+			deltaHue2 = 0U; // next Firework type
+	}
+	step++;
+}

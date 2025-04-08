@@ -801,6 +801,8 @@ bool FieryLedLamp::change_effect(unsigned short index)
 	case FieryLedLampEffectTypes::Prismata:
 	case FieryLedLampEffectTypes::Attract:
 	case FieryLedLampEffectTypes::Leapers:
+		config.effect = new FieryLedLampEffectLeapers();
+		break;
 	case FieryLedLampEffectTypes::Pulse:
 	case FieryLedLampEffectTypes::PulseWhite:
 	case FieryLedLampEffectTypes::PulseRainbow:
@@ -836,6 +838,8 @@ bool FieryLedLamp::change_effect(unsigned short index)
 	case FieryLedLampEffectTypes::Scanner:		// Сканер
 	case FieryLedLampEffectTypes::Sinusoid3:		// Синусоид
 	case FieryLedLampEffectTypes::Colors:			// Смена цвета
+		config.effect = new FieryLedLampEffectColors();
+		break;
 	case FieryLedLampEffectTypes::Snow:			// Снегопад
 	case FieryLedLampEffectTypes::Specrum:		// Спектрум
 	case FieryLedLampEffectTypes::Spiro:			// Спирали
@@ -854,6 +858,8 @@ bool FieryLedLamp::change_effect(unsigned short index)
 		config.effect = new FieryLedLampEffectSimpleRain();
 		break;
 	case FieryLedLampEffectTypes::Firework:		// Фейерверк
+		config.effect = new FieryLedLampEffectFirework();
+		break;
 	case FieryLedLampEffectTypes::Firework2:		// Фейерверк 2
 	case FieryLedLampEffectTypes::Fairy:			// Фея
 	case FieryLedLampEffectTypes::Fontan:			// Фонтан

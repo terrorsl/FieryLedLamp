@@ -69,4 +69,15 @@ public:
 	void updateInner();
 private:
 };
+
+class FieryLedLampEffectColors: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectColors():FieryLedLampEffect(HIGH_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	uint8_t step;
+	uint8_t change;
+};
 #endif

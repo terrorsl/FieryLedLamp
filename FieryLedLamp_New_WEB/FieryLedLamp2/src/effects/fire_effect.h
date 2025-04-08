@@ -157,4 +157,25 @@ public:
 	void updateInner();
 private:
 };
+
+class FieryLedLampEffectFirework: public FieryLedLampEffect
+{
+public:
+	FieryLedLampEffectFirework():FieryLedLampEffect(SOFT_DELAY){};
+	void setup();
+	void updateInner();
+private:
+	void VirtualExplosion(uint8_t f_type, int8_t timeline);
+
+	uint8_t MAX_BRIGHTNESS;
+	uint8_t DOT_EXPLOSION;
+	uint8_t HORIZONT;
+	uint8_t DELTA;
+	float stepH;
+	uint8_t FPS_DELAY;
+	uint8_t STEP;
+	uint8_t skyColor;
+	uint8_t sizeH;
+	uint8_t step, deltaHue2;
+};
 #endif

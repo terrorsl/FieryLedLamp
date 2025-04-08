@@ -649,37 +649,38 @@ void FieryLedLampEffectSand::updateInner()
 //---------------------------------------
 void FieryLedLampEffectLotus::drawLotusFlowerFragment(uint8_t posX, byte line)
 {
-    const uint8_t h = (LED_HEIGHT > 24) ? LED_HEIGHT * 0.9 : LED_HEIGHT;
+    const uint8_t h = (LED_HEIGHT > 24) ? LED_HEIGHT * 0.9 : LED_HEIGHT-1;
     uint8_t flover_color = 128 + abs(128 - hue);          // 128 -- 255
     uint8_t gleam = 255 - abs(128 - hue2);                // 255 -- 128
     float f_size = (128 - abs(128 - deltaValue)) / 150.0; // 1.0 -- 0.0
     const byte lowBri = 112U;
     // clear -----
-    DrawLine(posX, 0, posX, h * 1.1, CRGB::Black);
+    //DrawLine(posX, 0, posX, h * 1.1, CRGB::Black);
+    DrawLine(posX, 0, posX, h, CRGB::Black);
 
     switch (line)
     {
     case 0:
-      gradientVertical(posX, 0, posX + 1, h * 0.22, 96, 96, 32, 255, 255U);                             // green leaf c
-      gradientVertical(posX, h * 0.9, posX + 1, h * 1.1, 64, 48, 64, 205, gleam);                       // pestle
-      gradientVertical(posX, 8, posX + 1, h * 0.6, flover_color, flover_color, 128, lowBri, 255U);          // ---
-      break;
+        gradientVertical(posX, 0, posX + 1, h * 0.22, 96, 96, 32, 255, 255U);                        // green leaf c
+        gradientVertical(posX, h * 0.9, posX + 1, h * 1.1, 64, 48, 64, 205, gleam);                  // pestle
+        gradientVertical(posX, 8, posX + 1, h * 0.6, flover_color, flover_color, 128, lowBri, 255U); // ---
+        break;
     case 2:
     case 6:
-      gradientVertical(posX, h * 0.2, posX + 1, h - 4, flover_color, flover_color, lowBri, 255, gleam);     //  -->
-      gradientVertical(posX, h * 0.05, posX + 1, h * 0.15, 96, 96, 32, 255, 255U);                      // green leaf
-      break;
+        gradientVertical(posX, h * 0.2, posX + 1, h - 4, flover_color, flover_color, lowBri, 255, gleam); //  -->
+        gradientVertical(posX, h * 0.05, posX + 1, h * 0.15, 96, 96, 32, 255, 255U);                      // green leaf
+        break;
     case 3:
     case 5:
-      gradientVertical(posX, h * 0.5, posX + 1, h - 2, flover_color, flover_color, lowBri, 255, 255U);      // ---->
-      break;
+        gradientVertical(posX, h * 0.5, posX + 1, h - 2, flover_color, flover_color, lowBri, 255, 255U); // ---->
+        break;
     case 4:
-      gradientVertical(posX, 1 + h * f_size, posX + 1, h, flover_color, flover_color, lowBri, 255, gleam);  // ------>
-      break;
+        gradientVertical(posX, 1 + h * f_size, posX + 1, h, flover_color, flover_color, lowBri, 255, gleam); // ------>
+        break;
     default:
-      gradientVertical(posX, h * 0.05, posX + 1, h * 0.2, 80, 96, 160, 64, 255U);                       // green leaf m
-      break;
-  }
+        gradientVertical(posX, h * 0.05, posX + 1, h * 0.2, 80, 96, 160, 64, 255U); // green leaf m
+        break;
+    }
 }
 
 void FieryLedLampEffectLotus::setup()
@@ -817,6 +818,8 @@ void FieryLedLampEffectTurbulence::updateInner()
         /* scroll center up ---- */
         for (uint8_t x = CENTER_X_MAJOR - DEPTH; x < CENTER_X_MAJOR + DEPTH; x++)
         {
+            if(y == LED_HEIGHT)
+                break;
             CRGB newcolor=getPixelColorXY(x, y - 1);
             newcolor.fadeToBlackBy(128 / y);
             drawPixelXY(x, y, newcolor);
@@ -914,17 +917,16 @@ void FieryLedLampEffectLighterTraces::setup()
 {
     for (uint8_t j = 0U; j < BALLS_AMOUNT; j++)
     {
-      int8_t sign;
-      // забиваем случайными данными
-      coord[j][0U] = LED_WIDTH / 2 * 10;
-      random(0, 2) ? sign = 1 : sign = -1;
-      vector[j][0U] = random(4, 15) * sign;
-      coord[j][1U] = LED_HEIGHT / 2 * 10;
-      random(0, 2) ? sign = 1 : sign = -1;
-      vector[j][1U] = random(4, 15) * sign;
-      //ballColors[j] = CHSV(random(0, 9) * 28, 255U, 255U);
-      // цвет зависит от масштаба
-      ballColors[j] = CHSV((scale * (j + 1)) % 256U, 255U, 255U);
+        int8_t sign;
+        // забиваем случайными данными
+        coord[j][0U] = LED_WIDTH / 2 * 10;
+        random(0, 2) ? sign = 1 : sign = -1;
+        vector[j][0U] = random(4, 15) * sign;
+        coord[j][1U] = LED_HEIGHT / 2 * 10;
+        random(0, 2) ? sign = 1 : sign = -1;
+        vector[j][1U] = random(4, 15) * sign;
+        //  цвет зависит от масштаба
+        ballColors[j] = CHSV((scale * (j + 1)) % 256U, 255U, 255U);
     }
 };
 void FieryLedLampEffectLighterTraces::updateInner()
@@ -969,5 +971,5 @@ void FieryLedLampEffectLighterTraces::updateInner()
             vector[j][1U] = -vector[j][1U];
         }
         drawPixelXYF(coord[j][0U] / 10., coord[j][1U] / 10., ballColors[j]);
-  }
+    }
 }
